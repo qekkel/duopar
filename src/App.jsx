@@ -651,15 +651,89 @@ const CURRICULUM = [
 
 function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
   const [activeTopicId, setActiveTopicId] = useState(null);
-  const [mode, setMode] = useState(null); // "learn" | "exam"
+  const [mode, setMode] = useState(null); // "detail" | "block" | "exam"
+  const [activeBlockIdx, setActiveBlockIdx] = useState(null);
+  const [completedBlocks, setCompletedBlocks] = useState({}); // { topicId: Set of block indices }
+
+  function doneBlocks(topicId) { return completedBlocks[topicId] || new Set(); }
 
   if (activeTopicId && mode) {
     const topic = CURRICULUM.find(t => t.id === activeTopicId);
-    if (mode === "learn") {
-      return <TopicLearnScreen topic={topic} onBack={() => { setMode(null); setActiveTopicId(null); }} onStartExam={() => setMode("exam")} />;
+    const blocks = topic.cards.map((card, i) => ({
+      name: card.title,
+      words: (() => {
+        const ws = [];
+        card.body.split("\n").forEach(l => {
+          if (l.includes(" — ") && !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•")) {
+            const [de, ru] = l.split(" — ");
+            if (de && ru) ws.push({ de: de.trim(), ru: ru.trim(), section: card.title });
+          }
+        });
+        return ws;
+      })(),
+    })).filter(b => b.words.length > 0);
+
+    if (mode === "block" && activeBlockIdx !== null) {
+      const block = blocks[activeBlockIdx];
+      return <TopicBlockLearnScreen
+        block={block}
+        allWords={blocks.flatMap(b => b.words)}
+        onBack={() => setMode("detail")}
+        onDone={() => {
+          setCompletedBlocks(prev => {
+            const s = new Set(prev[activeTopicId] || []);
+            s.add(activeBlockIdx);
+            return { ...prev, [activeTopicId]: s };
+          });
+          setMode("detail");
+        }}
+      />;
     }
+
     if (mode === "exam") {
-      return <TopicExamScreen topic={topic} onBack={() => setMode("learn")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+      return <TopicExamScreen topic={topic} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+    }
+
+    if (mode === "detail") {
+      const done = doneBlocks(activeTopicId);
+      const allDone = blocks.length > 0 && done.size >= blocks.length;
+      return (
+        <div style={{ paddingTop: 40 }}>
+          <button onClick={() => { setMode(null); setActiveTopicId(null); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 6 }}>
+            <div style={{ fontSize: 32 }}>{topic.emoji}</div>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{topic.title}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{done.size} из {blocks.length} блоков пройдено</div>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24, marginBottom: 24 }}>
+            {blocks.map((block, i) => {
+              const blockDone = done.has(i);
+              const unlocked = i === 0 || done.has(i - 1);
+              return (
+                <div key={i} style={{ background: blockDone ? "rgba(16,185,129,0.08)" : unlocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)", border: `1px solid ${blockDone ? "rgba(16,185,129,0.3)" : unlocked ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}`, borderRadius: 16, padding: "16px 18px", opacity: unlocked ? 1 : 0.4, display: "flex", alignItems: "center", gap: 14 }}>
+                  <div style={{ fontSize: 24 }}>{blockDone ? "✅" : unlocked ? "📚" : "🔒"}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{block.name}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{block.words.length} слов</div>
+                  </div>
+                  {unlocked && (
+                    <button onClick={() => { setActiveBlockIdx(i); setMode("block"); }} style={{ padding: "8px 16px", borderRadius: 12, background: blockDone ? "rgba(16,185,129,0.15)" : "#7C5CFC", color: blockDone ? "#10b981" : "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                      {blockDone ? "Повторить" : "Учить →"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {allDone && (
+            <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "18px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+              ⚡ Сдать экзамен
+            </button>
+          )}
+        </div>
+      );
     }
   }
 
@@ -691,7 +765,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
               </div>
               {unlocked && !done && (
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setActiveTopicId(topic.id); setMode("learn"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: lvlColor, color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  <button onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: lvlColor, color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                     📖 Учить
                   </button>
                   <button onClick={() => { setActiveTopicId(topic.id); setMode("exam"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
@@ -860,6 +934,96 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
         <div style={{ fontSize: 40, fontWeight: 900, color: "#fff" }}>{card.de}</div>
       </div>
 
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {options.map((opt, i) => {
+          let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
+          if (selected !== null) {
+            if (opt === correct) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
+            else if (opt === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
+            else color = "rgba(255,255,255,0.25)";
+          }
+          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s" }}>{opt}</button>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
+  const words = block.words;
+  const [phase, setPhase] = useState("intro");
+  const [introIdx, setIntroIdx] = useState(0);
+  const [practiceQueue, setPracticeQueue] = useState(() => shuffle(words));
+  const [practiceIdx, setPracticeIdx] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [wrong, setWrong] = useState([]);
+
+  function startPractice() { setPracticeQueue(shuffle(words)); setPracticeIdx(0); setSelected(null); setWrong([]); setPhase("practice"); }
+
+  function pick(opt) {
+    if (selected !== null) return;
+    const card = practiceQueue[practiceIdx];
+    setSelected(opt);
+    const isCorrect = opt === card.ru;
+    playSound(isCorrect ? "correct" : "wrong");
+    setTimeout(() => {
+      if (!isCorrect) setWrong(w => [...w, card]);
+      const next = practiceIdx + 1;
+      if (next < practiceQueue.length) { setPracticeIdx(next); setSelected(null); }
+      else {
+        const retry = [...wrong, ...(!isCorrect ? [card] : [])];
+        if (retry.length > 0) { setPracticeQueue(shuffle(retry)); setPracticeIdx(0); setSelected(null); setWrong([]); }
+        else onDone();
+      }
+    }, 900);
+  }
+
+  const progress = phase === "intro" ? (introIdx + 1) / words.length / 2 : 0.5 + (practiceIdx + 1) / practiceQueue.length / 2;
+
+  if (phase === "intro") {
+    const card = words[introIdx];
+    const isLast = introIdx === words.length - 1;
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
+          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+            <div style={{ height: "100%", borderRadius: 2, background: "#a78bfa", width: `${progress * 100}%`, transition: "width 0.3s" }} />
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>📚 {block.name}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {words.length} · Запомни</div>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 44, fontWeight: 900, color: "#fff", marginBottom: 22 }}>{card.de}</div>
+          <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
+          <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {introIdx > 0 && <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>←</button>}
+          {!isLast
+            ? <button onClick={() => setIntroIdx(i => i + 1)} style={{ flex: 3, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Следующее →</button>
+            : <button onClick={startPractice} style={{ flex: 3, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎯 Проверить себя!</button>}
+        </div>
+      </div>
+    );
+  }
+
+  const card = practiceQueue[practiceIdx];
+  const correct = card?.ru;
+  const options = card ? shuffle([correct, ...shuffle(allWords.filter(f => f.ru !== correct)).slice(0, 3).map(f => f.ru)]) : [];
+  return (
+    <div style={{ paddingTop: 40 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
+        <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+          <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${progress * 100}%`, transition: "width 0.4s" }} />
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🎯 {block.name}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
+        <div style={{ fontSize: 40, fontWeight: 900, color: "#fff" }}>{card.de}</div>
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {options.map((opt, i) => {
           let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
