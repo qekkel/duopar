@@ -951,6 +951,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [selected, setSelected] = useState(null);
   const [wrong, setWrong] = useState([]);
+  const [retryWords, setRetryWords] = useState([]);
 
   function startPractice() { setPracticeQueue(shuffle(words)); setPracticeIdx(0); setSelected(null); setWrong([]); setPhase("practice"); }
 
@@ -966,13 +967,36 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
       if (next < practiceQueue.length) { setPracticeIdx(next); setSelected(null); }
       else {
         const retry = [...wrong, ...(!isCorrect ? [card] : [])];
-        if (retry.length > 0) { setPracticeQueue(shuffle(retry)); setPracticeIdx(0); setSelected(null); setWrong([]); }
+        if (retry.length > 0) { setRetryWords(retry); setPhase("retry_intro"); }
         else onDone();
       }
     }, 900);
   }
 
   const progress = phase === "intro" ? (introIdx + 1) / words.length / 2 : 0.5 + (practiceIdx + 1) / practiceQueue.length / 2;
+
+  if (phase === "retry_intro") {
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center", padding: "60px 24px 24px" }}>
+        <div style={{ fontSize: 52, marginBottom: 16 }}>🔄</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Работа над ошибками</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+          {retryWords.length} {retryWords.length === 1 ? "слово" : retryWords.length < 5 ? "слова" : "слов"} требуют повторения
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 32, marginTop: 24 }}>
+          {retryWords.map((w, i) => (
+            <div key={i} style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: "#fff", fontWeight: 700 }}>{w.de}</span>
+              <span style={{ color: "rgba(255,255,255,0.45)" }}>{w.ru}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => { setPracticeQueue(shuffle(retryWords)); setPracticeIdx(0); setSelected(null); setWrong([]); setPhase("practice"); }} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+          Повторить →
+        </button>
+      </div>
+    );
+  }
 
   if (phase === "intro") {
     const card = words[introIdx];
