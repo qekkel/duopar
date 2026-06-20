@@ -2228,6 +2228,40 @@ function ProfileScreen({ profile, session, onUpdate, onBack, onRetakeTest }) {
         ))}
       </div>
 
+      {/* Map game stats */}
+      {((profile?.map_wins || 0) + (profile?.map_losses || 0) + (profile?.map_draws || 0)) > 0 && (() => {
+        const wins = profile?.map_wins || 0;
+        const losses = profile?.map_losses || 0;
+        const draws = profile?.map_draws || 0;
+        const total = wins + losses + draws;
+        const winPct = Math.round((wins / total) * 100);
+        return (
+          <div style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 20, padding: 20, marginBottom: 16 }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 14 }}>🗺️ Тур по Германии</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+              <div style={{ textAlign: "center", background: "rgba(124,92,252,0.12)", borderRadius: 12, padding: "10px 6px" }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#a78bfa" }}>{wins}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>победы</div>
+              </div>
+              <div style={{ textAlign: "center", background: "rgba(239,68,68,0.1)", borderRadius: 12, padding: "10px 6px" }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#f87171" }}>{losses}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>поражения</div>
+              </div>
+              <div style={{ textAlign: "center", background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "10px 6px" }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "rgba(255,255,255,0.5)" }}>{draws}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>ничьи</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>
+              <span>{total} игр</span><span>Винрейт {winPct}%</span>
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${winPct}%`, background: "linear-gradient(90deg,#7C5CFC,#a78bfa)", borderRadius: 3 }} />
+            </div>
+          </div>
+        );
+      })()}
+
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "16px 20px", marginBottom: 12 }}>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Настройки аккаунта</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2789,9 +2823,14 @@ function MapGameScreen({ onBack, session, profile }) {
 
   function checkGameOver(terr) {
     const allIds = Object.values(STATE_ID_MAP);
-    // game over when all 16 territories are claimed (no unclaimed left)
     const unclaimed = allIds.filter(id => !terr[id]);
     if (unclaimed.length === 0) {
+      const ps = Object.values(terr).filter(v => v === "player").length;
+      const bs = Object.values(terr).filter(v => v === "bot").length;
+      const result = ps > bs ? "win" : ps < bs ? "loss" : "draw";
+      if (session?.user?.id) {
+        supabase.rpc("increment_map_stat", { uid: session.user.id, result }).catch(() => {});
+      }
       setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 1800);
       return true;
     }
