@@ -2280,11 +2280,21 @@ function centroid(feature) {
 
 const CAT_EMOJI = { "Основы":"🔤","Природа":"🌿","Еда":"🍕","Город":"🏙️","Дом":"🏠","Чувства":"❤️","Грамматика":"📚","Время":"⏰","Люди":"👤","Глаголы":"🏃","Прилагательные":"✨","Разное":"🎲" };
 
-function MapGameScreen({ onBack }) {
+function MapGameScreen({ onBack, session, profile }) {
   const [geoFeatures, setGeoFeatures] = useState(null);
   const [phase, setPhase] = useState("matchmaking");
-  const [cdMatch, setCdMatch] = useState(30);
-  const [botName] = useState(() => BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]);
+  const [cdMatch, setCdMatch] = useState(5);
+  const [botName, setBotName] = useState(() => BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]);
+
+  // ── ONLINE STATE ──
+  const [onlineMode, setOnlineMode] = useState(false);
+  const [onlineSetup, setOnlineSetup] = useState("choice"); // choice | creating | waiting | joining
+  const [myRole, setMyRole] = useState(null); // "host" | "guest"
+  const [roomCode, setRoomCode] = useState("");
+  const [joinInput, setJoinInput] = useState("");
+  const channelRef = useRef(null);
+  const myRoleRef = useRef(null);
+  const onlineModeRef = useRef(false);
   const [territories, setTerritories] = useState({});
   // sub-phases: territory_select | selecting | topic_select | answering | duel | battle | round_result
   const [rPhase, setRPhase] = useState("territory_select");
@@ -2327,6 +2337,122 @@ function MapGameScreen({ onBack }) {
   }, [phase, cdMatch]);
   useEffect(() => () => { clearTimeout(botDuelRef.current); clearInterval(duelIvRef.current); }, []);
 
+  // ── ONLINE: cleanup channel on unmount ──
+  useEffect(() => () => { channelRef.current?.unsubscribe(); }, []);
+
+  function myUsername() { return profile?.username || session?.user?.email?.split("@")[0] || "Игрок"; }
+
+  function sendOnline(event, payload) {
+    channelRef.current?.send({ type: "broadcast", event, payload });
+  }
+
+  function setupChannel(code, role) {
+    const ch = supabase.channel(`mapgame-${code}`, { config: { broadcast: { self: false } } });
+
+    ch.on("broadcast", { event: "territory_pick" }, ({ payload }) => {
+      setBotPick(payload.sid); bPickRef.current = payload.sid;
+      setBotPickRevealed(true);
+      // if I already picked, proceed
+      if (pPickRef.current) proceedOnlinePicks(pPickRef.current, payload.sid);
+    });
+
+    ch.on("broadcast", { event: "answer" }, ({ payload }) => {
+      botOkRef.current = payload.correct; setBotOk(payload.correct);
+      if (payload.ms) setDuelBotMs(payload.ms);
+      setBotDone(true);
+    });
+
+    ch.on("broadcast", { event: "round_result" }, ({ payload }) => {
+      // guest applies host's resolved state
+      if (myRoleRef.current === "guest") {
+        terrRef.current = payload.territories;
+        setTerritories(payload.territories);
+        setRoundMsg(payload.msg);
+        setRPhase("round_result");
+        if (payload.confetti) setShowConfetti(true);
+        if (Object.keys(payload.territories).length >= 16) setTimeout(() => setPhase("gameover"), 2200);
+      }
+    });
+
+    ch.on("broadcast", { event: "next_round" }, () => {
+      if (myRoleRef.current === "guest") nextRoundOnline();
+    });
+
+    ch.on("broadcast", { event: "opponent_joined" }, ({ payload }) => {
+      setBotName(payload.username);
+      setOnlineSetup("ready");
+      setPhase("playing");
+      setOnlineMode(true); onlineModeRef.current = true;
+    });
+
+    ch.on("broadcast", { event: "start_game" }, ({ payload }) => {
+      setBotName(payload.hostUsername);
+      setOnlineSetup("ready");
+      setPhase("playing");
+      setOnlineMode(true); onlineModeRef.current = true;
+    });
+
+    ch.subscribe();
+    channelRef.current = ch;
+  }
+
+  function createRoom() {
+    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+    setRoomCode(code);
+    setMyRole("host"); myRoleRef.current = "host";
+    setOnlineSetup("waiting");
+    setupChannel(code, "host");
+  }
+
+  function joinRoom() {
+    const code = joinInput.trim().toUpperCase();
+    if (!code) return;
+    setRoomCode(code);
+    setMyRole("guest"); myRoleRef.current = "guest";
+    setOnlineSetup("joining");
+    setupChannel(code, "guest");
+    // notify host
+    setTimeout(() => {
+      sendOnline("opponent_joined", { username: myUsername() });
+      sendOnline("start_game", { hostUsername: myUsername() });
+    }, 800);
+  }
+
+  function proceedOnlinePicks(myPick, theirPick) {
+    setRPhase("selecting");
+    const iAttackThem = terrRef.current[myPick] === "bot";
+    const theyAttackMe = terrRef.current[theirPick] === "player";
+    setTimeout(() => {
+      if (myPick === theirPick) {
+        setIsDuel(true); setIsBattle(false);
+        startDuel(myPick);
+      } else if (iAttackThem) {
+        setIsBattle(true); setIsDuel(false);
+        startBattle(myPick);
+      } else if (theyAttackMe) {
+        setIsBattle(true); setIsDuel(false);
+        startBattle(theirPick);
+      } else {
+        setIsDuel(false); setIsBattle(false);
+        setRPhase("topic_select");
+      }
+    }, 1200);
+  }
+
+  function nextRoundOnline() {
+    setPlayerPick(null); pPickRef.current = null;
+    setBotPick(null); bPickRef.current = null;
+    setBotPickRevealed(false);
+    setIsDuel(false); setIsBattle(false);
+    setQuestion(null); qRef.current = null;
+    setPAnswer(null); pAnsRef.current = null;
+    setBotDone(false); setBotOk(null); botOkRef.current = null;
+    setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
+    setBattleRound(0); battleRoundRef.current = 0;
+    setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
+    setRPhase("territory_select");
+  }
+
   const cats = [...new Set(ALL_QUESTIONS.map(q => q.category).filter(Boolean))];
   function pickQ(cat) {
     const pool = cat ? ALL_QUESTIONS.filter(q => q.category === cat) : ALL_QUESTIONS;
@@ -2338,13 +2464,20 @@ function MapGameScreen({ onBack }) {
 
   function handleTerritoryClick(sid) {
     if (rPhase !== "territory_select" || territories[sid] === "player") return;
-    const isEnemyTerritory = territories[sid] === "bot";
 
     setPlayerPick(sid); pPickRef.current = sid;
+
+    if (onlineModeRef.current) {
+      sendOnline("territory_pick", { sid });
+      if (bPickRef.current !== null) proceedOnlinePicks(sid, bPickRef.current);
+      return;
+    }
+
+    // ── BOT MODE ──
+    const isEnemyTerritory = territories[sid] === "bot";
     setRPhase("selecting");
 
     if (isEnemyTerritory) {
-      // player attacks bot territory — bot "defends" (same sid)
       setBotPick(sid); bPickRef.current = sid;
       setBotPickRevealed(true);
       setIsBattle(true); setIsDuel(false);
@@ -2354,7 +2487,6 @@ function MapGameScreen({ onBack }) {
 
     const bPick = bPickRef.current;
     setIsBattle(false);
-
     if (bPick === sid) {
       setIsDuel(true);
       setTimeout(() => startDuel(sid), 1200);
@@ -2514,10 +2646,12 @@ function MapGameScreen({ onBack }) {
   }
 
   // ── ANSWERING ──
-  function handleAnswer(idx, phase2) {
+  function handleAnswer(idx) {
     if (pAnsRef.current !== null || (rPhase !== "answering" && rPhase !== "battle")) return;
     setPAnswer(idx); pAnsRef.current = idx;
-    playSound(idx === qRef.current?.correct ? "correct" : "wrong");
+    const correct = idx === qRef.current?.correct;
+    playSound(correct ? "correct" : "wrong");
+    if (onlineModeRef.current) sendOnline("answer", { correct, ms: duelStartRef.current ? Date.now() - duelStartRef.current : null });
   }
 
   useEffect(() => {
@@ -2536,7 +2670,13 @@ function MapGameScreen({ onBack }) {
     else if (sid) msgs.push("Ты ответил неправильно.");
     if (bCorrect && bsid) { newTerr[bsid] = "bot"; msgs.push(`${botName} захватил землю! 🟡`); }
     else if (bsid) msgs.push(`${botName} не захватил землю.`);
-    terrRef.current = newTerr; setTerritories(newTerr); setRoundMsg(msgs.join(" · ")); setRPhase("round_result");
+    terrRef.current = newTerr; setTerritories(newTerr);
+    const msg = msgs.join(" · ");
+    setRoundMsg(msg); setRPhase("round_result");
+    // host broadcasts result to guest
+    if (onlineModeRef.current && myRoleRef.current === "host") {
+      sendOnline("round_result", { territories: newTerr, msg, confetti: pCorrect });
+    }
     if (Object.keys(newTerr).length >= 16) setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 2000);
   }
 
@@ -2552,18 +2692,31 @@ function MapGameScreen({ onBack }) {
     setBattleRound(0); battleRoundRef.current = 0;
     setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
     setRPhase("territory_select");
-    // bot pre-picks after short delay so player sees it appear
-    setTimeout(() => {
-      const allIds = Object.values(STATE_ID_MAP);
-      const unclaimed = allIds.filter(id => !terrRef.current[id]);
-      if (!unclaimed.length) return;
-      const bPick = unclaimed[Math.floor(Math.random() * unclaimed.length)];
-      setBotPick(bPick); bPickRef.current = bPick;
-      setBotPickRevealed(true);
-    }, 600);
+    if (onlineModeRef.current) {
+      // online: host signals guest to start next round
+      if (myRoleRef.current === "host") sendOnline("next_round", {});
+      // no bot pre-pick in online mode
+    } else {
+      // bot pre-picks after short delay
+      setTimeout(() => {
+        const allIds = Object.values(STATE_ID_MAP);
+        const unclaimed = allIds.filter(id => !terrRef.current[id]);
+        if (!unclaimed.length) return;
+        const bPick = unclaimed[Math.floor(Math.random() * unclaimed.length)];
+        setBotPick(bPick); bPickRef.current = bPick;
+        setBotPickRevealed(true);
+      }, 600);
+    }
   }
 
-  function restartGame() { terrRef.current = {}; setTerritories({}); setPhase("matchmaking"); setCdMatch(30); nextRound(); }
+  function restartGame() {
+    terrRef.current = {}; setTerritories({});
+    setOnlineMode(false); onlineModeRef.current = false;
+    setOnlineSetup("choice"); setMyRole(null); myRoleRef.current = null;
+    setRoomCode(""); setJoinInput("");
+    channelRef.current?.unsubscribe(); channelRef.current = null;
+    setPhase("matchmaking"); setCdMatch(5); nextRound();
+  }
 
   // auto-advance from round_result after 2.5s
   useEffect(() => {
@@ -2602,18 +2755,67 @@ function MapGameScreen({ onBack }) {
   `;
 
   // ── MATCHMAKING ──
-  if (phase === "matchmaking") return (
-    <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
-      <style>{ANIM_CSS}</style>
-      <button onClick={onBack} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Завоевание Германии</div>
-      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Ищем соперника онлайн...</div>
-      <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 36px", animation: "spin 1s linear infinite" }} />
-      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24 }}>Если никого нет — бот через <span style={{ color: "#7C5CFC", fontWeight: 700 }}>{cdMatch}</span> сек</div>
-      <button onClick={() => setPhase("playing")} style={{ background: "rgba(124,92,252,0.12)", border: "1px solid rgba(124,92,252,0.25)", color: "#a78bfa", borderRadius: 14, padding: "12px 28px", fontSize: 14, cursor: "pointer" }}>Играть с ботом сейчас</button>
-    </div>
-  );
+  if (phase === "matchmaking") {
+    // Online: create room
+    if (onlineSetup === "creating" || onlineSetup === "waiting") return (
+      <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
+        <style>{ANIM_CSS}</style>
+        <button onClick={() => { setOnlineSetup("choice"); channelRef.current?.unsubscribe(); }} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>🔗</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Твой код комнаты</div>
+        <div style={{ fontSize: 48, fontWeight: 900, color: "#7C5CFC", letterSpacing: 8, margin: "20px 0", fontFamily: "monospace" }}>{roomCode}</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Отправь этот код другу — он введёт его у себя</div>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 20px", animation: "spin 1s linear infinite" }} />
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Ждём соперника...</div>
+      </div>
+    );
+
+    // Online: join room
+    if (onlineSetup === "joining") return (
+      <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
+        <style>{ANIM_CSS}</style>
+        <button onClick={() => setOnlineSetup("choice")} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>🔑</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 24 }}>Введи код комнаты</div>
+        <input value={joinInput} onChange={e => setJoinInput(e.target.value.toUpperCase())} placeholder="ABCDE" maxLength={5}
+          style={{ width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(124,92,252,0.4)", borderRadius: 14, padding: "16px", fontSize: 28, fontWeight: 800, color: "#fff", textAlign: "center", letterSpacing: 6, marginBottom: 20, boxSizing: "border-box", fontFamily: "monospace" }} />
+        <button onClick={joinRoom} disabled={joinInput.length < 3}
+          style={{ width: "100%", background: joinInput.length >= 3 ? "#7C5CFC" : "rgba(255,255,255,0.08)", border: "none", borderRadius: 14, padding: "16px", fontSize: 16, fontWeight: 700, color: joinInput.length >= 3 ? "#fff" : "rgba(255,255,255,0.3)", cursor: joinInput.length >= 3 ? "pointer" : "default" }}>
+          Войти в комнату →
+        </button>
+      </div>
+    );
+
+    // Default: choice screen
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
+        <style>{ANIM_CSS}</style>
+        <button onClick={onBack} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Завоевание Германии</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>С кем сыграем?</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button onClick={() => { setOnlineSetup("creating"); createRoom(); }}
+            style={{ width: "100%", background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+            👥 Создать комнату для друга
+          </button>
+          <button onClick={() => setOnlineSetup("joining")}
+            style={{ width: "100%", background: "rgba(124,92,252,0.12)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, color: "#a78bfa", cursor: "pointer" }}>
+            🔑 Войти по коду
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>или</div>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+          </div>
+          <button onClick={() => setPhase("playing")}
+            style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.5)", cursor: "pointer" }}>
+            🤖 Играть с ботом
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── GAMEOVER ──
   if (phase === "gameover") {
@@ -3146,7 +3348,7 @@ export default function DuoPar() {
         {screen === "learn" && <LearnScreen onBack={() => setScreen("lobby")} />}
 
         {/* MAP GAME */}
-        {screen === "mapgame" && <MapGameScreen onBack={() => setScreen("lobby")} />}
+        {screen === "mapgame" && <MapGameScreen onBack={() => setScreen("lobby")} session={session} profile={profile} />}
 
         {/* SETUP */}
         {screen === "setup" && !needsPlacement && <SetupScreen langLevel={langLevel} onStart={startGame} onBack={() => setScreen("lobby")} />}
