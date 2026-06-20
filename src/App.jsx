@@ -189,6 +189,11 @@ function xpToNextLevel(xp) { return 200 - (xp % 200); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 // ── ПРОГРАММА ОБУЧЕНИЯ ───────────────────────────────────────
+const CURRICULUM_LEVELS = {
+  A1: { color: "#7C5CFC", label: "A1 · Начинающий" },
+  A2: { color: "#f59e0b", label: "A2 · Базовый" },
+};
+
 const CURRICULUM = [
   {
     id: "greetings",
@@ -332,6 +337,316 @@ const CURRICULUM = [
       { q: "«Das Ei» — это:", options: ["сыр", "молоко", "яйцо", "хлеб"], answer: 2 },
     ],
   },
+
+  // ── A1 продолжение ────────────────────────────────────────────
+  {
+    id: "professions",
+    title: "Профессии",
+    emoji: "💼",
+    level: "A1",
+    cards: [
+      { title: "Профессии", body: "der Arzt / die Ärztin — врач\nder Lehrer / die Lehrerin — учитель\nder Ingenieur — инженер\nder Koch / die Köchin — повар\nder Polizist — полицейский\ndie Krankenschwester — медсестра\nder Verkäufer — продавец\nder Student — студент" },
+      { title: "Как говорить о профессии", body: "Ich bin Lehrerin. — Я учительница.\nEr ist Arzt. — Он врач.\nSie arbeitet als Köchin. — Она работает поваром.\n\n💡 Перед профессией НЕТ артикля:\nIch bin Arzt. ✓ (не «ein Arzt»)\n\nWas bist du von Beruf? — Кем ты работаешь?" },
+    ],
+    exam: [
+      { q: "Как сказать «Я врач»?", options: ["Ich habe ein Arzt.", "Ich bin ein Arzt.", "Ich bin Arzt.", "Ich arbeite Arzt."], answer: 2 },
+      { q: "«Die Ärztin» — это:", options: ["медсестра", "врач-женщина", "учительница", "студентка"], answer: 1 },
+      { q: "Как спросить о профессии?", options: ["Was machst du?", "Was bist du von Beruf?", "Wo arbeitest du?", "Wie heißt du?"], answer: 1 },
+      { q: "«Der Koch» — это:", options: ["врач", "учитель", "повар", "продавец"], answer: 2 },
+      { q: "«Sie arbeitet als Lehrerin» значит:", options: ["Она учится", "Она работает учительницей", "Она была учительницей", "Она ищет работу"], answer: 1 },
+    ],
+  },
+  {
+    id: "weekdays",
+    title: "Дни недели",
+    emoji: "📅",
+    level: "A1",
+    cards: [
+      { title: "Дни недели", body: "der Montag — понедельник\nder Dienstag — вторник\nder Mittwoch — среда\nder Donnerstag — четверг\nder Freitag — пятница\nder Samstag — суббота\nder Sonntag — воскресенье" },
+      { title: "Как использовать дни", body: "Am Montag — в понедельник\nAm Wochenende — на выходных\nMontagmorgen — утро понедельника\n\n💡 Все дни мужского рода: der\nСокращения: Mo Di Mi Do Fr Sa So\n\nHeute ist Mittwoch. — Сегодня среда." },
+    ],
+    exam: [
+      { q: "Как по-немецки «пятница»?", options: ["Donnerstag", "Freitag", "Samstag", "Montag"], answer: 1 },
+      { q: "«Am Montag» значит:", options: ["в понедельник", "с понедельника", "до понедельника", "в прошлый понедельник"], answer: 0 },
+      { q: "Какой день идёт после Mittwoch?", options: ["Dienstag", "Donnerstag", "Freitag", "Montag"], answer: 1 },
+      { q: "«Das Wochenende» — это:", options: ["будни", "выходные", "праздник", "отпуск"], answer: 1 },
+      { q: "Какого рода все дни недели?", options: ["die", "das", "der", "разного рода"], answer: 2 },
+    ],
+  },
+  {
+    id: "months",
+    title: "Месяцы и сезоны",
+    emoji: "🗓️",
+    level: "A1",
+    cards: [
+      { title: "Месяцы", body: "Januar — январь\nFebruar — февраль\nMärz — март\nApril — апрель\nMai — май\nJuni — июнь\nJuli — июль\nAugust — август\nSeptember — сентябрь\nOktober — октябрь\nNovember — ноябрь\nDezember — декабрь" },
+      { title: "Времена года", body: "der Frühling — весна\nder Sommer — лето\nder Herbst — осень\nder Winter — зима\n\nim Sommer — летом\nim Winter — зимой\n\n💡 Im Januar = в январе\n(im = in dem, предлог + артикль)" },
+    ],
+    exam: [
+      { q: "Как по-немецки «март»?", options: ["Mai", "März", "April", "Februar"], answer: 1 },
+      { q: "«Im Sommer» значит:", options: ["весной", "осенью", "летом", "зимой"], answer: 2 },
+      { q: "«Der Herbst» — это:", options: ["весна", "лето", "осень", "зима"], answer: 2 },
+      { q: "Как сказать «в декабре»?", options: ["am Dezember", "im Dezember", "in Dezember", "der Dezember"], answer: 1 },
+      { q: "Какой месяц идёт после Juli?", options: ["Juni", "September", "August", "Oktober"], answer: 2 },
+    ],
+  },
+  {
+    id: "time",
+    title: "Который час",
+    emoji: "🕐",
+    level: "A1",
+    cards: [
+      { title: "Как спросить время", body: "Wie viel Uhr ist es? — Который час?\nWie spät ist es? — Сколько времени?\n\nEs ist... — Сейчас...\nein Uhr — час\nzwei Uhr — два часа\ndrei Uhr — три часа\nzwölf Uhr — двенадцать часов" },
+      { title: "Минуты и части дня", body: "Es ist halb drei. — Половина третьего (2:30)\nEs ist Viertel nach vier. — Четверть пятого (4:15)\nEs ist Viertel vor fünf. — Без четверти пять (4:45)\n\n💡 halb drei = половина ДО трёх = 2:30\nОтличается от русского!" },
+    ],
+    exam: [
+      { q: "Как спросить «который час»?", options: ["Was ist die Zeit?", "Wie viel Uhr ist es?", "Wann ist es?", "Um wie Uhr?"], answer: 1 },
+      { q: "«Es ist halb drei» — это:", options: ["3:00", "3:30", "2:30", "2:15"], answer: 2 },
+      { q: "«Viertel nach vier» — это:", options: ["3:45", "4:15", "4:45", "5:15"], answer: 1 },
+      { q: "«Es ist zwei Uhr» значит:", options: ["два часа", "второй час", "в два часа", "около двух"], answer: 0 },
+      { q: "«Viertel vor fünf» — это:", options: ["5:15", "4:45", "5:45", "4:15"], answer: 1 },
+    ],
+  },
+  {
+    id: "clothes",
+    title: "Одежда",
+    emoji: "👕",
+    level: "A1",
+    cards: [
+      { title: "Предметы одежды", body: "das T-Shirt — футболка\ndie Hose — брюки\ndas Kleid — платье\nder Rock — юбка\ndie Jacke — куртка\nder Mantel — пальто\ndie Schuhe — туфли / обувь\ndie Socken — носки\nder Hut — шляпа\ndie Mütze — шапка" },
+      { title: "Покупка одежды", body: "Ich suche... — Я ищу...\nWelche Größe? — Какой размер?\nKann ich das anprobieren? — Можно примерить?\nDas passt gut! — Хорошо подходит!\nDas ist zu groß/klein. — Это слишком большое/маленькое.\nIch nehme es. — Я это возьму." },
+    ],
+    exam: [
+      { q: "«Die Jacke» — это:", options: ["платье", "юбка", "куртка", "пальто"], answer: 2 },
+      { q: "Как сказать «Можно примерить»?", options: ["Ich nehme es.", "Kann ich das anprobieren?", "Welche Größe?", "Das passt gut!"], answer: 1 },
+      { q: "«Der Rock» — это:", options: ["брюки", "рубашка", "юбка", "шляпа"], answer: 2 },
+      { q: "«Das passt gut» значит:", options: ["Это дорого", "Хорошо подходит", "Слишком маленькое", "Мне не нравится"], answer: 1 },
+      { q: "«Die Schuhe» — это:", options: ["носки", "шапка", "обувь", "перчатки"], answer: 2 },
+    ],
+  },
+  {
+    id: "health",
+    title: "Тело и здоровье",
+    emoji: "🏥",
+    level: "A1",
+    cards: [
+      { title: "Части тела", body: "der Kopf — голова\ndas Auge — глаз\ndie Nase — нос\nder Mund — рот\ndas Ohr — ухо\nder Arm — рука (рука до плеча)\ndie Hand — рука (кисть)\ndas Bein — нога\nder Fuß — стопа\nder Bauch — живот\nder Rücken — спина" },
+      { title: "У врача", body: "Ich bin krank. — Я болен.\nMir ist schlecht. — Мне плохо.\nIch habe Kopfschmerzen. — У меня болит голова.\nIch habe Fieber. — У меня температура.\nRufen Sie einen Arzt! — Вызовите врача!\n\n💡 _schmerzen = боль в...\nBauchschmerzen — боль в животе\nHalsschmerzen — боль в горле" },
+    ],
+    exam: [
+      { q: "«Der Kopf» — это:", options: ["рука", "нога", "голова", "спина"], answer: 2 },
+      { q: "«Ich habe Fieber» значит:", options: ["у меня насморк", "у меня температура", "я устал", "я голоден"], answer: 1 },
+      { q: "«Mir ist schlecht» значит:", options: ["мне скучно", "мне плохо", "мне холодно", "мне жарко"], answer: 1 },
+      { q: "«Halsschmerzen» — это боль в:", options: ["голове", "животе", "горле", "спине"], answer: 2 },
+      { q: "«Das Bein» — это:", options: ["рука", "нога", "живот", "глаз"], answer: 1 },
+    ],
+  },
+  {
+    id: "shopping",
+    title: "В магазине",
+    emoji: "🛒",
+    level: "A1",
+    cards: [
+      { title: "Покупки", body: "Was kostet das? — Сколько это стоит?\nWie viel kostet...? — Сколько стоит...?\nDas ist zu teuer. — Это слишком дорого.\nIch nehme das. — Я это возьму.\nHaben Sie...? — У вас есть...?\nWo ist die Kasse? — Где касса?\nEin Pfund — полкило (500г)" },
+      { title: "Деньги и цены", body: "der Euro — евро\nder Cent — цент\nEs kostet 5 Euro. — Это стоит 5 евро.\nBezahlen Sie bar oder mit Karte?\nВы платите наличными или картой?\n\nbar — наличными\nmit Karte — картой\nDas Wechselgeld — сдача" },
+    ],
+    exam: [
+      { q: "Как спросить «Сколько стоит?»", options: ["Was haben Sie?", "Was kostet das?", "Wo ist das?", "Was möchten Sie?"], answer: 1 },
+      { q: "«Wo ist die Kasse?» значит:", options: ["Где выход?", "Где касса?", "Где товар?", "Где магазин?"], answer: 1 },
+      { q: "«Bar bezahlen» значит:", options: ["платить картой", "платить наличными", "не платить", "платить онлайн"], answer: 1 },
+      { q: "«Das ist zu teuer» значит:", options: ["Это дёшево", "Это бесплатно", "Это слишком дорого", "Это хорошая цена"], answer: 2 },
+      { q: "«Das Wechselgeld» — это:", options: ["цена", "скидка", "сдача", "чек"], answer: 2 },
+    ],
+  },
+  {
+    id: "transport",
+    title: "Транспорт",
+    emoji: "🚌",
+    level: "A1",
+    cards: [
+      { title: "Виды транспорта", body: "der Bus — автобус\ndie U-Bahn — метро\ndie S-Bahn — электричка\nder Zug — поезд\ndas Auto — машина\ndas Fahrrad — велосипед\ndas Taxi — такси\ndas Flugzeug — самолёт\nzu Fuß — пешком" },
+      { title: "На вокзале и остановке", body: "Wo fährt der Bus ab? — Откуда отходит автобус?\nEinen Fahrschein, bitte. — Один билет, пожалуйста.\nWann kommt der Zug an? — Когда прибывает поезд?\nEin Ticket nach Berlin. — Билет до Берлина.\nGleis 3 — третий путь (платформа)\numsteigen — делать пересадку" },
+    ],
+    exam: [
+      { q: "«Die U-Bahn» — это:", options: ["автобус", "трамвай", "метро", "поезд"], answer: 2 },
+      { q: "«Zu Fuß gehen» значит:", options: ["ехать на машине", "идти пешком", "ехать на велосипеде", "бежать"], answer: 1 },
+      { q: "«Umsteigen» значит:", options: ["купить билет", "опоздать", "делать пересадку", "выйти из поезда"], answer: 2 },
+      { q: "«Das Flugzeug» — это:", options: ["поезд", "корабль", "самолёт", "автобус"], answer: 2 },
+      { q: "«Wann kommt der Zug an?» значит:", options: ["Откуда едет поезд?", "Когда прибывает поезд?", "Где поезд?", "Как долго едет поезд?"], answer: 1 },
+    ],
+  },
+  {
+    id: "hobbies",
+    title: "Хобби и свободное время",
+    emoji: "🎮",
+    level: "A1",
+    cards: [
+      { title: "Хобби", body: "lesen — читать\nmusik hören — слушать музыку\nfernsehen — смотреть телевизор\nsport treiben — заниматься спортом\nkochen — готовить\nreisen — путешествовать\nzeichnen — рисовать\ntanzen — танцевать\nsingen — петь\nspielen — играть" },
+      { title: "Как говорить о хобби", body: "Ich lese gern. — Я люблю читать.\nIch spiele gern Fußball. — Я люблю играть в футбол.\nIch mag Musik. — Мне нравится музыка.\n\n💡 gern = охотно, с удовольствием\nIch ... gern = Я люблю...\n\nWas machst du in der Freizeit?\nЧто ты делаешь в свободное время?" },
+    ],
+    exam: [
+      { q: "«Ich lese gern» значит:", options: ["Я умею читать", "Я люблю читать", "Я читаю сейчас", "Я буду читать"], answer: 1 },
+      { q: "«Fernsehen» — это:", options: ["читать", "готовить", "смотреть телевизор", "путешествовать"], answer: 2 },
+      { q: "«Sport treiben» значит:", options: ["смотреть спорт", "заниматься спортом", "говорить о спорте", "любить спорт"], answer: 1 },
+      { q: "Как сказать «Я люблю танцевать»?", options: ["Ich tanze nicht.", "Ich kann tanzen.", "Ich tanze gern.", "Ich möchte tanzen."], answer: 2 },
+      { q: "«Die Freizeit» — это:", options: ["работа", "учёба", "свободное время", "выходные"], answer: 2 },
+    ],
+  },
+  {
+    id: "modal_verbs",
+    title: "Модальные глаголы",
+    emoji: "🔑",
+    level: "A1",
+    cards: [
+      { title: "können, müssen, wollen", body: "können — мочь, уметь\nIch kann schwimmen. — Я умею плавать.\n\nmüssen — должен, нужно\nIch muss arbeiten. — Мне нужно работать.\n\nwollen — хотеть\nIch will nach Berlin. — Я хочу в Берлин.\n\ndürfen — иметь право, разрешено\nDarf ich rauchen? — Можно курить?" },
+      { title: "Формы модальных глаголов", body: "können: ich kann, du kannst, er/sie kann\nmüssen: ich muss, du musst, er/sie muss\nwollen: ich will, du willst, er/sie will\ndürfen: ich darf, du darfst, er/sie darf\n\n💡 Инфинитив идёт В КОНЕЦ предложения:\nIch kann heute nicht kommen.\nМне не удастся прийти сегодня." },
+    ],
+    exam: [
+      { q: "«Ich kann Deutsch sprechen» значит:", options: ["Я хочу говорить по-немецки", "Я могу говорить по-немецки", "Я должен говорить по-немецки", "Я не говорю по-немецки"], answer: 1 },
+      { q: "«Du ___ das Buch lesen» (должен) — вставь:", options: ["kannst", "willst", "musst", "darfst"], answer: 2 },
+      { q: "Где стоит инфинитив с модальным глаголом?", options: ["В начале", "На втором месте", "В конце", "После подлежащего"], answer: 2 },
+      { q: "«Darf ich...?» используют когда:", options: ["хотят что-то", "спрашивают разрешение", "описывают умение", "говорят об обязанности"], answer: 1 },
+      { q: "«Ich will schlafen» значит:", options: ["Я должен спать", "Я умею спать", "Я хочу спать", "Я могу спать"], answer: 2 },
+    ],
+  },
+
+  // ── A2 ────────────────────────────────────────────────────────
+  {
+    id: "perfekt",
+    title: "Прошедшее время (Perfekt)",
+    emoji: "⏰",
+    level: "A2",
+    cards: [
+      { title: "Как образуется Perfekt", body: "haben/sein + Partizip II\n\nIch habe gegessen. — Я поел.\nIch bin gegangen. — Я ушёл.\n\nПравило haben:\nIch habe gemacht — я сделал\nIch habe gekauft — я купил\n\nПравило sein (движение/изменение):\nIch bin gefahren — я поехал\nIch bin aufgestanden — я встал" },
+      { title: "Partizip II — как образовать", body: "Слабые глаголы:\nge- + основа + -(e)t\nmachen → gemacht\nkaufen → gekauft\narbeiten → gearbeitet\n\nСильные глаголы (меняют корень):\ngehen → gegangen\nessen → gegessen\nschreiben → geschrieben\nsehen → gesehen\n\n💡 Сильные глаголы надо учить наизусть!" },
+    ],
+    exam: [
+      { q: "«Ich habe gegessen» — это:", options: ["Я ем", "Я поел", "Я буду есть", "Я хочу есть"], answer: 1 },
+      { q: "С каким вспомогательным глаголом используется «gehen» в Perfekt?", options: ["haben", "sein", "werden", "machen"], answer: 1 },
+      { q: "Partizip II от «machen» — это:", options: ["gemacht", "gemachen", "macht", "mächte"], answer: 0 },
+      { q: "«Ich bin gefahren» значит:", options: ["Я еду", "Я поехал", "Я хочу ехать", "Я умею ехать"], answer: 1 },
+      { q: "Partizip II слабых глаголов образуется по схеме:", options: ["ge- + основа + -en", "ge- + основа + -(e)t", "основа + -t", "ge- + основа"], answer: 1 },
+    ],
+  },
+  {
+    id: "dativ",
+    title: "Дательный падеж (Dativ)",
+    emoji: "📦",
+    level: "A2",
+    cards: [
+      { title: "Что такое Dativ", body: "Dativ = кому? чему?\n\nder → dem (м.р.)\ndie → der (ж.р.)\ndas → dem (ср.р.)\ndie (мн.ч.) → den + -n\n\nПримеры:\nIch helfe dem Mann. — Я помогаю мужчине.\nIch gebe der Frau das Buch. — Я даю женщине книгу.\nIch danke dem Kind. — Я благодарю ребёнка." },
+      { title: "Предлоги с Dativ", body: "Предлоги которые ВСЕГДА требуют Dativ:\nmit — с (mit dem Bus)\nnach — после / в (nach der Schule)\nbei — у / при (bei meiner Mutter)\nvon — от / из (von dem Lehrer)\nzu — к / до (zu Hause)\naus — из (aus Deutschland)\nseit — с (с тех пор как)\naußer — кроме" },
+    ],
+    exam: [
+      { q: "«Dem» — это Dativ от:", options: ["die", "der/das", "die (мн.ч.)", "ein"], answer: 1 },
+      { q: "«Ich helfe ___ Frau» — вставь артикль в Dativ:", options: ["die", "der", "das", "dem"], answer: 1 },
+      { q: "Какой предлог ВСЕГДА требует Dativ?", options: ["durch", "für", "mit", "ohne"], answer: 2 },
+      { q: "«Zu Hause» значит:", options: ["домой", "из дома", "дома", "у дома"], answer: 2 },
+      { q: "«Seit» с Dativ означает:", options: ["после", "с (начало действия до сейчас)", "из", "у"], answer: 1 },
+    ],
+  },
+  {
+    id: "akkusativ",
+    title: "Винительный падеж (Akkusativ)",
+    emoji: "🎯",
+    level: "A2",
+    cards: [
+      { title: "Что такое Akkusativ", body: "Akkusativ = кого? что?\n\nМеняется только мужской род:\nder → den\n\ndie → die (не меняется)\ndas → das (не меняется)\n\nПримеры:\nIch sehe den Mann. — Я вижу мужчину.\nIch kaufe die Tasche. — Я покупаю сумку.\nIch lese das Buch. — Я читаю книгу.\nein → einen (м.р.)" },
+      { title: "Предлоги с Akkusativ", body: "Предлоги которые ВСЕГДА требуют Akkusativ:\ndurch — через (durch den Park)\nfür — для (für mich)\ngegen — против (gegen den Wind)\nohne — без (ohne dich)\num — вокруг (um die Ecke)\n\n💡 Запомни: durch-für-gegen-ohne-um\n= все с Akkusativ!" },
+    ],
+    exam: [
+      { q: "«Ich sehe ___ Mann» — вставь артикль в Akkusativ:", options: ["der", "dem", "den", "des"], answer: 2 },
+      { q: "В Akkusativ меняется только:", options: ["мужской род", "женский род", "средний род", "все роды"], answer: 0 },
+      { q: "«Für» требует:", options: ["Nominativ", "Dativ", "Akkusativ", "Genitiv"], answer: 2 },
+      { q: "«Ohne dich» значит:", options: ["с тобой", "для тебя", "против тебя", "без тебя"], answer: 3 },
+      { q: "«Einen» — это Akkusativ от:", options: ["die", "das", "ein (м.р.)", "kein"], answer: 2 },
+    ],
+  },
+  {
+    id: "separable_verbs",
+    title: "Разделяемые глаголы",
+    emoji: "✂️",
+    level: "A2",
+    cards: [
+      { title: "Что такое разделяемые глаголы", body: "Приставка отделяется и идёт В КОНЕЦ:\n\naufstehen — вставать\nIch stehe um 7 auf. — Я встаю в 7.\n\nanrufen — звонить\nIch rufe dich an. — Я тебе позвоню.\n\neinkaufen — делать покупки\nIch kaufe heute ein. — Сегодня я иду за покупками.\n\nabfahren — отправляться\nDer Zug fährt um 10 ab." },
+      { title: "Частые разделяемые глаголы", body: "aufmachen — открывать\nzumachen — закрывать\nankommen — прибывать\naussteigen — выходить (из транспорта)\neinsteigen — входить (в транспорт)\nfernsehen — смотреть телевизор\naufräumen — убирать (комнату)\nmitnehmen — брать с собой\n\n💡 В инфинитиве и Partizip II приставка сохраняется!" },
+    ],
+    exam: [
+      { q: "«Ich stehe um 7 ___» (aufstehen) — куда идёт приставка?", options: ["В начало", "После подлежащего", "В конец предложения", "После глагола"], answer: 2 },
+      { q: "«Anrufen» значит:", options: ["приходить", "звонить", "отвечать", "кричать"], answer: 1 },
+      { q: "«Der Zug fährt ab» — это форма глагола:", options: ["anfahren", "abfahren", "auffahren", "einfahren"], answer: 1 },
+      { q: "«Aussteigen» значит:", options: ["входить в транспорт", "выходить из транспорта", "пересаживаться", "опаздывать"], answer: 1 },
+      { q: "«Ich kaufe heute ein» — это форма глагола:", options: ["ankaufen", "aufkaufen", "einkaufen", "verkaufen"], answer: 2 },
+    ],
+  },
+  {
+    id: "weather",
+    title: "Погода",
+    emoji: "🌤️",
+    level: "A2",
+    cards: [
+      { title: "Погода", body: "die Sonne — солнце\nder Regen — дождь\nder Schnee — снег\nder Wind — ветер\nder Nebel — туман\ndas Gewitter — гроза\ndie Wolke — облако\n\nEs ist sonnig. — Солнечно.\nEs regnet. — Идёт дождь.\nEs schneit. — Идёт снег.\nEs ist windig. — Ветрено." },
+      { title: "Температура и прогноз", body: "Wie ist das Wetter heute? — Какая сегодня погода?\nEs ist warm/kalt/heiß. — Тепло/холодно/жарко.\nEs sind 20 Grad. — 20 градусов.\nDer Wetterbericht sagt... — Прогноз говорит...\n\nheiß — жарко (выше 30°)\nwarm — тепло (15-25°)\nkühl — прохладно (10-15°)\nkalt — холодно (ниже 10°)" },
+    ],
+    exam: [
+      { q: "«Es regnet» значит:", options: ["Идёт снег", "Идёт дождь", "Ветрено", "Солнечно"], answer: 1 },
+      { q: "«Das Gewitter» — это:", options: ["туман", "облако", "гроза", "ветер"], answer: 2 },
+      { q: "Как спросить о погоде?", options: ["Was ist Wetter?", "Wie ist das Wetter?", "Wann ist Wetter?", "Wo ist das Wetter?"], answer: 1 },
+      { q: "«Es ist heiß» значит:", options: ["холодно", "прохладно", "тепло", "жарко"], answer: 3 },
+      { q: "«Es schneit» значит:", options: ["Идёт дождь", "Идёт снег", "Туман", "Ветер"], answer: 1 },
+    ],
+  },
+  {
+    id: "travel",
+    title: "Путешествия",
+    emoji: "✈️",
+    level: "A2",
+    cards: [
+      { title: "В отеле", body: "das Hotel — отель\ndas Zimmer — номер\ndie Rezeption — ресепшн\nIch habe ein Zimmer reserviert. — Я забронировал номер.\nFür wie viele Nächte? — На сколько ночей?\nder Schlüssel — ключ\ndas Frühstück — завтрак\nIst das Frühstück inklusive? — Завтрак включён?" },
+      { title: "Путешествие", body: "der Reisepass — паспорт\ndas Visum — виза\nder Koffer — чемодан\ndie Unterkunft — жильё\ndie Sehenswürdigkeit — достопримечательность\nbesichtigen — осматривать\nder Stadtplan — карта города\nWo ist...? — Где находится...?" },
+    ],
+    exam: [
+      { q: "«Ich habe ein Zimmer reserviert» значит:", options: ["Я ищу номер", "Я забронировал номер", "Я хочу номер", "Мне нужен номер"], answer: 1 },
+      { q: "«Das Frühstück ist inklusive» значит:", options: ["завтрак платный", "завтрак включён", "завтрак не предоставляется", "завтрак опциональный"], answer: 1 },
+      { q: "«Die Sehenswürdigkeit» — это:", options: ["отель", "ресторан", "достопримечательность", "карта"], answer: 2 },
+      { q: "«Der Reisepass» — это:", options: ["билет", "виза", "паспорт", "чемодан"], answer: 2 },
+      { q: "«Besichtigen» значит:", options: ["бронировать", "путешествовать", "осматривать", "фотографировать"], answer: 2 },
+    ],
+  },
+  {
+    id: "adjectives",
+    title: "Сравнение прилагательных",
+    emoji: "📊",
+    level: "A2",
+    cards: [
+      { title: "Сравнительная степень", body: "Добавляем -er:\nschnell → schneller (быстрее)\nklein → kleiner (меньше)\nalt → älter (старше) ← умлаут!\ngroß → größer (больше)\n\nA ist ... als B — A ... чем B:\nIch bin größer als du. — Я выше тебя.\nDer Zug ist schneller als der Bus.\nПоезд быстрее автобуса." },
+      { title: "Превосходная степень", body: "am ...-sten / der/die/das ...-ste\n\nschnell → am schnellsten (быстрее всего)\ngroß → am größten (самый большой)\nalt → am ältesten (самый старый)\n\nНеправильные:\ngut → besser → am besten\nviel → mehr → am meisten\ngern → lieber → am liebsten\n\n💡 gut/viel/gern — учи отдельно!" },
+    ],
+    exam: [
+      { q: "Сравнительная степень от «schnell» — это:", options: ["schnellst", "schneller", "schnellste", "mehr schnell"], answer: 1 },
+      { q: "«Ich bin größer als du» значит:", options: ["Я такой же высокий как ты", "Я ниже тебя", "Я выше тебя", "Ты выше меня"], answer: 2 },
+      { q: "Превосходная степень от «gut» — это:", options: ["guter", "am gutsten", "am besten", "am gutensten"], answer: 2 },
+      { q: "«Lieber» — это сравнительная степень от:", options: ["lieb", "gern", "viel", "gut"], answer: 1 },
+      { q: "«Am ältesten» — это превосходная степень от:", options: ["alt", "älter", "alle", "alles"], answer: 0 },
+    ],
+  },
+  {
+    id: "subordinate",
+    title: "Придаточные предложения",
+    emoji: "🔗",
+    level: "A2",
+    cards: [
+      { title: "Союзы weil, dass, wenn", body: "weil — потому что (глагол в конец!)\nIch lerne Deutsch, weil ich in Deutschland wohne.\nЯ учу немецкий, потому что живу в Германии.\n\ndass — что\nIch denke, dass das richtig ist.\nЯ думаю, что это правильно.\n\nwenn — когда / если\nWenn ich Zeit habe, lese ich.\nКогда у меня есть время, я читаю." },
+      { title: "Порядок слов в придаточном", body: "В придаточном предложении глагол идёт В КОНЕЦ:\n\nweil ich müde BIN (не «bin ich»)\ndass er kommen WILL\nwenn sie Zeit HAT\n\n💡 Главное предложение + запятая + придаточное\n\nIch bleibe zu Hause, weil es regnet.\nЯ остаюсь дома, потому что идёт дождь." },
+    ],
+    exam: [
+      { q: "«Ich lerne Deutsch, ___ ich in Deutschland wohne.» (потому что)", options: ["wenn", "dass", "weil", "aber"], answer: 2 },
+      { q: "Где в придаточном предложении стоит глагол?", options: ["На первом месте", "На втором месте", "В конце", "После союза"], answer: 2 },
+      { q: "«Wenn» означает:", options: ["потому что", "что", "когда/если", "хотя"], answer: 2 },
+      { q: "«Ich denke, ___ du recht hast.»", options: ["weil", "wenn", "dass", "ob"], answer: 2 },
+      { q: "Что нужно поставить между главным и придаточным предложением?", options: ["точку", "запятую", "двоеточие", "ничего"], answer: 1 },
+    ],
+  },
 ];
 
 function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
@@ -351,29 +666,36 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
   return (
     <div style={{ paddingTop: 40 }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
-      <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>Программа A1</h1>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>Программа</h1>
       <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {CURRICULUM.map((topic, i) => {
-          const done = completedTopics.includes(topic.id);
-          const unlocked = i === 0 || completedTopics.includes(CURRICULUM[i - 1].id);
+      {["A1", "A2"].map(lvl => {
+        const topics = CURRICULUM.filter(t => t.level === lvl);
+        const lvlColor = CURRICULUM_LEVELS[lvl].color;
+        return (
+          <div key={lvl} style={{ marginBottom: 32 }}>
+            <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>{CURRICULUM_LEVELS[lvl].label}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {topics.map((topic) => {
+                const i = CURRICULUM.indexOf(topic);
+                const done = completedTopics.includes(topic.id);
+                const unlocked = i === 0 || completedTopics.includes(CURRICULUM[i - 1].id);
           return (
             <div key={topic.id} style={{ background: done ? "rgba(16,185,129,0.08)" : unlocked ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)", border: `1px solid ${done ? "rgba(16,185,129,0.3)" : unlocked ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}`, borderRadius: 18, padding: "18px 20px", opacity: unlocked ? 1 : 0.45 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: unlocked && !done ? 14 : 0 }}>
                 <div style={{ fontSize: 28 }}>{done ? "✅" : unlocked ? topic.emoji : "🔒"}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{i + 1}. {topic.title}</div>
-                  <div style={{ fontSize: 12, color: done ? "#10b981" : "rgba(255,255,255,0.35)", marginTop: 2 }}>{done ? "Пройдено" : unlocked ? `${topic.cards.length} карточки · ${topic.exam.length} вопросов` : "Заблокировано"}</div>
+                  <div style={{ fontSize: 12, color: done ? "#10b981" : "rgba(255,255,255,0.35)", marginTop: 2 }}>{done ? "Пройдено" : unlocked ? "Доступно" : "Заблокировано"}</div>
                 </div>
               </div>
               {unlocked && !done && (
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setActiveTopicId(topic.id); setMode("learn"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  <button onClick={() => { setActiveTopicId(topic.id); setMode("learn"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: lvlColor, color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                     📖 Учить
                   </button>
                   <button onClick={() => { setActiveTopicId(topic.id); setMode("exam"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                    ⚡ Сдать экзамен
+                    ⚡ Экзамен
                   </button>
                 </div>
               )}
@@ -385,7 +707,10 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
             </div>
           );
         })}
-      </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
