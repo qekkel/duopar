@@ -390,29 +390,116 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
   );
 }
 
+function parseFlashcards(topic) {
+  const cards = [];
+  topic.cards.forEach(card => {
+    const lines = card.body.split("\n").filter(l => l.includes(" — ") && !l.startsWith("💡") && !l.startsWith("⚠️"));
+    lines.forEach(line => {
+      const [de, ru] = line.split(" — ");
+      if (de && ru) cards.push({ de: de.trim(), ru: ru.trim(), section: card.title });
+    });
+  });
+  return cards;
+}
+
 function TopicLearnScreen({ topic, onBack, onStartExam }) {
-  const [cardIndex, setCardIndex] = useState(0);
-  const card = topic.cards[cardIndex];
-  const isLast = cardIndex === topic.cards.length - 1;
+  const flashcards = parseFlashcards(topic);
+  const [idx, setIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [known, setKnown] = useState([]);
+  const [unknown, setUnknown] = useState([]);
+  const [queue, setQueue] = useState(() => [...flashcards]);
+  const [done, setDone] = useState(false);
+
+  const card = queue[idx];
+
+  function answer(isKnown) {
+    playSound(isKnown ? "correct" : "wrong");
+    if (isKnown) setKnown(k => [...k, card]);
+    else setUnknown(u => [...u, card]);
+
+    const next = idx + 1;
+    if (next < queue.length) { setIdx(next); setFlipped(false); }
+    else {
+      const retry = unknown.concat(!isKnown ? [card] : []);
+      if (retry.length > 0) {
+        setQueue(retry);
+        setIdx(0);
+        setFlipped(false);
+        setUnknown([]);
+      } else {
+        setDone(true);
+      }
+    }
+  }
+
+  if (flashcards.length === 0) {
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
+        <div style={{ textAlign: "center", paddingTop: 60 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>{topic.emoji}</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 24 }}>{topic.title}</div>
+          <button onClick={onStartExam} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>⚡ Сдать экзамен</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (done) {
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center" }}>
+        <div style={{ fontSize: 56, marginBottom: 16 }}>🧠</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Слова изучены!</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>{known.length + unknown.length} карточек · все знаешь</div>
+        <button onClick={onStartExam} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>⚡ Сдать экзамен!</button>
+      </div>
+    );
+  }
+
+  const progress = (known.length) / (known.length + queue.length - idx + (unknown.length));
 
   return (
     <div style={{ paddingTop: 40 }}>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
-      <div style={{ fontSize: 12, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{topic.emoji} {topic.title}</div>
-      <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
-        {topic.cards.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= cardIndex ? "#7C5CFC" : "rgba(255,255,255,0.1)" }} />)}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0 }}>← Назад</button>
+        <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+          <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${Math.round(progress * 100)}%`, transition: "width 0.3s" }} />
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{known.length}/{known.length + queue.length - idx}</div>
       </div>
-      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "28px 24px", minHeight: 220, marginBottom: 20 }}>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 18 }}>{card.title}</div>
-        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 2, whiteSpace: "pre-line" }}>{card.body}</div>
+
+      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{topic.emoji} {topic.title}</div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 24 }}>{card.section}</div>
+
+      <div onClick={() => setFlipped(f => !f)} style={{ background: flipped ? "rgba(124,92,252,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${flipped ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 24, minHeight: 220, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 32, marginBottom: 20, transition: "all 0.25s", textAlign: "center" }}>
+        {!flipped ? (
+          <>
+            <div style={{ fontSize: 36, fontWeight: 900, color: "#fff", marginBottom: 16 }}>{card.de}</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>нажми чтобы увидеть перевод</div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 22, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>{card.de}</div>
+            <div style={{ fontSize: 36, fontWeight: 900, color: "#a78bfa" }}>{card.ru}</div>
+          </>
+        )}
       </div>
-      <div style={{ display: "flex", gap: 10 }}>
-        {cardIndex > 0 && <button onClick={() => setCardIndex(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Назад</button>}
-        {!isLast
-          ? <button onClick={() => setCardIndex(i => i + 1)} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Далее →</button>
-          : <button onClick={onStartExam} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>⚡ Сдать экзамен!</button>
-        }
-      </div>
+
+      {flipped ? (
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => answer(false)} style={{ flex: 1, padding: "16px", borderRadius: 16, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+            😅 Не знал
+          </button>
+          <button onClick={() => answer(true)} style={{ flex: 1, padding: "16px", borderRadius: 16, background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+            ✅ Знал!
+          </button>
+        </div>
+      ) : (
+        <button onClick={() => setFlipped(true)} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+          Показать перевод
+        </button>
+      )}
     </div>
   );
 }
