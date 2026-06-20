@@ -2792,9 +2792,10 @@ function MapGameScreen({ onBack, session, profile }) {
   useEffect(() => {
     if (rPhase !== "territory_select") return;
     const allIds = Object.values(STATE_ID_MAP);
-    const unclaimed = allIds.filter(id => !terrRef.current[id]);
-    if (unclaimed.length !== 1) return;
-    const lastId = unclaimed[0];
+    // selectable = unclaimed + bot territories (player can attack both)
+    const selectable = allIds.filter(id => !terrRef.current[id] || terrRef.current[id] === "bot");
+    if (selectable.length !== 1) return;
+    const lastId = selectable[0];
     setAutoPickTerr(lastId);
     const t = setTimeout(() => {
       setAutoPickTerr(null);
