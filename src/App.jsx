@@ -2575,7 +2575,7 @@ function MapGameScreen({ onBack, session, profile }) {
       setTerritories(newTerr);
       setRoundMsg(msg);
       setRPhase("round_result");
-      if (Object.keys(newTerr).length >= 16) setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 2200);
+      checkGameOver(newTerr);
       return;
     }
     loadBattleQuestion(nextR);
@@ -2650,7 +2650,7 @@ function MapGameScreen({ onBack, session, profile }) {
     else if (bCorrect) { newTerr[sid] = "bot"; msg = `${botName} ответил правильно и захватил землю!`; }
     else { msg = "Никто не ответил правильно — земля осталась свободной."; }
     terrRef.current = newTerr; setTerritories(newTerr); setRoundMsg(msg); setRPhase("round_result");
-    if (Object.keys(newTerr).length >= 16) setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 2000);
+    checkGameOver(newTerr);
   }
 
   // ── TOPIC SELECT ──
@@ -2727,10 +2727,24 @@ function MapGameScreen({ onBack, session, profile }) {
     if (onlineModeRef.current && myRoleRef.current === "host") {
       sendOnline("round_result", { territories: newTerr, msg, confetti: pCorrect });
     }
-    if (Object.keys(newTerr).length >= 16) setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 2000);
+    checkGameOver(newTerr);
+  }
+
+  function checkGameOver(terr) {
+    const allIds = Object.values(STATE_ID_MAP);
+    // game over when no territory is selectable (unclaimed or bot-owned)
+    const selectable = allIds.filter(id => !terr[id] || terr[id] === "bot");
+    if (selectable.length === 0) {
+      setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 1800);
+      return true;
+    }
+    return false;
   }
 
   function nextRound() {
+    // check if anything left to play
+    if (checkGameOver(terrRef.current)) return;
+
     setPlayerPick(null); pPickRef.current = null;
     setBotPick(null); bPickRef.current = null;
     setBotPickRevealed(false);
@@ -2744,11 +2758,8 @@ function MapGameScreen({ onBack, session, profile }) {
     setTopicTurn("player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
     setRPhase("territory_select");
     if (onlineModeRef.current) {
-      // online: host signals guest to start next round
       if (myRoleRef.current === "host") sendOnline("next_round", {});
-      // no bot pre-pick in online mode
     } else {
-      // bot pre-picks after short delay
       setTimeout(() => {
         const allIds = Object.values(STATE_ID_MAP);
         const unclaimed = allIds.filter(id => !terrRef.current[id]);
