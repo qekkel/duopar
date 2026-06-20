@@ -1869,7 +1869,7 @@ function PartnerBubble({ answered, isCorrect }) {
 }
 
 // ── SETUP SCREEN ──────────────────────────────────────────────
-function SetupScreen({ langLevel, onStart }) {
+function SetupScreen({ langLevel, onStart, onBack }) {
   const available = CATEGORIES_BY_LEVEL[langLevel] || CATEGORIES_BY_LEVEL["A1"];
   const [selected, setSelected] = useState(new Set(available));
 
@@ -1882,7 +1882,8 @@ function SetupScreen({ langLevel, onStart }) {
   }
 
   return (
-    <div style={{ paddingTop: 60 }}>
+    <div style={{ paddingTop: 40 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
       <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · {langLevel}</div>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 20px" }}>Новая игра</h1>
 
@@ -2316,7 +2317,7 @@ export default function DuoPar() {
         {screen === "learn" && <LearnScreen onBack={() => setScreen("lobby")} />}
 
         {/* SETUP */}
-        {screen === "setup" && !needsPlacement && <SetupScreen langLevel={langLevel} onStart={startGame} />}
+        {screen === "setup" && !needsPlacement && <SetupScreen langLevel={langLevel} onStart={startGame} onBack={() => setScreen("lobby")} />}
 
         {/* QUIZ */}
         {screen === "quiz" && q && (
