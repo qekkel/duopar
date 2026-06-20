@@ -404,135 +404,125 @@ function parseFlashcards(topic) {
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
+const BATCH_SIZE = 5;
+
 function TopicLearnScreen({ topic, onBack, onStartExam }) {
-  const flashcards = parseFlashcards(topic);
+  const allCards = parseFlashcards(topic);
+  const batches = [];
+  for (let i = 0; i < allCards.length; i += BATCH_SIZE) batches.push(allCards.slice(i, i + BATCH_SIZE));
+
+  const [batchIdx, setBatchIdx] = useState(0);
   const [phase, setPhase] = useState("intro"); // "intro" | "practice"
   const [introIdx, setIntroIdx] = useState(0);
-  const [idx, setIdx] = useState(0);
+  const [practiceQueue, setPracticeQueue] = useState(() => shuffle(batches[0] || []));
+  const [practiceIdx, setPracticeIdx] = useState(0);
   const [selected, setSelected] = useState(null);
   const [wrong, setWrong] = useState([]);
-  const [done, setDone] = useState(false);
-  const [queue, setQueue] = useState(() => shuffle(flashcards));
 
-  const card = queue[idx];
-  const correct = card?.ru;
+  const batch = batches[batchIdx] || [];
+  const isLastBatch = batchIdx === batches.length - 1;
+  const totalSteps = batches.length * 2; // intro + practice per batch
+  const currentStep = batchIdx * 2 + (phase === "practice" ? 1 : 0);
 
-  const options = card ? shuffle([
-    correct,
-    ...shuffle(flashcards.filter(f => f.ru !== correct)).slice(0, 3).map(f => f.ru)
-  ]) : [];
+  function startPractice() {
+    setPracticeQueue(shuffle(batch));
+    setPracticeIdx(0);
+    setSelected(null);
+    setWrong([]);
+    setPhase("practice");
+  }
+
+  function nextBatch() {
+    const next = batchIdx + 1;
+    setBatchIdx(next);
+    setIntroIdx(0);
+    setPhase("intro");
+  }
 
   function pick(opt) {
     if (selected !== null) return;
+    const card = practiceQueue[practiceIdx];
     setSelected(opt);
-    const isCorrect = opt === correct;
+    const isCorrect = opt === card.ru;
     playSound(isCorrect ? "correct" : "wrong");
     setTimeout(() => {
-      const next = idx + 1;
       if (!isCorrect) setWrong(w => [...w, card]);
-      if (next < queue.length) { setIdx(next); setSelected(null); }
+      const next = practiceIdx + 1;
+      if (next < practiceQueue.length) { setPracticeIdx(next); setSelected(null); }
       else {
         const retry = [...wrong, ...(!isCorrect ? [card] : [])];
-        if (retry.length > 0) { setQueue(shuffle(retry)); setIdx(0); setSelected(null); setWrong([]); }
-        else setDone(true);
+        if (retry.length > 0) { setPracticeQueue(shuffle(retry)); setPracticeIdx(0); setSelected(null); setWrong([]); }
+        else if (isLastBatch) onStartExam();
+        else nextBatch();
       }
     }, 900);
   }
 
+  // INTRO PHASE
   if (phase === "intro") {
-    const introCard = flashcards[introIdx];
-    const isLast = introIdx === flashcards.length - 1;
+    const card = batch[introIdx];
+    const isLastCard = introIdx === batch.length - 1;
     return (
       <div style={{ paddingTop: 40 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
           <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
           <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-            <div style={{ height: "100%", borderRadius: 2, background: "#a78bfa", width: `${((introIdx + 1) / flashcards.length) * 100}%`, transition: "width 0.3s" }} />
+            <div style={{ height: "100%", borderRadius: 2, background: "#a78bfa", width: `${((currentStep + (introIdx + 1) / batch.length) / totalSteps) * 100}%`, transition: "width 0.3s" }} />
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{introIdx + 1}/{flashcards.length}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Этап {batchIdx + 1}/{batches.length}</div>
         </div>
 
-        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>📚 {topic.title} · Знакомство</div>
+        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>📚 Новые слова · {introIdx + 1} из {batch.length}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Запомни эти слова</div>
 
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "40px 28px", textAlign: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 42, fontWeight: 900, color: "#fff", marginBottom: 20 }}>{introCard.de}</div>
-          <div style={{ width: 40, height: 2, background: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }} />
-          <div style={{ fontSize: 26, fontWeight: 700, color: "#a78bfa" }}>{introCard.ru}</div>
-          {introCard.section && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 16 }}>{introCard.section}</div>}
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 44, fontWeight: 900, color: "#fff", marginBottom: 22 }}>{card.de}</div>
+          <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
+          <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
-          {introIdx > 0 && (
-            <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>← Назад</button>
-          )}
-          {!isLast
-            ? <button onClick={() => setIntroIdx(i => i + 1)} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Следующее →</button>
-            : <button onClick={() => setPhase("practice")} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎯 Теперь угадай!</button>
+          {introIdx > 0 && <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>←</button>}
+          {!isLastCard
+            ? <button onClick={() => setIntroIdx(i => i + 1)} style={{ flex: 3, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Следующее →</button>
+            : <button onClick={startPractice} style={{ flex: 3, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎯 Проверить себя!</button>
           }
         </div>
       </div>
     );
   }
 
-  if (flashcards.length < 4) {
-    return (
-      <div style={{ paddingTop: 40 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
-        <div style={{ textAlign: "center", paddingTop: 60 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>{topic.emoji}</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 24 }}>{topic.title}</div>
-          <button onClick={onStartExam} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>⚡ Сдать экзамен</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (done) {
-    return (
-      <div style={{ paddingTop: 60, textAlign: "center" }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>🧠</div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Все слова знаешь!</div>
-        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>{flashcards.length} слов пройдено</div>
-        <button onClick={onStartExam} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>⚡ Сдать экзамен!</button>
-      </div>
-    );
-  }
-
-  const total = flashcards.length;
-  const progress = (idx) / queue.length;
+  // PRACTICE PHASE
+  const card = practiceQueue[practiceIdx];
+  const correct = card?.ru;
+  const options = card ? shuffle([correct, ...shuffle(allCards.filter(f => f.ru !== correct)).slice(0, 3).map(f => f.ru)]) : [];
 
   return (
     <div style={{ paddingTop: 40 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
         <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-          <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${Math.round(progress * 100)}%`, transition: "width 0.4s" }} />
+          <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${((currentStep + (practiceIdx + 1) / practiceQueue.length) / totalSteps) * 100}%`, transition: "width 0.4s" }} />
         </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{idx}/{queue.length}</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Этап {batchIdx + 1}/{batches.length}</div>
       </div>
 
-      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>{topic.emoji} {topic.title}</div>
+      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🎯 Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Выбери правильный перевод</div>
 
-      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Как переводится?</div>
-        <div style={{ fontSize: 38, fontWeight: 900, color: "#fff" }}>{card.de}</div>
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
+        <div style={{ fontSize: 40, fontWeight: 900, color: "#fff" }}>{card.de}</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {options.map((opt, i) => {
-          let bg = "rgba(255,255,255,0.05)";
-          let border = "rgba(255,255,255,0.1)";
-          let color = "#fff";
+          let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
           if (selected !== null) {
             if (opt === correct) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
             else if (opt === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
-            else { color = "rgba(255,255,255,0.3)"; }
+            else color = "rgba(255,255,255,0.25)";
           }
-          return (
-            <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s" }}>
-              {opt}
-            </button>
-          );
+          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s" }}>{opt}</button>;
         })}
       </div>
     </div>
