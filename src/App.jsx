@@ -2119,6 +2119,9 @@ function MapGameScreen({ onBack }) {
   const [botDone, setBotDone] = useState(false);
   const [botOk, setBotOk] = useState(null);
   const [duelSecs, setDuelSecs] = useState(10);
+  const [duelPlayerMs, setDuelPlayerMs] = useState(null);
+  const [duelBotMs, setDuelBotMs] = useState(null);
+  const duelStartRef = useRef(null);
   const [battleScore, setBattleScore] = useState({ player: 0, bot: 0 });
   const [battleRound, setBattleRound] = useState(0);
   const [roundMsg, setRoundMsg] = useState(null);
@@ -2265,14 +2268,16 @@ function MapGameScreen({ onBack }) {
     setQuestion(q); qRef.current = q;
     setPAnswer(null); pAnsRef.current = null;
     setBotDone(false); setBotOk(null); botOkRef.current = null;
-    setDuelSecs(10);
+    setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null);
     setIsDuel(true);
     setRPhase("duel");
+    duelStartRef.current = Date.now();
 
     const delay = 2500 + Math.random() * 4500;
     botDuelRef.current = setTimeout(() => {
       const ok = Math.random() < 0.7;
       botOkRef.current = ok; setBotOk(ok); setBotDone(true);
+      setDuelBotMs(Date.now() - duelStartRef.current);
       if (pAnsRef.current === null) { clearInterval(duelIvRef.current); setTimeout(() => resolveDuel(null), 800); }
     }, delay);
 
@@ -2296,6 +2301,7 @@ function MapGameScreen({ onBack }) {
     if (pAnsRef.current !== null || rPhase !== "duel") return;
     clearInterval(duelIvRef.current);
     setPAnswer(idx); pAnsRef.current = idx;
+    setDuelPlayerMs(Date.now() - (duelStartRef.current || Date.now()));
     const pCorrect = idx === qRef.current?.correct;
     playSound(pCorrect ? "correct" : "wrong");
     if (botOkRef.current === null) {
@@ -2375,10 +2381,17 @@ function MapGameScreen({ onBack }) {
     setBotDone(false); setBotOk(null); botOkRef.current = null;
     setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
     setBattleRound(0); battleRoundRef.current = 0;
-    setRoundMsg(null); setDuelSecs(10); setShowConfetti(false);
+    setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
   }
 
   function restartGame() { terrRef.current = {}; setTerritories({}); setPhase("matchmaking"); setCdMatch(30); nextRound(); }
+
+  // auto-advance from round_result after 2.5s
+  useEffect(() => {
+    if (rPhase !== "round_result") return;
+    const t = setTimeout(nextRound, 2500);
+    return () => clearTimeout(t);
+  }, [rPhase]);
 
   const pScore = Object.values(territories).filter(v => v === "player").length;
   const bScore = Object.values(territories).filter(v => v === "bot").length;
@@ -2655,10 +2668,18 @@ function MapGameScreen({ onBack }) {
       <ScoreBar />
       <MapSvg />
       <div style={{ marginTop: 10, padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 }}>
-        <div style={{ fontSize: 14, color: "#fff", marginBottom: 14, lineHeight: 1.6 }}>{roundMsg}</div>
-        <button onClick={nextRound} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "opacity 0.2s" }}>
-          Следующий раунд →
-        </button>
+        <div style={{ fontSize: 14, color: "#fff", marginBottom: 8, lineHeight: 1.6 }}>{roundMsg}</div>
+        {isDuel && duelPlayerMs !== null && duelBotMs !== null && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <div style={{ flex: 1, background: "rgba(124,92,252,0.1)", borderRadius: 8, padding: "6px 10px", fontSize: 11, color: "#a78bfa" }}>
+              Ты: {(duelPlayerMs / 1000).toFixed(1)}с
+            </div>
+            <div style={{ flex: 1, background: "rgba(245,158,11,0.1)", borderRadius: 8, padding: "6px 10px", fontSize: 11, color: "#f59e0b" }}>
+              {botName}: {(duelBotMs / 1000).toFixed(1)}с
+            </div>
+          </div>
+        )}
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>следующий раунд через секунду...</div>
       </div>
     </div>
   );
