@@ -393,18 +393,18 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
 function parseFlashcards(topic) {
   const cards = [];
   topic.cards.forEach(card => {
-    const lines = card.body.split("\n").filter(l => l.includes(" — ") && !l.startsWith("💡") && !l.startsWith("⚠️"));
+    const lines = card.body.split("\n").filter(l => l.includes(" — ") && !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•"));
     lines.forEach(line => {
       const [de, ru] = line.split(" — ");
       if (de && ru) cards.push({ de: de.trim(), ru: ru.trim(), section: card.title });
     });
   });
-  return cards;
+  return cards.slice(0, 8);
 }
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-const BATCH_SIZE = 5;
+const BATCH_SIZE = 4;
 
 function TopicLearnScreen({ topic, onBack, onStartExam }) {
   const allCards = parseFlashcards(topic);
