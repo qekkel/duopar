@@ -2364,16 +2364,9 @@ function MapGameScreen({ onBack, session, profile }) {
     });
 
     ch.on("broadcast", { event: "topic_pick" }, ({ payload }) => {
-      if (payload.turn === "player") {
-        // opponent (bot-side) picked — now it's our turn (guest picks second)
-        setBotCat(payload.cat);
-        setTopicTurn("bot_done"); // signal that opponent picked, now local player picks
-      } else if (payload.turn === "bot") {
-        // opponent picked their topic — start answering
-        setBotCat(payload.cat);
-        // start answering: local player uses playerCat, opponent uses payload.cat
-        // playerCat is already set
-      }
+      // opponent chose — both answer the same question
+      setBotCat(payload.cat);
+      startAnsweringPhase(payload.cat);
     });
 
     ch.on("broadcast", { event: "answer" }, ({ payload }) => {
@@ -2526,7 +2519,7 @@ function MapGameScreen({ onBack, session, profile }) {
     setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
     setBattleRound(0); battleRoundRef.current = 0;
     setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
-    setTopicTurn("player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
+    setTopicTurn(t => t === "player" ? "bot" : "player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
     setRPhase("territory_select");
   }
 
@@ -2713,43 +2706,48 @@ function MapGameScreen({ onBack, session, profile }) {
   }
 
   // ── TOPIC SELECT ──
+  // topicTurn: whose turn it is to PICK the topic this round ("player"|"bot")
+  // Both players answer the SAME question from the chosen topic
   function enterTopicSelect() {
     const allCats = [...new Set(ALL_QUESTIONS.map(q => q.category).filter(Boolean))];
-    const shuffled = [...allCats].sort(() => Math.random() - 0.5);
-    const four = shuffled.slice(0, 4);
+    const four = [...allCats].sort(() => Math.random() - 0.5).slice(0, 4);
     setAvailableCats(four);
     setPlayerCat(null);
     setBotCat(null);
-    // player always picks first
-    setTopicTurn("player");
     setRPhase("topic_select");
+
+    // if bot's turn to pick — bot picks after short delay
+    if (topicTurn === "bot") {
+      setTimeout(() => {
+        const botChoice = four[Math.floor(Math.random() * four.length)];
+        setBotCat(botChoice);
+        if (onlineModeRef.current) {
+          sendOnline("topic_pick", { cat: botChoice });
+        } else {
+          startAnsweringPhase(botChoice);
+        }
+      }, 1200 + Math.random() * 800);
+    }
   }
 
   function handleCategoryPick(cat) {
     if (topicTurn !== "player") return;
     setPlayerCat(cat);
-    setTopicTurn("bot");
     if (onlineModeRef.current) {
-      sendOnline("topic_pick", { cat, turn: "player" });
+      sendOnline("topic_pick", { cat });
     } else {
-      // bot picks after 1–2s
-      setTimeout(() => {
-        const botChoice = availableCats[Math.floor(Math.random() * availableCats.length)];
-        setBotCat(botChoice);
-        startAnsweringPhase(cat, botChoice);
-      }, 1000 + Math.random() * 1000);
+      startAnsweringPhase(cat);
     }
   }
 
-  function startAnsweringPhase(pCat, bCat) {
-    // each player gets a question from their chosen category
-    const pQ = pickQ(pCat);
-    setQuestion(pQ); qRef.current = pQ;
+  function startAnsweringPhase(cat) {
+    // both players get the SAME question from the chosen category
+    const q = pickQ(cat);
+    setQuestion(q); qRef.current = q;
     setPAnswer(null); pAnsRef.current = null;
     setBotDone(false); setBotOk(null); botOkRef.current = null;
     setRPhase("answering");
     if (!onlineModeRef.current) {
-      const bQ = pickQ(bCat);
       setTimeout(() => { const ok = Math.random() < 0.7; botOkRef.current = ok; setBotOk(ok); setBotDone(true); }, 1500 + Math.random() * 2000);
     }
   }
@@ -2814,7 +2812,7 @@ function MapGameScreen({ onBack, session, profile }) {
     setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
     setBattleRound(0); battleRoundRef.current = 0;
     setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
-    setTopicTurn("player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
+    setTopicTurn(t => t === "player" ? "bot" : "player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
     setRPhase("territory_select");
     if (onlineModeRef.current) {
       if (myRoleRef.current === "host") sendOnline("next_round", {});
@@ -3152,45 +3150,34 @@ function MapGameScreen({ onBack, session, profile }) {
   // ── TOPIC SELECT ──
   if (rPhase === "topic_select") {
     const myTurn = topicTurn === "player";
-    const botWaiting = topicTurn === "bot" && !botCat;
+    const chosenCat = myTurn ? playerCat : botCat;
     return (
       <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
         <style>{ANIM_CSS}</style>
         <ScoreBar />
-        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-          <div style={{ flex: 1, background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
-            <div style={{ color: "#a78bfa", fontWeight: 700 }}>ТЫ → {stateName(playerPick)}</div>
-            <div style={{ color: playerCat ? "#a78bfa" : "rgba(255,255,255,0.4)", marginTop: 2 }}>
-              {playerCat ? `${CAT_EMOJI[playerCat] || "📝"} ${playerCat}` : (myTurn ? "выбираешь тему..." : "ждёт")}
-            </div>
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>
+            {myTurn ? "Твоя очередь выбрать тему" : `${botName} выбирает тему`}
           </div>
-          <div style={{ flex: 1, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
-            <div style={{ color: "#f59e0b", fontWeight: 700 }}>{botName.toUpperCase()} → {stateName(botPick)}</div>
-            <div style={{ color: botCat ? "#f59e0b" : "rgba(255,255,255,0.4)", marginTop: 2, animation: botWaiting ? "pulse 1s ease infinite" : "none" }}>
-              {botCat ? `${CAT_EMOJI[botCat] || "📝"} ${botCat}` : (botWaiting ? "выбирает тему..." : "ждёт")}
-            </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+            Оба ответите на один и тот же вопрос
           </div>
         </div>
 
         {myTurn ? (
-          <>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
-              Твоя очередь — выбери тему:
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {availableCats.map(cat => (
-                <button key={cat} onClick={() => handleCategoryPick(cat)}
-                  style={{ background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 12, padding: "14px 10px", color: "#fff", fontSize: 13, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 8, transition: "background 0.15s, border-color 0.15s" }}>
-                  <span style={{ fontSize: 20 }}>{CAT_EMOJI[cat] || "📝"}</span>
-                  <span style={{ fontWeight: 600 }}>{cat}</span>
-                </button>
-              ))}
-            </div>
-          </>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {availableCats.map(cat => (
+              <button key={cat} onClick={() => handleCategoryPick(cat)}
+                style={{ background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 12, padding: "16px 10px", color: "#fff", fontSize: 13, cursor: "pointer", textAlign: "center", transition: "background 0.15s, border-color 0.15s" }}>
+                <div style={{ fontSize: 26, marginBottom: 6 }}>{CAT_EMOJI[cat] || "📝"}</div>
+                <div style={{ fontWeight: 600 }}>{cat}</div>
+              </button>
+            ))}
+          </div>
         ) : (
-          <div style={{ textAlign: "center", paddingTop: 20 }}>
-            {playerCat && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>Ты выбрал: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{CAT_EMOJI[playerCat]} {playerCat}</span></div>}
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", animation: "pulse 1s ease infinite" }}>{botName} выбирает тему...</div>
+          <div style={{ textAlign: "center", paddingTop: 30 }}>
+            <div style={{ fontSize: 32, marginBottom: 16, animation: "pulse 1s ease infinite" }}>🤔</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)" }}>{botName} выбирает тему...</div>
           </div>
         )}
       </div>
