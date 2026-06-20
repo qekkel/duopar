@@ -697,39 +697,33 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
     if (mode === "detail") {
       const done = doneBlocks(activeTopicId);
       const allDone = blocks.length > 0 && done.size >= blocks.length;
+      const nextBlock = blocks.findIndex((_, i) => !done.has(i));
       return (
-        <div style={{ paddingTop: 40 }}>
-          <button onClick={() => { setMode(null); setActiveTopicId(null); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 6 }}>
-            <div style={{ fontSize: 32 }}>{topic.emoji}</div>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{topic.title}</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{done.size} из {blocks.length} блоков пройдено</div>
-            </div>
+        <div style={{ paddingTop: 60, textAlign: "center" }}>
+          <button onClick={() => { setMode(null); setActiveTopicId(null); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 40, padding: 0, display: "block" }}>← Назад</button>
+          <div style={{ fontSize: 56, marginBottom: 12 }}>{topic.emoji}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 6 }}>{topic.title}</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 36 }}>{done.size} из {blocks.length} частей пройдено</div>
+
+          {/* Сегментированная полоска прогресса */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 48 }}>
+            {blocks.map((_, i) => (
+              <div key={i} style={{ flex: 1, height: 8, borderRadius: 4, background: done.has(i) ? "#7C5CFC" : "rgba(255,255,255,0.1)", transition: "background 0.4s" }} />
+            ))}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24, marginBottom: 24 }}>
-            {blocks.map((block, i) => {
-              const blockDone = done.has(i);
-              const unlocked = i === 0 || done.has(i - 1);
-              return (
-                <div key={i} style={{ background: blockDone ? "rgba(16,185,129,0.08)" : unlocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.02)", border: `1px solid ${blockDone ? "rgba(16,185,129,0.3)" : unlocked ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}`, borderRadius: 16, padding: "16px 18px", opacity: unlocked ? 1 : 0.4, display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ fontSize: 24 }}>{blockDone ? "✅" : unlocked ? "📚" : "🔒"}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{block.name}</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{block.words.length} слов</div>
-                  </div>
-                  {unlocked && (
-                    <button onClick={() => { setActiveBlockIdx(i); setMode("block"); }} style={{ padding: "8px 16px", borderRadius: 12, background: blockDone ? "rgba(16,185,129,0.15)" : "#7C5CFC", color: blockDone ? "#10b981" : "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                      {blockDone ? "Повторить" : "Учить →"}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {allDone && (
+
+          {!allDone ? (
+            <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "18px", borderRadius: 16, background: "#7C5CFC", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+              {done.size === 0 ? "▶ Начать" : "▶ Продолжить"}
+            </button>
+          ) : (
             <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "18px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
               ⚡ Сдать экзамен
+            </button>
+          )}
+          {done.size > 0 && !allDone && (
+            <button onClick={() => { setActiveBlockIdx(0); setCompletedBlocks(p => ({ ...p, [activeTopicId]: new Set() })); setMode("block"); }} style={{ marginTop: 12, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
+              Начать сначала
             </button>
           )}
         </div>
