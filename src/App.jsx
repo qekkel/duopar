@@ -188,6 +188,204 @@ function getLevel(xp) { return Math.floor(xp / 200) + 1; }
 function xpToNextLevel(xp) { return 200 - (xp % 200); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
+// ── ТЕОРИЯ ───────────────────────────────────────────────────
+const LESSONS = [
+  {
+    id: "articles",
+    title: "Артикли",
+    icon: "📌",
+    color: "#7C5CFC",
+    cards: [
+      {
+        title: "Три рода в немецком",
+        body: "Каждое существительное имеет род:\n\n🔵 der — мужской\n🔴 die — женский\n🟢 das — средний\n\nРод нужно запоминать вместе со словом.",
+      },
+      {
+        title: "Именительный падеж (Nominativ)",
+        body: "Кто? Что? — подлежащее.\n\n🔵 der Hund\n🔴 die Katze\n🟢 das Kind\n\nПример:\n→ Der Hund schläft.\n→ Die Katze trinkt Milch.",
+      },
+      {
+        title: "Винительный падеж (Akkusativ)",
+        body: "Кого? Что? — прямое дополнение.\n\n🔵 den Hund ← меняется!\n🔴 die Katze\n🟢 das Kind\n\nПример:\n→ Ich sehe den Hund.\n→ Er kauft die Katze.",
+      },
+      {
+        title: "Дательный падеж (Dativ)",
+        body: "Кому? Чему? — косвенное дополнение.\n\n🔵 dem Hund\n🔴 der Katze ← меняется!\n🟢 dem Kind\n\nПример:\n→ Ich helfe dem Mann.\n→ Sie gibt der Frau Blumen.",
+      },
+      {
+        title: "Таблица артиклей",
+        body: "         m      f      n\nNom:   der    die    das\nAkk:   den    die    das\nDat:   dem    der    dem\n\n💡 Запомни: в Akkusativ меняется только мужской род: der → den.",
+        mono: true,
+      },
+    ],
+  },
+  {
+    id: "verbs",
+    title: "Глаголы",
+    icon: "⚡",
+    color: "#10b981",
+    cards: [
+      {
+        title: "Спряжение: sein (быть)",
+        body: "ich bin       — я есть\ndu bist       — ты есть\ner/sie ist    — он/она есть\nwir sind      — мы есть\nihr seid      — вы есть\nsie/Sie sind  — они/Вы есть\n\nПример:\n→ Ich bin Student.\n→ Wir sind hier.",
+        mono: true,
+      },
+      {
+        title: "Спряжение: haben (иметь)",
+        body: "ich habe      — я имею\ndu hast       — ты имеешь\ner/sie hat    — он/она имеет\nwir haben     — мы имеем\nihr habt      — вы имеете\nsie/Sie haben — они/Вы имеют\n\nПример:\n→ Ich habe ein Auto.\n→ Er hat Hunger.",
+        mono: true,
+      },
+      {
+        title: "Регулярные глаголы (-en)",
+        body: "Основа + окончание:\n\nwohnen (жить)\nich wohn-e\ndu wohn-st\ner/sie wohn-t\nwir wohn-en\nihr wohn-t\nsie wohn-en\n\n💡 Большинство глаголов спрягаются по этой схеме.",
+        mono: true,
+      },
+      {
+        title: "Перфект: haben или sein?",
+        body: "Прошедшее время = haben/sein + Partizip II\n\n✅ haben — большинство глаголов:\n→ Ich habe gegessen.\n→ Er hat geschlafen.\n\n✅ sein — движение и изменение состояния:\n→ Ich bin gegangen.\n→ Sie ist aufgestanden.\n\n💡 gehen, kommen, fahren, fliegen → sein",
+      },
+      {
+        title: "Модальные глаголы",
+        body: "können  — мочь (умею)\nmüssen  — должен\nwollen  — хотеть\nsollen  — должен (по чьей-то воле)\ndürfen  — можно (разрешено)\nmöchten — хотел бы\n\nСтруктура:\n→ Ich kann Deutsch sprechen.\n→ Er muss arbeiten.\n💡 Второй глагол — инфинитив в конце.",
+      },
+    ],
+  },
+  {
+    id: "wordorder",
+    title: "Порядок слов",
+    icon: "🔤",
+    color: "#f59e0b",
+    cards: [
+      {
+        title: "Глагол всегда на 2-м месте",
+        body: "В немецком глагол занимает СТРОГО 2-ю позицию.\n\n→ Ich gehe heute ins Kino.\n→ Heute gehe ich ins Kino.\n→ Ins Kino gehe ich heute.\n\n💡 Что бы ни стояло первым — глагол всегда второй.",
+      },
+      {
+        title: "Отрицание: nicht и kein",
+        body: "kein — отрицает существительное:\n→ Ich habe kein Auto.\n→ Das ist kein Problem.\n\nnicht — отрицает всё остальное:\n→ Ich gehe nicht.\n→ Er schläft nicht gut.\n\n💡 kein = k + ein (как артикль)",
+      },
+      {
+        title: "Вопросительные слова",
+        body: "Wer?    — Кто?\nWas?    — Что?\nWo?     — Где?\nWann?   — Когда?\nWie?    — Как?\nWarum?  — Почему?\nWohin?  — Куда?\nWoher?  — Откуда?\n\n→ Wo wohnst du?\n→ Wann kommst du?",
+        mono: true,
+      },
+      {
+        title: "Придаточные предложения",
+        body: "В придаточном глагол уходит В КОНЕЦ.\n\nГлавное: Ich weiß.\nПридаточное: dass er kommt.\n→ Ich weiß, dass er kommt.\n\nДругие союзы:\nweil (потому что)\nobwohl (хотя)\nwenn (если/когда)\n→ Er lernt, weil er klug ist.",
+      },
+    ],
+  },
+  {
+    id: "vocab",
+    title: "Лексика",
+    icon: "💡",
+    color: "#ec4899",
+    cards: [
+      {
+        title: "Сложные слова (Komposita)",
+        body: "Немецкий создаёт новые слова соединяя старые:\n\ndie Hand + das Tuch = das Handtuch (полотенце)\ndie Wasser + die Flasche = die Wasserflasche (бутылка воды)\nder Zahn + die Bürste = die Zahnbürste (зубная щётка)\n\n💡 Род определяется последним словом!",
+      },
+      {
+        title: "Числа 1–20",
+        body: "1 eins    11 elf\n2 zwei    12 zwölf\n3 drei    13 dreizehn\n4 vier    14 vierzehn\n5 fünf    15 fünfzehn\n6 sechs   16 sechzehn\n7 sieben  17 siebzehn\n8 acht    18 achtzehn\n9 neun    19 neunzehn\n10 zehn   20 zwanzig",
+        mono: true,
+      },
+      {
+        title: "Дни недели",
+        body: "Montag     — Понедельник\nDienstag   — Вторник\nMittwoch   — Среда\nDonnerstag — Четверг\nFreitag    — Пятница\nSamstag    — Суббота\nSonntag    — Воскресенье\n\n💡 Все мужского рода: der Montag",
+        mono: true,
+      },
+      {
+        title: "Полезные фразы",
+        body: "Wie bitte?         — Простите?\nIch verstehe nicht. — Я не понимаю.\nKönnen Sie langsamer sprechen? — Говорите медленнее?\nWas bedeutet...?   — Что значит...?\nIch lerne Deutsch.  — Я учу немецкий.\nMein Deutsch ist nicht so gut. — Мой немецкий не очень.",
+      },
+    ],
+  },
+];
+
+function LearnScreen({ onBack }) {
+  const [topic, setTopic] = useState(null);
+  const [cardIdx, setCardIdx] = useState(0);
+
+  if (topic) {
+    const lesson = LESSONS.find(l => l.id === topic);
+    const card = lesson.cards[cardIdx];
+    const isLast = cardIdx === lesson.cards.length - 1;
+
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <button onClick={() => { setTopic(null); setCardIdx(0); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0 }}>
+          ← {lesson.title}
+        </button>
+
+        <div style={{ display: "flex", gap: 6, marginBottom: 28 }}>
+          {lesson.cards.map((_, i) => (
+            <div key={i} onClick={() => setCardIdx(i)} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= cardIdx ? lesson.color : "rgba(255,255,255,0.12)", cursor: "pointer", transition: "background 0.3s" }} />
+          ))}
+        </div>
+
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>
+          {cardIdx + 1} / {lesson.cards.length}
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${lesson.color}30`, borderRadius: 20, padding: "28px 24px", marginBottom: 24, minHeight: 280 }}>
+          <div style={{ fontSize: 11, letterSpacing: 2, color: lesson.color, fontWeight: 700, textTransform: "uppercase", marginBottom: 16 }}>{lesson.icon} {lesson.title}</div>
+          <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", marginBottom: 20, lineHeight: 1.3 }}>{card.title}</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, whiteSpace: "pre-line", fontFamily: card.mono ? "monospace" : "inherit" }}>
+            {card.body}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button onClick={() => setCardIdx(i => Math.max(0, i - 1))} disabled={cardIdx === 0} style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "14px", color: cardIdx === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", fontSize: 15, cursor: cardIdx === 0 ? "default" : "pointer" }}>
+            ← Назад
+          </button>
+          {isLast ? (
+            <button onClick={() => { setTopic(null); setCardIdx(0); }} style={{ flex: 2, background: lesson.color, border: "none", borderRadius: 14, padding: "14px", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+              Готово ✓
+            </button>
+          ) : (
+            <button onClick={() => setCardIdx(i => i + 1)} style={{ flex: 2, background: lesson.color, border: "none", borderRadius: 14, padding: "14px", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+              Далее →
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ paddingTop: 60 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0 }}>
+        ← Назад
+      </button>
+      <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · Теория</div>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>Учить</h1>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 28 }}>Карточки с правилами немецкого</div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {LESSONS.map(lesson => (
+          <button key={lesson.id} onClick={() => setTopic(lesson.id)} style={{ background: "rgba(255,255,255,0.04)", border: `1.5px solid ${lesson.color}30`, borderRadius: 18, padding: "20px", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${lesson.color}12`; e.currentTarget.style.borderColor = `${lesson.color}60`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = `${lesson.color}30`; }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: `${lesson.color}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                {lesson.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{lesson.title}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{lesson.cards.length} карточек</div>
+              </div>
+              <span style={{ marginLeft: "auto", color: lesson.color, fontSize: 18 }}>→</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── LEVEL PICKER ─────────────────────────────────────────────
 function LevelPicker({ onPick, onTest }) {
   const levels = [
@@ -642,28 +840,36 @@ export default function DuoPar() {
   useEffect(() => {
     if (session?.user) {
       supabase.from("profiles").select("*").eq("id", session.user.id).single()
-        .then(({ data }) => setProfile(data));
+        .then(({ data }) => {
+          setProfile(data);
+          if (data && !data.lang_level) setScreen("onboarding");
+        });
     } else {
       setProfile(null);
     }
   }, [session]);
 
-  // Показываем выбор уровня если lang_level не установлен
-  const needsPlacement = session && profile && !profile.lang_level && screen !== "placement";
+  const needsPlacement = screen === "onboarding";
 
   const q = questions[qIndex];
   const langLevel = profile?.lang_level || "A1";
 
   async function pickLevel(level) {
-    await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
-    setProfile(p => ({ ...p, lang_level: level }));
-    setScreen("lobby");
+    const { error } = await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
+    if (!error) {
+      setProfile(p => ({ ...p, lang_level: level }));
+      setScreen("lobby");
+    }
   }
 
   async function finishPlacement(level, testScore) {
     await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
     setProfile(p => ({ ...p, lang_level: level }));
     setScreen("placement_result_" + level + "_" + testScore);
+  }
+
+  async function retakeTest() {
+    setScreen("placement");
   }
 
   function startGame(categories) {
@@ -757,12 +963,12 @@ export default function DuoPar() {
       <div style={{ width: "100%", maxWidth: 420, padding: "0 20px" }}>
 
         {/* LEVEL PICKER */}
-        {needsPlacement && (
-          <LevelPicker onPick={pickLevel} onTest={() => setScreen("placement")} />
+        {screen === "onboarding" && (
+          <LevelPicker onPick={pickLevel} onTest={() => setScreen("onboarding_test")} />
         )}
 
         {/* PLACEMENT TEST */}
-        {screen === "placement" && !screen.startsWith("placement_result_") && (
+        {(screen === "placement" || screen === "onboarding_test") && (
           <PlacementTest onDone={finishPlacement} />
         )}
 
@@ -777,7 +983,7 @@ export default function DuoPar() {
         {/* PROFILE */}
         {screen === "profile" && !needsPlacement && (
           <ProfileScreen profile={profile} session={session} onUpdate={setProfile} onBack={() => setScreen("lobby")}
-            onRetakeTest={() => setScreen("placement")} />
+            onRetakeTest={retakeTest} />
         )}
 
         {/* LOBBY */}
@@ -819,11 +1025,19 @@ export default function DuoPar() {
               </div>
             </div>
 
-            <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
-              Начать квест →
-            </button>
+            <div style={{ display: "flex", gap: 10, marginBottom: 0 }}>
+              <button onClick={() => setScreen("learn")} style={{ flex: 1, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+                📖 Учить
+              </button>
+              <button onClick={() => setScreen("setup")} style={{ flex: 2, background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                Играть →
+              </button>
+            </div>
           </div>
         )}
+
+        {/* LEARN */}
+        {screen === "learn" && <LearnScreen onBack={() => setScreen("lobby")} />}
 
         {/* SETUP */}
         {screen === "setup" && !needsPlacement && <SetupScreen langLevel={langLevel} onStart={startGame} />}
