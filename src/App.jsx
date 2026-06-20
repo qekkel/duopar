@@ -2977,15 +2977,57 @@ function MapGameScreen({ onBack, session, profile }) {
   // ── GAMEOVER ──
   if (phase === "gameover") {
     const pw = pScore > bScore, draw = pScore === bScore;
+    const pct = Math.round((pScore / 16) * 100);
+
+    const winMsgs = ["Германия твоя! 🇩🇪", "Блестяще! Ни одной ошибки лишней!", "Ты настоящий знаток!", "Сильно сыграно — бот не справился!"];
+    const loseMsgs = ["Не сдавайся — в следующий раз повезёт!", "Немного не хватило — практикуйся!", `${botName} сегодня был сильнее... но не всегда!`, "Учи слова и возвращайся за реваншем 💪"];
+    const drawMsgs = ["Равные соперники!", "Ничья — как честно!", "Одинаково сильны — нужна пересдача!"];
+    const msg = pw ? winMsgs[pScore % winMsgs.length] : draw ? drawMsgs[pScore % drawMsgs.length] : loseMsgs[bScore % loseMsgs.length];
+
     return (
-      <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.4s ease" }}>
+      <div style={{ paddingTop: 50, textAlign: "center", animation: "fadeUp 0.4s ease" }}>
         <style>{ANIM_CSS}</style>
         {pw && <Confetti />}
-        <div style={{ fontSize: 52, marginBottom: 12 }}>{pw ? "🏆" : draw ? "🤝" : "😔"}</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{pw ? "Победа!" : draw ? "Ничья!" : `${botName} победил!`}</div>
-        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Ты: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{pScore}</span> · {botName}: <span style={{ color: "#f59e0b", fontWeight: 700 }}>{bScore}</span></div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 40 }}>из 16 земель Германии</div>
-        <button onClick={restartGame} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "14px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>Играть снова</button>
+
+        {/* Big result emoji with animation */}
+        <div style={{ fontSize: 72, marginBottom: 8, animation: pw ? "pulse 1.2s ease infinite" : "none" }}>
+          {pw ? "🏆" : draw ? "🤝" : "😢"}
+        </div>
+
+        <div style={{ fontSize: 26, fontWeight: 900, color: pw ? "#fcd34d" : draw ? "#a78bfa" : "rgba(255,255,255,0.5)", marginBottom: 6 }}>
+          {pw ? "Победа!" : draw ? "Ничья!" : "Поражение"}
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginBottom: 28, lineHeight: 1.5, padding: "0 16px" }}>
+          {msg}
+        </div>
+
+        {/* Score bar */}
+        <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 16, padding: "16px", marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700 }}>ТЫ</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: "#fff" }}>{pScore}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>земель</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", fontSize: 18, color: "rgba(255,255,255,0.2)" }}>vs</div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700 }}>{botName.toUpperCase()}</div>
+              <div style={{ fontSize: 32, fontWeight: 900, color: "#fff" }}>{bScore}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>земель</div>
+            </div>
+          </div>
+          {/* visual bar */}
+          <div style={{ height: 8, borderRadius: 4, background: "rgba(245,158,11,0.4)", overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#7C5CFC,#a78bfa)", borderRadius: 4, transition: "width 1s ease" }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 10, color: "rgba(255,255,255,0.25)" }}>
+            <span>🟣 {pct}%</span><span>из 16 земель</span><span>{100-pct}% 🟡</span>
+          </div>
+        </div>
+
+        <button onClick={restartGame} style={{ width: "100%", background: pw ? "linear-gradient(135deg,#7C5CFC,#a78bfa)" : "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "15px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
+          {pw ? "Играть снова 🎉" : "Взять реванш 💪"}
+        </button>
         <button onClick={onBack} style={{ width: "100%", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", borderRadius: 14, padding: "14px", fontSize: 15, cursor: "pointer" }}>В главное меню</button>
       </div>
     );
