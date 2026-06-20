@@ -406,6 +406,8 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 function TopicLearnScreen({ topic, onBack, onStartExam }) {
   const flashcards = parseFlashcards(topic);
+  const [phase, setPhase] = useState("intro"); // "intro" | "practice"
+  const [introIdx, setIntroIdx] = useState(0);
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState(null);
   const [wrong, setWrong] = useState([]);
@@ -435,6 +437,41 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
         else setDone(true);
       }
     }, 900);
+  }
+
+  if (phase === "intro") {
+    const introCard = flashcards[introIdx];
+    const isLast = introIdx === flashcards.length - 1;
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
+          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+            <div style={{ height: "100%", borderRadius: 2, background: "#a78bfa", width: `${((introIdx + 1) / flashcards.length) * 100}%`, transition: "width 0.3s" }} />
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{introIdx + 1}/{flashcards.length}</div>
+        </div>
+
+        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>📚 {topic.title} · Знакомство</div>
+
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "40px 28px", textAlign: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 42, fontWeight: 900, color: "#fff", marginBottom: 20 }}>{introCard.de}</div>
+          <div style={{ width: 40, height: 2, background: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }} />
+          <div style={{ fontSize: 26, fontWeight: 700, color: "#a78bfa" }}>{introCard.ru}</div>
+          {introCard.section && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 16 }}>{introCard.section}</div>}
+        </div>
+
+        <div style={{ display: "flex", gap: 10 }}>
+          {introIdx > 0 && (
+            <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>← Назад</button>
+          )}
+          {!isLast
+            ? <button onClick={() => setIntroIdx(i => i + 1)} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Следующее →</button>
+            : <button onClick={() => setPhase("practice")} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎯 Теперь угадай!</button>
+          }
+        </div>
+      </div>
+    );
   }
 
   if (flashcards.length < 4) {
