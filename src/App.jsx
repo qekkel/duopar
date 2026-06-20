@@ -731,24 +731,31 @@ const BATCH_SIZE = 4;
 
 function TopicLearnScreen({ topic, onBack, onStartExam }) {
   const allCards = parseFlashcards(topic);
-  const batches = [];
-  for (let i = 0; i < allCards.length; i += BATCH_SIZE) batches.push(allCards.slice(i, i + BATCH_SIZE));
+  // Group by section (card title) so each card = one named block
+  const sectionMap = [];
+  allCards.forEach(card => {
+    const last = sectionMap[sectionMap.length - 1];
+    if (last && last.name === card.section) last.words.push(card);
+    else sectionMap.push({ name: card.section, words: [card] });
+  });
+  const batches = sectionMap.length > 0 ? sectionMap : [{ name: "Слова", words: allCards }];
 
   const [batchIdx, setBatchIdx] = useState(0);
   const [phase, setPhase] = useState("intro"); // "intro" | "practice"
   const [introIdx, setIntroIdx] = useState(0);
-  const [practiceQueue, setPracticeQueue] = useState(() => shuffle(batches[0] || []));
+  const [practiceQueue, setPracticeQueue] = useState(() => shuffle(batches[0]?.words || []));
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [selected, setSelected] = useState(null);
   const [wrong, setWrong] = useState([]);
 
-  const batch = batches[batchIdx] || [];
+  const batch = batches[batchIdx] || { name: "", words: [] };
+  const batchWords = batch.words;
   const isLastBatch = batchIdx === batches.length - 1;
   const totalSteps = batches.length * 2; // intro + practice per batch
   const currentStep = batchIdx * 2 + (phase === "practice" ? 1 : 0);
 
   function startPractice() {
-    setPracticeQueue(shuffle(batch));
+    setPracticeQueue(shuffle(batchWords));
     setPracticeIdx(0);
     setSelected(null);
     setWrong([]);
@@ -783,20 +790,20 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
 
   // INTRO PHASE
   if (phase === "intro") {
-    const card = batch[introIdx];
-    const isLastCard = introIdx === batch.length - 1;
+    const card = batchWords[introIdx];
+    const isLastCard = introIdx === batchWords.length - 1;
     return (
       <div style={{ paddingTop: 40 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
           <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
           <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-            <div style={{ height: "100%", borderRadius: 2, background: "#a78bfa", width: `${((currentStep + (introIdx + 1) / batch.length) / totalSteps) * 100}%`, transition: "width 0.3s" }} />
+            <div style={{ height: "100%", borderRadius: 2, background: "#a78bfa", width: `${((currentStep + (introIdx + 1) / batchWords.length) / totalSteps) * 100}%`, transition: "width 0.3s" }} />
           </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Этап {batchIdx + 1}/{batches.length}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Блок {batchIdx + 1}/{batches.length}</div>
         </div>
 
-        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>📚 Новые слова · {introIdx + 1} из {batch.length}</div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Запомни эти слова</div>
+        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>📚 {batch.name}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {batchWords.length} · Запомни</div>
 
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 44, fontWeight: 900, color: "#fff", marginBottom: 22 }}>{card.de}</div>
@@ -843,11 +850,11 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
         <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
           <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${((currentStep + (practiceIdx + 1) / practiceQueue.length) / totalSteps) * 100}%`, transition: "width 0.4s" }} />
         </div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Этап {batchIdx + 1}/{batches.length}</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>Блок {batchIdx + 1}/{batches.length}</div>
       </div>
 
-      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>🎯 Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Выбери правильный перевод</div>
+      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🎯 {batch.name}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
 
       <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
         <div style={{ fontSize: 40, fontWeight: 900, color: "#fff" }}>{card.de}</div>
