@@ -803,8 +803,9 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const STORAGE_KEY = `duopar_blocks_${userId || "guest"}`;
 
   const [activeTopicId, setActiveTopicId] = useState(null);
-  const [mode, setMode] = useState(null); // "detail" | "block" | "exam"
+  const [mode, setMode] = useState(null); // "detail" | "block" | "exam" | "level_exam"
   const [activeBlockIdx, setActiveBlockIdx] = useState(null);
+  const [levelExamLevel, setLevelExamLevel] = useState(null);
   const [completedBlocks, setCompletedBlocks] = useState(() => loadBlocks(STORAGE_KEY));
 
   useEffect(() => {
@@ -865,6 +866,16 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
     if (mode === "exam") {
       return <TopicExamScreen topic={topic} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+    }
+
+    if (mode === "level_exam") {
+      const lvlTopics = CURRICULUM.filter(t => t.level === levelExamLevel);
+      const fakeTopic = {
+        title: `Итоговый экзамен ${levelExamLevel}`,
+        cards: lvlTopics.flatMap(t => t.cards),
+        exam: shuffle(lvlTopics.flatMap(t => t.exam)).slice(0, 8),
+      };
+      return <TopicExamScreen topic={fakeTopic} onBack={() => setMode(null)} onPass={() => setMode(null)} />;
     }
 
     if (mode === "detail") {
@@ -947,6 +958,26 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                   </button>
                 );
               })}
+
+              {/* Итоговый экзамен уровня */}
+              {(() => {
+                const allTopicsDone = topics.every(t => completedTopics.includes(t.id));
+                return (
+                  <button onClick={() => { setLevelExamLevel(lvl); setMode("level_exam"); }}
+                    style={{ background: allTopicsDone ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.03)", border: `2px dashed ${allTopicsDone ? "#10b981" : lvlColor}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", opacity: allTopicsDone ? 1 : 0.7 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ fontSize: 26 }}>{allTopicsDone ? "🏆" : "📝"}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: allTopicsDone ? "#10b981" : "#fff" }}>Итоговый экзамен {CURRICULUM_LEVELS[lvl].label.split(" · ")[0]}</div>
+                        <div style={{ fontSize: 11, color: allTopicsDone ? "#10b981" : lvlColor, marginTop: 2 }}>
+                          {allTopicsDone ? "Все темы пройдены — сдавай!" : "Все темы уровня в одном экзамене"}
+                        </div>
+                      </div>
+                      <div style={{ color: allTopicsDone ? "#10b981" : lvlColor, fontSize: 14 }}>→</div>
+                    </div>
+                  </button>
+                );
+              })()}
             </div>
           </div>
         );
