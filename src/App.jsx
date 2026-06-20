@@ -2104,115 +2104,182 @@ const CAT_EMOJI = { "Основы":"🔤","Природа":"🌿","Еда":"🍕
 
 function MapGameScreen({ onBack }) {
   const [geoFeatures, setGeoFeatures] = useState(null);
-  // meta
-  const [phase, setPhase] = useState("matchmaking"); // matchmaking | playing | gameover
+  const [phase, setPhase] = useState("matchmaking");
   const [cdMatch, setCdMatch] = useState(30);
   const [botName] = useState(() => BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]);
   const [territories, setTerritories] = useState({});
-  // round sub-phase: territory_select | topic_select | answering | duel | round_result
+  // sub-phases: territory_select | selecting | topic_select | answering | duel | battle | round_result
   const [rPhase, setRPhase] = useState("territory_select");
   const [playerPick, setPlayerPick] = useState(null);
   const [botPick, setBotPick] = useState(null);
   const [isDuel, setIsDuel] = useState(false);
+  const [isBattle, setIsBattle] = useState(false);
   const [question, setQuestion] = useState(null);
   const [pAnswer, setPAnswer] = useState(null);
   const [botDone, setBotDone] = useState(false);
   const [botOk, setBotOk] = useState(null);
   const [duelSecs, setDuelSecs] = useState(10);
+  const [battleScore, setBattleScore] = useState({ player: 0, bot: 0 });
+  const [battleRound, setBattleRound] = useState(0);
   const [roundMsg, setRoundMsg] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // refs for stale-closure safety
   const terrRef = useRef({});
   const qRef = useRef(null);
   const pPickRef = useRef(null);
   const bPickRef = useRef(null);
   const botOkRef = useRef(null);
   const pAnsRef = useRef(null);
-  const botDuelTimeoutRef = useRef(null);
-  const duelIntervalRef = useRef(null);
+  const botDuelRef = useRef(null);
+  const duelIvRef = useRef(null);
+  const battleScoreRef = useRef({ player: 0, bot: 0 });
+  const battleRoundRef = useRef(0);
+  const battleQsRef = useRef([]);
 
   useEffect(() => { fetch(GEO_URL).then(r => r.json()).then(d => setGeoFeatures(d.features)); }, []);
-
-  // matchmaking countdown
   useEffect(() => {
     if (phase !== "matchmaking") return;
     if (cdMatch <= 0) { setPhase("playing"); return; }
     const t = setTimeout(() => setCdMatch(c => c - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, cdMatch]);
-
-  // cleanup on unmount
-  useEffect(() => () => { clearTimeout(botDuelTimeoutRef.current); clearInterval(duelIntervalRef.current); }, []);
+  useEffect(() => () => { clearTimeout(botDuelRef.current); clearInterval(duelIvRef.current); }, []);
 
   const cats = [...new Set(ALL_QUESTIONS.map(q => q.category).filter(Boolean))];
-
   function pickQ(cat) {
     const pool = cat ? ALL_QUESTIONS.filter(q => q.category === cat) : ALL_QUESTIONS;
     return (pool.length ? pool : ALL_QUESTIONS)[Math.floor(Math.random() * (pool.length || ALL_QUESTIONS.length))];
   }
-
-  function getStateId(f) {
-    return STATE_ID_MAP[f.properties.GEN || f.properties.NAME_1 || f.properties.name || ""] || null;
-  }
-
-  function stateName(id) {
-    return Object.keys(STATE_ID_MAP).find(k => STATE_ID_MAP[k] === id) || id;
-  }
+  function getStateId(f) { return STATE_ID_MAP[f.properties.GEN || f.properties.NAME_1 || f.properties.name || ""] || null; }
+  function stateName(id) { return Object.keys(STATE_ID_MAP).find(k => STATE_ID_MAP[k] === id) || id; }
 
   // ── TERRITORY SELECT ──
   function handleTerritoryClick(sid) {
-    if (rPhase !== "territory_select" || territories[sid]) return;
+    if (rPhase !== "territory_select" || territories[sid] === "player") return;
+    const isEnemyTerritory = territories[sid] === "bot";
+    setPlayerPick(sid); pPickRef.current = sid;
+
+    if (isEnemyTerritory) {
+      // attacking bot territory → battle
+      setBotPick(sid); bPickRef.current = sid;
+      setIsBattle(true); setIsDuel(false);
+      setRPhase("selecting");
+      setTimeout(() => startBattle(sid), 1600);
+      return;
+    }
+
+    // unclaimed territory
     const allIds = Object.values(STATE_ID_MAP);
     const unclaimed = allIds.filter(id => !terrRef.current[id]);
-    // 20% chance bot picks same → duel
     let bPick;
-    if (Math.random() < 0.2 && unclaimed.length > 1) {
-      bPick = sid;
+    if (Math.random() < 0.18 && unclaimed.length > 1) {
+      bPick = sid; // duel!
     } else {
       const others = unclaimed.filter(id => id !== sid);
       bPick = others.length ? others[Math.floor(Math.random() * others.length)] : sid;
     }
-    setPlayerPick(sid); pPickRef.current = sid;
     setBotPick(bPick); bPickRef.current = bPick;
+    setIsBattle(false);
+
     if (bPick === sid) {
       setIsDuel(true);
-      startDuel(sid);
+      setRPhase("selecting");
+      setTimeout(() => startDuel(sid), 1600);
     } else {
       setIsDuel(false);
-      setRPhase("topic_select");
+      setRPhase("selecting");
+      setTimeout(() => setRPhase("topic_select"), 1600);
     }
   }
 
-  // ── DUEL ──
+  // ── BATTLE (attack enemy territory, best of 3) ──
+  function startBattle(sid) {
+    const qs = [pickQ(null), pickQ(null), pickQ(null)];
+    battleQsRef.current = qs;
+    battleScoreRef.current = { player: 0, bot: 0 };
+    battleRoundRef.current = 0;
+    setBattleScore({ player: 0, bot: 0 });
+    setBattleRound(0);
+    setIsBattle(true);
+    loadBattleQuestion(0);
+  }
+
+  function loadBattleQuestion(round) {
+    const q = battleQsRef.current[round];
+    setQuestion(q); qRef.current = q;
+    setPAnswer(null); pAnsRef.current = null;
+    setBotDone(false); setBotOk(null); botOkRef.current = null;
+    setRPhase("battle");
+    setTimeout(() => {
+      const ok = Math.random() < 0.65;
+      botOkRef.current = ok; setBotOk(ok); setBotDone(true);
+    }, 1200 + Math.random() * 2200);
+  }
+
+  useEffect(() => {
+    if (rPhase !== "battle" || pAnswer === null || !botDone) return;
+    const t = setTimeout(advanceBattle, 1100);
+    return () => clearTimeout(t);
+  }, [pAnswer, botDone, rPhase]);
+
+  function advanceBattle() {
+    const pCorrect = pAnsRef.current === qRef.current?.correct;
+    const bCorrect = botOkRef.current === true;
+    const newScore = {
+      player: battleScoreRef.current.player + (pCorrect ? 1 : 0),
+      bot: battleScoreRef.current.bot + (bCorrect ? 1 : 0),
+    };
+    battleScoreRef.current = newScore;
+    setBattleScore(newScore);
+    const nextR = battleRoundRef.current + 1;
+    battleRoundRef.current = nextR;
+    setBattleRound(nextR);
+
+    if (nextR >= 3) {
+      // battle over
+      const sid = pPickRef.current;
+      const newTerr = { ...terrRef.current };
+      let msg;
+      if (newScore.player > newScore.bot) {
+        newTerr[sid] = "player";
+        msg = `Победа в битве ${newScore.player}–${newScore.bot}! Земля ${stateName(sid)} теперь твоя! 🏆`;
+        setShowConfetti(true);
+      } else if (newScore.bot > newScore.player) {
+        msg = `${botName} отбился ${newScore.bot}–${newScore.player}. Земля осталась у него.`;
+      } else {
+        msg = `Ничья ${newScore.player}–${newScore.bot}. Земля осталась у ${botName}.`;
+      }
+      terrRef.current = newTerr;
+      setTerritories(newTerr);
+      setRoundMsg(msg);
+      setRPhase("round_result");
+      if (Object.keys(newTerr).length >= 16) setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 2200);
+      return;
+    }
+    loadBattleQuestion(nextR);
+  }
+
+  // ── DUEL (both picked same unclaimed territory) ──
   function startDuel(sid) {
     const q = pickQ(null);
     setQuestion(q); qRef.current = q;
     setPAnswer(null); pAnsRef.current = null;
     setBotDone(false); setBotOk(null); botOkRef.current = null;
     setDuelSecs(10);
+    setIsDuel(true);
     setRPhase("duel");
 
-    // bot answers at random time 2.5–7s
     const delay = 2500 + Math.random() * 4500;
-    botDuelTimeoutRef.current = setTimeout(() => {
+    botDuelRef.current = setTimeout(() => {
       const ok = Math.random() < 0.7;
-      botOkRef.current = ok;
-      setBotOk(ok);
-      setBotDone(true);
-      // if player hasn't answered yet
-      if (pAnsRef.current === null) {
-        clearInterval(duelIntervalRef.current);
-        setTimeout(() => resolveDuel(null), 800);
-      }
+      botOkRef.current = ok; setBotOk(ok); setBotDone(true);
+      if (pAnsRef.current === null) { clearInterval(duelIvRef.current); setTimeout(() => resolveDuel(null), 800); }
     }, delay);
 
-    // countdown
-    duelIntervalRef.current = setInterval(() => {
+    duelIvRef.current = setInterval(() => {
       setDuelSecs(s => {
         if (s <= 1) {
-          clearInterval(duelIntervalRef.current);
-          clearTimeout(botDuelTimeoutRef.current);
+          clearInterval(duelIvRef.current); clearTimeout(botDuelRef.current);
           if (pAnsRef.current === null) {
             const ok = Math.random() < 0.7;
             botOkRef.current = ok; setBotOk(ok); setBotDone(true);
@@ -2227,57 +2294,37 @@ function MapGameScreen({ onBack }) {
 
   function handleDuelAnswer(idx) {
     if (pAnsRef.current !== null || rPhase !== "duel") return;
-    clearInterval(duelIntervalRef.current);
+    clearInterval(duelIvRef.current);
     setPAnswer(idx); pAnsRef.current = idx;
     const pCorrect = idx === qRef.current?.correct;
     playSound(pCorrect ? "correct" : "wrong");
-
-    if (!botOkRef.current && botOkRef.current !== false) {
-      // bot hasn't answered yet
+    if (botOkRef.current === null) {
       if (pCorrect) {
-        // player wins immediately
-        clearTimeout(botDuelTimeoutRef.current);
+        clearTimeout(botDuelRef.current);
         botOkRef.current = false; setBotOk(false); setBotDone(true);
         setTimeout(() => resolveDuel(idx), 1000);
       } else {
-        // player wrong — let bot finish (up to 2s more)
         setTimeout(() => {
-          if (botOkRef.current === null) {
-            clearTimeout(botDuelTimeoutRef.current);
-            const ok = Math.random() < 0.7;
-            botOkRef.current = ok; setBotOk(ok); setBotDone(true);
-          }
+          if (botOkRef.current === null) { clearTimeout(botDuelRef.current); const ok = Math.random() < 0.7; botOkRef.current = ok; setBotOk(ok); setBotDone(true); }
           setTimeout(() => resolveDuel(idx), 400);
         }, 2000);
       }
     } else {
-      // bot already answered
       setTimeout(() => resolveDuel(idx), 1000);
     }
   }
 
   function resolveDuel(pIdx) {
-    clearTimeout(botDuelTimeoutRef.current);
-    clearInterval(duelIntervalRef.current);
+    clearTimeout(botDuelRef.current); clearInterval(duelIvRef.current);
     const pCorrect = pIdx !== null && pIdx === qRef.current?.correct;
     const bCorrect = botOkRef.current === true;
     const sid = pPickRef.current;
     const newTerr = { ...terrRef.current };
     let msg;
-    if (pCorrect) {
-      newTerr[sid] = "player";
-      msg = bCorrect ? "Оба правы, но ты ответил быстрее! 🏆" : "Правильно! Земля твоя! 🏆";
-    } else if (bCorrect) {
-      newTerr[sid] = "bot";
-      msg = `${botName} ответил правильно и захватил землю!`;
-    } else {
-      msg = "Никто не ответил правильно — земля осталась свободной.";
-    }
-    terrRef.current = newTerr;
-    setTerritories(newTerr);
-    setRoundMsg(msg);
-    setRPhase("round_result");
-    if (pCorrect) setShowConfetti(true);
+    if (pCorrect) { newTerr[sid] = "player"; msg = bCorrect ? "Оба правы, но ты быстрее! 🏆" : "Правильно! Земля твоя! 🏆"; setShowConfetti(true); }
+    else if (bCorrect) { newTerr[sid] = "bot"; msg = `${botName} ответил правильно и захватил землю!`; }
+    else { msg = "Никто не ответил правильно — земля осталась свободной."; }
+    terrRef.current = newTerr; setTerritories(newTerr); setRoundMsg(msg); setRPhase("round_result");
     if (Object.keys(newTerr).length >= 16) setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 2000);
   }
 
@@ -2288,43 +2335,33 @@ function MapGameScreen({ onBack }) {
     setPAnswer(null); pAnsRef.current = null;
     setBotDone(false); setBotOk(null); botOkRef.current = null;
     setRPhase("answering");
-    // bot answers after 1.5–3.5s
-    setTimeout(() => {
-      const ok = Math.random() < 0.7;
-      botOkRef.current = ok; setBotOk(ok); setBotDone(true);
-    }, 1500 + Math.random() * 2000);
+    setTimeout(() => { const ok = Math.random() < 0.7; botOkRef.current = ok; setBotOk(ok); setBotDone(true); }, 1500 + Math.random() * 2000);
   }
 
-  // ── ANSWER ──
-  function handleAnswer(idx) {
-    if (pAnsRef.current !== null || rPhase !== "answering") return;
+  // ── ANSWERING ──
+  function handleAnswer(idx, phase2) {
+    if (pAnsRef.current !== null || (rPhase !== "answering" && rPhase !== "battle")) return;
     setPAnswer(idx); pAnsRef.current = idx;
     playSound(idx === qRef.current?.correct ? "correct" : "wrong");
   }
 
-  // When both player and bot done in normal round
   useEffect(() => {
     if (rPhase !== "answering" || pAnswer === null || !botDone) return;
-    const timer = setTimeout(resolveRound, 1000);
-    return () => clearTimeout(timer);
+    const t = setTimeout(resolveRound, 1000);
+    return () => clearTimeout(t);
   }, [pAnswer, botDone, rPhase]);
 
   function resolveRound() {
     const pCorrect = pAnsRef.current === qRef.current?.correct;
     const bCorrect = botOkRef.current === true;
-    const sid = pPickRef.current;
-    const bsid = bPickRef.current;
+    const sid = pPickRef.current, bsid = bPickRef.current;
     const newTerr = { ...terrRef.current };
     const msgs = [];
-    if (pCorrect && sid) { newTerr[sid] = "player"; msgs.push("Ты захватил землю! 🟣"); }
+    if (pCorrect && sid) { newTerr[sid] = "player"; msgs.push("Ты захватил землю! 🟣"); setShowConfetti(true); }
     else if (sid) msgs.push("Ты ответил неправильно.");
     if (bCorrect && bsid) { newTerr[bsid] = "bot"; msgs.push(`${botName} захватил землю! 🟡`); }
     else if (bsid) msgs.push(`${botName} не захватил землю.`);
-    terrRef.current = newTerr;
-    setTerritories(newTerr);
-    setRoundMsg(msgs.join(" · "));
-    if (pCorrect) setShowConfetti(true);
-    setRPhase("round_result");
+    terrRef.current = newTerr; setTerritories(newTerr); setRoundMsg(msgs.join(" · ")); setRPhase("round_result");
     if (Object.keys(newTerr).length >= 16) setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 2000);
   }
 
@@ -2332,69 +2369,70 @@ function MapGameScreen({ onBack }) {
     setRPhase("territory_select");
     setPlayerPick(null); pPickRef.current = null;
     setBotPick(null); bPickRef.current = null;
-    setIsDuel(false);
+    setIsDuel(false); setIsBattle(false);
     setQuestion(null); qRef.current = null;
     setPAnswer(null); pAnsRef.current = null;
     setBotDone(false); setBotOk(null); botOkRef.current = null;
-    setRoundMsg(null);
-    setDuelSecs(10);
-    setShowConfetti(false);
+    setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
+    setBattleRound(0); battleRoundRef.current = 0;
+    setRoundMsg(null); setDuelSecs(10); setShowConfetti(false);
   }
 
-  function restartGame() {
-    terrRef.current = {};
-    setTerritories({});
-    setPhase("matchmaking");
-    setCdMatch(30);
-    nextRound();
-  }
+  function restartGame() { terrRef.current = {}; setTerritories({}); setPhase("matchmaking"); setCdMatch(30); nextRound(); }
 
   const pScore = Object.values(territories).filter(v => v === "player").length;
   const bScore = Object.values(territories).filter(v => v === "bot").length;
   const W = 310, H = 370;
 
   function getFill(sid) {
-    if (sid === playerPick && rPhase !== "round_result") return "#a78bfa";
-    if (sid === botPick && rPhase === "answering") return "#fcd34d";
+    if (sid === playerPick) return "#a78bfa";
+    if (sid === botPick && rPhase !== "territory_select") return "#fcd34d";
     if (territories[sid] === "player") return "#7C5CFC";
     if (territories[sid] === "bot") return "#f59e0b";
     return "#2a2040";
   }
+  function getOpacity(sid) {
+    if (sid === playerPick || sid === botPick) return 0.95;
+    if (territories[sid]) return 0.88;
+    return rPhase === "territory_select" ? 0.65 : 0.55;
+  }
+  function getStroke(sid) {
+    if (sid === playerPick) return "#c4b5fd";
+    if (sid === botPick && rPhase !== "territory_select") return "#fcd34d";
+    return "#0f0d1a";
+  }
+
+  const ANIM_CSS = `
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes flash{0%,100%{opacity:1}50%{opacity:0.6}}
+  `;
 
   // ── MATCHMAKING ──
-  if (phase === "matchmaking") {
-    return (
-      <div style={{ paddingTop: 60, textAlign: "center" }}>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <button onClick={onBack} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Завоевание Германии</div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Ищем соперника онлайн...</div>
-        <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 36px", animation: "spin 1s linear infinite" }} />
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24 }}>
-          Если никого нет — бот через <span style={{ color: "#7C5CFC", fontWeight: 700 }}>{cdMatch}</span> сек
-        </div>
-        <button onClick={() => setPhase("playing")} style={{ background: "rgba(124,92,252,0.12)", border: "1px solid rgba(124,92,252,0.25)", color: "#a78bfa", borderRadius: 14, padding: "12px 28px", fontSize: 14, cursor: "pointer" }}>
-          Играть с ботом сейчас
-        </button>
-      </div>
-    );
-  }
+  if (phase === "matchmaking") return (
+    <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      <button onClick={onBack} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Завоевание Германии</div>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Ищем соперника онлайн...</div>
+      <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 36px", animation: "spin 1s linear infinite" }} />
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24 }}>Если никого нет — бот через <span style={{ color: "#7C5CFC", fontWeight: 700 }}>{cdMatch}</span> сек</div>
+      <button onClick={() => setPhase("playing")} style={{ background: "rgba(124,92,252,0.12)", border: "1px solid rgba(124,92,252,0.25)", color: "#a78bfa", borderRadius: 14, padding: "12px 28px", fontSize: 14, cursor: "pointer" }}>Играть с ботом сейчас</button>
+    </div>
+  );
 
   // ── GAMEOVER ──
   if (phase === "gameover") {
-    const playerWins = pScore > bScore;
-    const draw = pScore === bScore;
+    const pw = pScore > bScore, draw = pScore === bScore;
     return (
-      <div style={{ paddingTop: 60, textAlign: "center" }}>
-        {playerWins && <Confetti />}
-        <div style={{ fontSize: 52, marginBottom: 12 }}>{playerWins ? "🏆" : draw ? "🤝" : "😔"}</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
-          {playerWins ? "Победа!" : draw ? "Ничья!" : `${botName} победил!`}
-        </div>
-        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
-          Ты: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{pScore}</span> · {botName}: <span style={{ color: "#f59e0b", fontWeight: 700 }}>{bScore}</span>
-        </div>
+      <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.4s ease" }}>
+        <style>{ANIM_CSS}</style>
+        {pw && <Confetti />}
+        <div style={{ fontSize: 52, marginBottom: 12 }}>{pw ? "🏆" : draw ? "🤝" : "😔"}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{pw ? "Победа!" : draw ? "Ничья!" : `${botName} победил!`}</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Ты: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{pScore}</span> · {botName}: <span style={{ color: "#f59e0b", fontWeight: 700 }}>{bScore}</span></div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 40 }}>из 16 земель Германии</div>
         <button onClick={restartGame} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "14px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>Играть снова</button>
         <button onClick={onBack} style={{ width: "100%", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", borderRadius: 14, padding: "14px", fontSize: 15, cursor: "pointer" }}>В главное меню</button>
@@ -2402,35 +2440,33 @@ function MapGameScreen({ onBack }) {
     );
   }
 
-  // ── MAP (shared across sub-phases) ──
-  const mapSvg = (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)", display: "block", background: "#13101f", flexShrink: 0 }}>
-      {!geoFeatures && <text x={W/2} y={H/2} textAnchor="middle" fontSize="13" fill="rgba(255,255,255,0.3)">Загружаем карту...</text>}
-      {geoFeatures && geoFeatures.map(feature => {
-        const id = getStateId(feature);
-        if (!id) return null;
-        const d = featureToD(feature, W, H);
-        const [cLon, cLat] = centroid(feature);
-        const [cx, cy] = project(cLon, cLat, W, H);
-        const isSmall = ["hh", "hb", "be", "sl"].includes(id);
-        const clickable = rPhase === "territory_select" && !territories[id];
-        return (
-          <g key={id} onClick={() => handleTerritoryClick(id)} style={{ cursor: clickable ? "pointer" : "default" }}>
-            <path d={d} fill={getFill(id)} stroke="#0f0d1a" strokeWidth="1.2" strokeLinejoin="round"
-              opacity={territories[id] || id === playerPick || id === botPick ? 0.92 : 0.7}
-            />
-            {!isSmall && (
-              <text x={cx} y={cy + 2} textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.6)" style={{ pointerEvents: "none", userSelect: "none" }}>
-                {id.toUpperCase()}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  );
+  // ── SHARED MAP SVG ──
+  function MapSvg({ compact }) {
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)", display: "block", background: "#13101f", flexShrink: 0, ...(compact ? { maxHeight: 200 } : {}) }}>
+        {!geoFeatures && <text x={W/2} y={H/2} textAnchor="middle" fontSize="13" fill="rgba(255,255,255,0.3)">Загружаем карту...</text>}
+        {geoFeatures && geoFeatures.map(feature => {
+          const id = getStateId(feature);
+          if (!id) return null;
+          const d = featureToD(feature, W, H);
+          const [cLon, cLat] = centroid(feature);
+          const [cx, cy] = project(cLon, cLat, W, H);
+          const isSmall = ["hh","hb","be","sl"].includes(id);
+          const clickable = rPhase === "territory_select" && territories[id] !== "player";
+          return (
+            <g key={id} onClick={() => handleTerritoryClick(id)} style={{ cursor: clickable ? "pointer" : "default" }}>
+              <path d={d} fill={getFill(id)} stroke={getStroke(id)} strokeWidth={id === playerPick || id === botPick ? 2 : 1.2}
+                strokeLinejoin="round" opacity={getOpacity(id)} style={{ transition: "fill 0.5s ease, opacity 0.3s ease, stroke 0.3s ease" }} />
+              {!isSmall && <text x={cx} y={cy+2} textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.6)" style={{ pointerEvents:"none", userSelect:"none" }}>{id.toUpperCase()}</text>}
+            </g>
+          );
+        })}
+      </svg>
+    );
+  }
 
-  const scoreBar = (
+  // ── SHARED SCORE BAR ──
+  const ScoreBar = () => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
       <button onClick={onBack} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
       <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
@@ -2444,140 +2480,197 @@ function MapGameScreen({ onBack }) {
           <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{bScore}</div>
         </div>
       </div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{pScore + bScore}/16</div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{pScore+bScore}/16</div>
+    </div>
+  );
+
+  // ── ANSWER BUTTONS ──
+  function AnswerButtons({ q, ans, onPick }) {
+    if (!q) return null;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {q.options.map((opt, i) => {
+          let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
+          if (ans !== null) {
+            if (i === q.correct) { bg = "rgba(16,185,129,0.18)"; border = "#10b981"; color = "#10b981"; }
+            else if (i === ans) { bg = "rgba(239,68,68,0.18)"; border = "#ef4444"; color = "#ef4444"; }
+            else color = "rgba(255,255,255,0.2)";
+          }
+          return (
+            <button key={i} onClick={() => ans === null && onPick(i)}
+              style={{ background: bg, border: `1px solid ${border}`, borderRadius: 12, padding: "12px 16px", color, fontSize: 14, cursor: ans !== null ? "default" : "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "background 0.2s ease, border-color 0.2s ease, color 0.2s ease" }}>
+              <span>{opt}</span>
+              {ans !== null && i === q.correct && <span style={{ fontWeight: 800 }}>✓</span>}
+              {ans !== null && i === ans && i !== q.correct && <span style={{ fontWeight: 800 }}>✗</span>}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ── SELECTING (brief reveal) ──
+  if (rPhase === "selecting") return (
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      <ScoreBar />
+      <MapSvg />
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        <div style={{ flex: 1, background: "rgba(124,92,252,0.12)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 12, padding: "10px 12px", animation: "flash 0.8s ease infinite" }}>
+          <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, marginBottom: 2 }}>ТЫ АТАКУЕШЬ</div>
+          <div style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>{stateName(playerPick)}</div>
+        </div>
+        <div style={{ flex: 1, background: isBattle ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.1)", border: `1px solid ${isBattle ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.3)"}`, borderRadius: 12, padding: "10px 12px", animation: "flash 0.8s ease 0.2s infinite" }}>
+          <div style={{ fontSize: 10, color: isBattle ? "#f87171" : "#f59e0b", fontWeight: 700, marginBottom: 2 }}>{isBattle ? "ЗАЩИЩАЕТ" : `${botName.toUpperCase()} АТАКУЕТ`}</div>
+          <div style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>{stateName(botPick)}</div>
+        </div>
+      </div>
+      {isBattle && <div style={{ marginTop: 8, textAlign: "center", fontSize: 12, color: "#f87171", fontWeight: 700, letterSpacing: 1, animation: "pulse 0.6s ease infinite" }}>⚔️ НАЧИНАЕТСЯ БИТВА — ЛУЧШИЙ ИЗ 3!</div>}
+      {isDuel && !isBattle && <div style={{ marginTop: 8, textAlign: "center", fontSize: 12, color: "#f87171", fontWeight: 700, letterSpacing: 1, animation: "pulse 0.6s ease infinite" }}>⚡ ДУЭЛЬ — ОБА ХОТЯТ ЭТУ ЗЕМЛЮ!</div>}
+    </div>
+  );
+
+  // ── BATTLE ──
+  if (rPhase === "battle") return (
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      {showConfetti && <Confetti />}
+      <ScoreBar />
+      <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 14, padding: "10px 14px", marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 10, color: "#f87171", fontWeight: 700, letterSpacing: 1 }}>⚔️ БИТВА ЗА {stateName(playerPick).toUpperCase()}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Вопрос {battleRound + 1} из 3</div>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: "#a78bfa" }}>ТЫ</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{battleScore.player}</div>
+            </div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.3)" }}>–</div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: "#f59e0b" }}>{botName.toUpperCase()}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{battleScore.bot}</div>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
+          {[0,1,2].map(i => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < battleRound ? "rgba(255,255,255,0.3)" : i === battleRound ? "#f87171" : "rgba(255,255,255,0.1)", transition: "background 0.4s ease" }} />)}
+        </div>
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10, fontSize: 11 }}>
+        {botDone
+          ? <span style={{ color: botOk ? "#f59e0b" : "rgba(255,255,255,0.3)" }}>{botName}: {botOk ? "✓ правильно" : "✗ неправильно"}</span>
+          : <span style={{ color: "rgba(255,255,255,0.3)", animation: "pulse 1s ease infinite" }}>{botName} отвечает...</span>}
+      </div>
+      <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{question?.word || question?.prompt}</div>
+      <AnswerButtons q={question} ans={pAnswer} onPick={idx => { if (pAnsRef.current === null) { setPAnswer(idx); pAnsRef.current = idx; playSound(idx === qRef.current?.correct ? "correct" : "wrong"); } }} />
     </div>
   );
 
   // ── DUEL ──
-  if (rPhase === "duel") {
-    const pCorrect = pAnswer !== null && pAnswer === question?.correct;
-    const pWrong = pAnswer !== null && pAnswer !== question?.correct;
-    return (
-      <div style={{ paddingTop: 16 }}>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        {showConfetti && <Confetti />}
-        {scoreBar}
-        <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 14, padding: "12px 16px", marginBottom: 12, textAlign: "center" }}>
-          <div style={{ fontSize: 11, color: "#f87171", letterSpacing: 1, fontWeight: 700, marginBottom: 2 }}>⚔️ ДУЭЛЬ ЗА {stateName(playerPick).toUpperCase()}</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Ответь быстрее {botName}!</div>
+  if (rPhase === "duel") return (
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      {showConfetti && <Confetti />}
+      <ScoreBar />
+      <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 14, padding: "10px 14px", marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 10, color: "#f87171", fontWeight: 700, letterSpacing: 1 }}>⚡ ДУЭЛЬ ЗА {stateName(playerPick).toUpperCase()}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Ответь быстрее {botName}!</div>
+          </div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: duelSecs <= 3 ? "#ef4444" : "#fff", transition: "color 0.3s", minWidth: 40, textAlign: "right" }}>{duelSecs}с</div>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Осталось: <span style={{ color: duelSecs <= 3 ? "#ef4444" : "#fff", fontWeight: 700 }}>{duelSecs}с</span></div>
-          {botDone && <div style={{ fontSize: 12, color: botOk ? "#f59e0b" : "rgba(255,255,255,0.3)" }}>{botName}: {botOk ? "✓ правильно" : "✗ неправильно"}</div>}
-          {!botDone && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", animation: "pulse 1s ease infinite" }}>{botName} думает...</div>}
+        <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)", marginTop: 8 }}>
+          <div style={{ height: "100%", borderRadius: 2, background: duelSecs <= 3 ? "#ef4444" : "#7C5CFC", width: `${(duelSecs / 10) * 100}%`, transition: "width 1s linear, background 0.3s" }} />
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{question?.word || question?.prompt}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {question?.options.map((opt, i) => {
-            let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
-            if (pAnswer !== null) {
-              if (i === question.correct) { bg = "rgba(16,185,129,0.18)"; border = "#10b981"; color = "#10b981"; }
-              else if (i === pAnswer) { bg = "rgba(239,68,68,0.18)"; border = "#ef4444"; color = "#ef4444"; }
-              else color = "rgba(255,255,255,0.2)";
-            }
-            return (
-              <button key={i} onClick={() => handleDuelAnswer(i)}
-                style={{ background: bg, border: `1px solid ${border}`, borderRadius: 12, padding: "12px 16px", color, fontSize: 14, cursor: pAnswer !== null ? "default" : "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "all 0.15s" }}>
-                <span>{opt}</span>
-                {pAnswer !== null && i === question.correct && <span style={{ fontWeight: 800 }}>✓</span>}
-                {pAnswer !== null && i === pAnswer && i !== question.correct && <span style={{ fontWeight: 800 }}>✗</span>}
-              </button>
-            );
-          })}
-        </div>
-        <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
       </div>
-    );
-  }
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10, fontSize: 11 }}>
+        {botDone
+          ? <span style={{ color: botOk ? "#f59e0b" : "rgba(255,255,255,0.3)" }}>{botName}: {botOk ? "✓ правильно" : "✗ неправильно"}</span>
+          : <span style={{ color: "rgba(255,255,255,0.3)", animation: "pulse 1s ease infinite" }}>{botName} думает...</span>}
+      </div>
+      <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{question?.word || question?.prompt}</div>
+      <AnswerButtons q={question} ans={pAnswer} onPick={handleDuelAnswer} />
+    </div>
+  );
 
   // ── TOPIC SELECT ──
-  if (rPhase === "topic_select") {
-    return (
-      <div style={{ paddingTop: 16 }}>
-        {scoreBar}
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>
-          Ты атакуешь <span style={{ color: "#a78bfa", fontWeight: 700 }}>{stateName(playerPick)}</span>
-          {botPick && <> · {botName} атакует <span style={{ color: "#f59e0b", fontWeight: 700 }}>{stateName(botPick)}</span></>}
+  if (rPhase === "topic_select") return (
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      <ScoreBar />
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        <div style={{ flex: 1, background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
+          <div style={{ color: "#a78bfa", fontWeight: 700 }}>ТЫ</div>
+          <div style={{ color: "#fff" }}>🟣 {stateName(playerPick)}</div>
         </div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Выбери тему вопроса:</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {cats.map(cat => (
-            <button key={cat} onClick={() => handleCategoryPick(cat)}
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "12px 10px", color: "#fff", fontSize: 13, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 18 }}>{CAT_EMOJI[cat] || "📝"}</span>
-              <span>{cat}</span>
-            </button>
-          ))}
+        <div style={{ flex: 1, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
+          <div style={{ color: "#f59e0b", fontWeight: 700 }}>{botName.toUpperCase()}</div>
+          <div style={{ color: "#fff" }}>🟡 {stateName(botPick)}</div>
         </div>
       </div>
-    );
-  }
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>Выбери тему вопроса:</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {cats.map(cat => (
+          <button key={cat} onClick={() => handleCategoryPick(cat)}
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "11px 10px", color: "#fff", fontSize: 13, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 8, transition: "background 0.15s, border-color 0.15s" }}>
+            <span style={{ fontSize: 18 }}>{CAT_EMOJI[cat] || "📝"}</span>
+            <span>{cat}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   // ── ANSWERING ──
-  if (rPhase === "answering") {
-    return (
-      <div style={{ paddingTop: 16 }}>
-        {showConfetti && <Confetti />}
-        {scoreBar}
-        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-          <div style={{ flex: 1, background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
-            <div style={{ color: "#a78bfa", fontWeight: 700 }}>ТЫ</div>
-            <div style={{ color: "#fff" }}>🟣 {stateName(playerPick)}</div>
-          </div>
-          <div style={{ flex: 1, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
-            <div style={{ color: "#f59e0b", fontWeight: 700 }}>{botName.toUpperCase()}</div>
-            <div style={{ color: "#fff" }}>🟡 {stateName(botPick)}</div>
-            {botDone && <div style={{ color: botOk ? "#10b981" : "#ef4444", fontSize: 10, marginTop: 2 }}>{botOk ? "✓ правильно" : "✗ неправильно"}</div>}
-            {!botDone && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, marginTop: 2 }}>думает...</div>}
-          </div>
+  if (rPhase === "answering") return (
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      {showConfetti && <Confetti />}
+      <ScoreBar />
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <div style={{ flex: 1, background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
+          <div style={{ color: "#a78bfa", fontWeight: 700 }}>ТЫ</div>
+          <div style={{ color: "#fff" }}>🟣 {stateName(playerPick)}</div>
         </div>
-        <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{question?.word || question?.prompt}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {question?.options.map((opt, i) => {
-            let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
-            if (pAnswer !== null) {
-              if (i === question.correct) { bg = "rgba(16,185,129,0.18)"; border = "#10b981"; color = "#10b981"; }
-              else if (i === pAnswer) { bg = "rgba(239,68,68,0.18)"; border = "#ef4444"; color = "#ef4444"; }
-              else color = "rgba(255,255,255,0.2)";
-            }
-            return (
-              <button key={i} onClick={() => handleAnswer(i)}
-                style={{ background: bg, border: `1px solid ${border}`, borderRadius: 12, padding: "12px 16px", color, fontSize: 14, cursor: pAnswer !== null ? "default" : "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", transition: "all 0.15s" }}>
-                <span>{opt}</span>
-                {pAnswer !== null && i === question.correct && <span style={{ fontWeight: 800 }}>✓</span>}
-                {pAnswer !== null && i === pAnswer && i !== question.correct && <span style={{ fontWeight: 800 }}>✗</span>}
-              </button>
-            );
-          })}
+        <div style={{ flex: 1, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
+          <div style={{ color: "#f59e0b", fontWeight: 700 }}>{botName.toUpperCase()}</div>
+          <div style={{ color: "#fff" }}>🟡 {stateName(botPick)}</div>
+          {botDone ? <div style={{ color: botOk ? "#10b981" : "#ef4444", fontSize: 10, marginTop: 2 }}>{botOk ? "✓ правильно" : "✗ неправильно"}</div>
+            : <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, marginTop: 2, animation: "pulse 1s ease infinite" }}>думает...</div>}
         </div>
       </div>
-    );
-  }
+      <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{question?.word || question?.prompt}</div>
+      <AnswerButtons q={question} ans={pAnswer} onPick={idx => handleAnswer(idx)} />
+    </div>
+  );
 
   // ── ROUND RESULT ──
-  if (rPhase === "round_result") {
-    return (
-      <div style={{ paddingTop: 16 }}>
-        {showConfetti && <Confetti />}
-        {scoreBar}
-        {mapSvg}
-        <div style={{ marginTop: 12, padding: "14px 16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14 }}>
-          <div style={{ fontSize: 14, color: "#fff", marginBottom: 14, lineHeight: 1.6 }}>{roundMsg}</div>
-          <button onClick={nextRound} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-            Следующий раунд →
-          </button>
-        </div>
+  if (rPhase === "round_result") return (
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.4s ease" }}>
+      <style>{ANIM_CSS}</style>
+      {showConfetti && <Confetti />}
+      <ScoreBar />
+      <MapSvg />
+      <div style={{ marginTop: 10, padding: "14px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14 }}>
+        <div style={{ fontSize: 14, color: "#fff", marginBottom: 14, lineHeight: 1.6 }}>{roundMsg}</div>
+        <button onClick={nextRound} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "opacity 0.2s" }}>
+          Следующий раунд →
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 
   // ── TERRITORY SELECT ──
   return (
-    <div style={{ paddingTop: 16 }}>
-      {scoreBar}
-      {mapSvg}
-      <div style={{ marginTop: 10, padding: "12px 16px", background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 12, fontSize: 13, color: "#a78bfa", textAlign: "center" }}>
-        👆 Выбери землю для захвата
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      <ScoreBar />
+      <MapSvg />
+      <div style={{ marginTop: 10, padding: "11px 16px", background: "rgba(124,92,252,0.07)", border: "1px solid rgba(124,92,252,0.18)", borderRadius: 12, fontSize: 13, color: "#a78bfa", textAlign: "center" }}>
+        👆 Нажми на землю для захвата · 🟡 жёлтая земля = атаковать Фридриха
       </div>
     </div>
   );
