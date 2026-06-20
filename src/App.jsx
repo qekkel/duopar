@@ -2891,6 +2891,8 @@ function MapGameScreen({ onBack, session, profile }) {
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:0.6}}
+    @keyframes winGlow{0%{fill:#7C5CFC;filter:drop-shadow(0 0 4px #7C5CFC)}50%{fill:#c4b5fd;filter:drop-shadow(0 0 12px #a78bfa)}100%{fill:#7C5CFC;filter:drop-shadow(0 0 4px #7C5CFC)}}
+    @keyframes loseGlow{0%{fill:#f59e0b;filter:drop-shadow(0 0 4px #f59e0b)}50%{fill:#fde68a;filter:drop-shadow(0 0 10px #fcd34d)}100%{fill:#f59e0b;filter:drop-shadow(0 0 4px #f59e0b)}}
     @keyframes autoPick{from{fill:#2a2040;filter:drop-shadow(0 0 6px #fff)}to{fill:#e2e8f0;filter:drop-shadow(0 0 14px #fff)}}
   `;
 
@@ -3025,6 +3027,10 @@ function MapGameScreen({ onBack, session, profile }) {
           </div>
         </div>
 
+        <MapSvg compact />
+
+        <div style={{ height: 20 }} />
+
         <button onClick={restartGame} style={{ width: "100%", background: pw ? "linear-gradient(135deg,#7C5CFC,#a78bfa)" : "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "15px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
           {pw ? "Играть снова 🎉" : "Взять реванш 💪"}
         </button>
@@ -3049,7 +3055,13 @@ function MapGameScreen({ onBack, session, profile }) {
           return (
             <g key={id} onClick={() => handleTerritoryClick(id)} style={{ cursor: clickable ? "pointer" : "default" }}>
               <path d={d} fill={getFill(id)} stroke={id === autoPickTerr ? "#ffffff" : getStroke(id)} strokeWidth={id === playerPick || id === botPick || id === autoPickTerr ? 2.5 : 1.2}
-                strokeLinejoin="round" opacity={getOpacity(id)} style={{ transition: id === autoPickTerr ? "none" : "fill 0.5s ease, opacity 0.3s ease, stroke 0.3s ease", ...getAutoPickStyle(id) }} />
+                strokeLinejoin="round" opacity={getOpacity(id)}
+                style={{
+                  transition: id === autoPickTerr ? "none" : "fill 0.5s ease, opacity 0.3s ease, stroke 0.3s ease",
+                  ...(phase === "gameover" && territories[id] === "player" ? { animation: `winGlow ${0.8 + (id.charCodeAt(0) % 5) * 0.15}s ease-in-out infinite` } : {}),
+                  ...(phase === "gameover" && territories[id] === "bot" ? { animation: `loseGlow ${0.9 + (id.charCodeAt(0) % 4) * 0.2}s ease-in-out infinite` } : {}),
+                  ...getAutoPickStyle(id)
+                }} />
               {!isSmall && <text x={cx} y={cy+2} textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.6)" style={{ pointerEvents:"none", userSelect:"none" }}>{id.toUpperCase()}</text>}
             </g>
           );
