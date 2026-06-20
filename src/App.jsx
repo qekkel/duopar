@@ -1,61 +1,120 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
+// ── ВОПРОСЫ ПО УРОВНЯМ ───────────────────────────────────────
+
 const ALL_QUESTIONS = [
-  { id: 1, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "die Brücke", options: ["Мост", "Река", "Дорога", "Берег"], correct: 0, hint: "По ней переходят через реку" },
-  { id: 2, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "die Wolke", options: ["Вода", "Облако", "Ветер", "Земля"], correct: 1, hint: "Бывает на небе" },
-  { id: 3, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Schmetterling", options: ["Жук", "Бабочка", "Стрекоза", "Пчела"], correct: 1, hint: "Летает среди цветов" },
-  { id: 4, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Wald", options: ["Поле", "Лес", "Гора", "Озеро"], correct: 1, hint: "Много деревьев" },
-  { id: 5, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Regen", options: ["Снег", "Туман", "Дождь", "Ветер"], correct: 2, hint: "Капает с неба" },
-  { id: 6, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "die Blume", options: ["Дерево", "Трава", "Куст", "Цветок"], correct: 3, hint: "Растёт в саду, пахнет красиво" },
-  { id: 7, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Schnee", options: ["Лёд", "Снег", "Град", "Иней"], correct: 1, hint: "Белый и холодный" },
-  { id: 8, type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Fluss", options: ["Море", "Река", "Озеро", "Ручей"], correct: 1, hint: "Течёт между берегами" },
-  { id: 9, type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "der Kuchen", options: ["Хлеб", "Пирог", "Суп", "Сыр"], correct: 1, hint: "Сладкое, часто к кофе" },
-  { id: 10, type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "das Brot", options: ["Булочка", "Пирог", "Хлеб", "Печенье"], correct: 2, hint: "Основа немецкого стола" },
-  { id: 11, type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "die Kartoffel", options: ["Морковь", "Лук", "Картофель", "Капуста"], correct: 2, hint: "Из неё делают картошку-фри" },
-  { id: 12, type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "der Käse", options: ["Масло", "Молоко", "Творог", "Сыр"], correct: 3, hint: "Делают из молока, бывает с дырками" },
-  { id: 13, type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "das Ei", options: ["Молоко", "Яйцо", "Мясо", "Рыба"], correct: 1, hint: "Кладут в омлет" },
-  { id: 14, type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "der Apfel", options: ["Груша", "Слива", "Яблоко", "Вишня"], correct: 2, hint: "Красный или зелёный фрукт" },
-  { id: 15, type: "translate", category: "Город", prompt: "Как переводится слово?", word: "der Bahnhof", options: ["Аэропорт", "Вокзал", "Порт", "Стоянка"], correct: 1, hint: "Bahn — поезд, Hof — двор" },
-  { id: 16, type: "translate", category: "Город", prompt: "Как переводится слово?", word: "die Straße", options: ["Площадь", "Переулок", "Улица", "Проспект"], correct: 2, hint: "По ней едут машины" },
-  { id: 17, type: "translate", category: "Город", prompt: "Как переводится слово?", word: "das Krankenhaus", options: ["Школа", "Больница", "Аптека", "Банк"], correct: 1, hint: "Krank — больной, Haus — дом" },
-  { id: 18, type: "translate", category: "Город", prompt: "Как переводится слово?", word: "die Bibliothek", options: ["Музей", "Театр", "Библиотека", "Галерея"], correct: 2, hint: "Там берут книги" },
-  { id: 19, type: "translate", category: "Город", prompt: "Как переводится слово?", word: "das Rathaus", options: ["Тюрьма", "Ратуша", "Церковь", "Замок"], correct: 1, hint: "Центр городского управления" },
-  { id: 20, type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "der Kühlschrank", options: ["Плита", "Холодильник", "Шкаф", "Раковина"], correct: 1, hint: "kühl — прохладный" },
-  { id: 21, type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "das Fenster", options: ["Дверь", "Стена", "Окно", "Потолок"], correct: 2, hint: "Через него светит солнце" },
-  { id: 22, type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "das Schloss", options: ["Ключ", "Дверь", "Замок", "Окно"], correct: 2, hint: "Может быть и дворцом, и замком на двери" },
-  { id: 23, type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "der Stuhl", options: ["Стол", "Кровать", "Диван", "Стул"], correct: 3, hint: "На нём сидят" },
-  { id: 24, type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "die Treppe", options: ["Лифт", "Лестница", "Коридор", "Балкон"], correct: 1, hint: "По ней поднимаются на этаж" },
-  { id: 25, type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "die Sehnsucht", options: ["Радость", "Скука", "Тоска", "Злость"], correct: 2, hint: "Глубокое тоскливое желание" },
-  { id: 26, type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "die Freude", options: ["Грусть", "Страх", "Радость", "Злость"], correct: 2, hint: "Когда всё хорошо" },
-  { id: 27, type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "die Angst", options: ["Боль", "Страх", "Усталость", "Скука"], correct: 1, hint: "Неприятное чувство перед опасностью" },
-  { id: 28, type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "das Jahrhundert", options: ["Год", "Десятилетие", "Век", "Момент"], correct: 2, hint: "100 лет" },
-  { id: 29, type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "die Zukunft", options: ["Прошлое", "Настоящее", "Будущее", "История"], correct: 2, hint: "То, что ещё не случилось" },
-  { id: 30, type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "gestern", options: ["Сегодня", "Завтра", "Вчера", "Недавно"], correct: 2, hint: "День до сегодняшнего" },
-  { id: 31, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Hund bellt laut.", options: ["Der", "Die", "Das", "Dem"], correct: 0, hint: "Hund — мужской род" },
-  { id: 32, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Sonne scheint.", options: ["Der", "Die", "Das", "Den"], correct: 1, hint: "Sonne — женский род" },
-  { id: 33, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Kind spielt.", options: ["Der", "Die", "Das", "Dem"], correct: 2, hint: "Kind — средний род" },
-  { id: 34, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Ich sehe ___ Mann.", options: ["der", "die", "das", "den"], correct: 3, hint: "Akkusativ, мужской род → den" },
-  { id: 35, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Sie hilft ___ Frau.", options: ["der", "die", "das", "den"], correct: 0, hint: "Dativ, женский род → der" },
-  { id: 36, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Buch ist interessant.", options: ["Der", "Die", "Das", "Dem"], correct: 2, hint: "Buch — средний род" },
-  { id: 37, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Ich kaufe ___ Apfel.", options: ["der", "die", "den", "das"], correct: 2, hint: "Akkusativ, мужской род → den" },
-  { id: 38, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Katze schläft.", options: ["Der", "Die", "Das", "Den"], correct: 1, hint: "Katze — женский род" },
-  { id: 39, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Er gibt ___ Kind ein Geschenk.", options: ["der", "die", "dem", "das"], correct: 2, hint: "Dativ, средний род → dem" },
-  { id: 40, type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Wasser ist kalt.", options: ["Der", "Die", "Das", "Den"], correct: 2, hint: "Wasser — средний род" },
-  { id: 41, type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Ich gehe morgen zur Schule.", "Ich gehen morgen zur Schule.", "Ich geht morgen zur Schule.", "Ich gehst morgen zur Schule."], correct: 0, hint: "Ich → первое лицо ед. числа → gehe" },
-  { id: 42, type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Er haben ein Auto.", "Er hat ein Auto.", "Er habe ein Auto.", "Er hast ein Auto."], correct: 1, hint: "er/sie/es → hat" },
-  { id: 43, type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Wir spielen Fußball.", "Wir spielt Fußball.", "Wir spielst Fußball.", "Wir spielen Fußballe."], correct: 0, hint: "wir → spielen (окончание -en)" },
-  { id: 44, type: "choose", category: "Грамматика", prompt: "Выбери правильный порядок слов:", word: null, options: ["Morgen ich gehe ins Kino.", "Ich morgen gehe ins Kino.", "Morgen gehe ich ins Kino.", "Ins Kino ich gehe morgen."], correct: 2, hint: "Если наречие в начале — глагол на 2-м месте" },
-  { id: 45, type: "choose", category: "Грамматика", prompt: "Как правильно сказать в прошедшем времени?", word: null, options: ["Ich habe geschlafen.", "Ich bin geschlafen.", "Ich habe schlafe.", "Ich war schlafe."], correct: 0, hint: "schlafen → Perfekt с haben" },
-  { id: 46, type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Du gehst ins Kino?", "Du gehst im Kino?", "Du gehen ins Kino?", "Du geht ins Kino?"], correct: 0, hint: "du → gehst; ins = in das" },
-  { id: 47, type: "choose", category: "Грамматика", prompt: "Выбери правильную форму глагола:", word: null, options: ["Sie lesen ein Buch.", "Sie liest ein Buch.", "Sie lese ein Buch.", "Sie lesen ein Bücher."], correct: 0, hint: "Sie (они) → lesen; Sie (она) → liest" },
-  { id: 48, type: "choose", category: "Грамматика", prompt: "Какое предложение верно?", word: null, options: ["Ich bin gegangen.", "Ich habe gegangen.", "Ich war gehen.", "Ich bin gehe."], correct: 0, hint: "gehen → Perfekt с sein" },
-  { id: 49, type: "choose", category: "Грамматика", prompt: "Выбери правильный вариант:", word: null, options: ["Er kommt aus Deutschland.", "Er kommt von Deutschland.", "Er kommt aus der Deutschland.", "Er kommt von der Deutschland."], correct: 0, hint: "aus + страна без артикля" },
-  { id: 50, type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Ich möchte Kaffee trinken.", "Ich möchte Kaffee trinkst.", "Ich möchte Kaffee trinkt.", "Ich möchten Kaffee trinken."], correct: 0, hint: "Модальный глагол + инфинитив в конце" },
+  // A0 — Числа и цвета
+  { id: 1, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "eins", options: ["Два", "Три", "Один", "Четыре"], correct: 2, hint: "Первое число" },
+  { id: 2, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "zwei", options: ["Один", "Два", "Три", "Пять"], correct: 1, hint: "1 + 1 = ?" },
+  { id: 3, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "rot", options: ["Синий", "Зелёный", "Красный", "Жёлтый"], correct: 2, hint: "Цвет крови" },
+  { id: 4, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "blau", options: ["Красный", "Синий", "Белый", "Чёрный"], correct: 1, hint: "Цвет неба" },
+  { id: 5, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Hallo", options: ["Пока", "Спасибо", "Привет", "Пожалуйста"], correct: 2, hint: "Приветствие" },
+  { id: 6, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Danke", options: ["Привет", "Пожалуйста", "Спасибо", "Пока"], correct: 2, hint: "Говорят в ответ на помощь" },
+  { id: 7, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "ja", options: ["Нет", "Может быть", "Да", "Никогда"], correct: 2, hint: "Противоположность «нет»" },
+  { id: 8, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "nein", options: ["Да", "Нет", "Может", "Всегда"], correct: 1, hint: "Противоположность «да»" },
+  { id: 9, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "groß", options: ["Маленький", "Быстрый", "Большой", "Тихий"], correct: 2, hint: "Антоним «klein»" },
+  { id: 10, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "klein", options: ["Большой", "Маленький", "Старый", "Новый"], correct: 1, hint: "Антоним «groß»" },
+  { id: 11, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Wasser", options: ["Хлеб", "Молоко", "Вода", "Сок"], correct: 2, hint: "H₂O" },
+  { id: 12, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Haus", options: ["Машина", "Дом", "Дерево", "Дорога"], correct: 1, hint: "Где живут люди" },
+  { id: 13, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Hund", options: ["Кошка", "Птица", "Собака", "Рыба"], correct: 2, hint: "Лучший друг человека" },
+  { id: 14, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Katze", options: ["Собака", "Кошка", "Мышь", "Лошадь"], correct: 1, hint: "Мяукает" },
+  { id: 15, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "gut", options: ["Плохой", "Хороший", "Быстрый", "Старый"], correct: 1, hint: "Антоним «schlecht»" },
+  { id: 16, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Mutter", options: ["Отец", "Сестра", "Мать", "Бабушка"], correct: 2, hint: "Женщина, которая тебя родила" },
+  { id: 17, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "Vater", options: ["Мать", "Отец", "Брат", "Дедушка"], correct: 1, hint: "Папа" },
+  { id: 18, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "essen", options: ["Пить", "Спать", "Есть", "Идти"], correct: 2, hint: "Что делают за столом" },
+  { id: 19, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "trinken", options: ["Есть", "Пить", "Читать", "Писать"], correct: 1, hint: "Что делают со стаканом воды" },
+  { id: 20, level: "A0", type: "translate", category: "Основы", prompt: "Как переводится слово?", word: "schlafen", options: ["Работать", "Играть", "Спать", "Бежать"], correct: 2, hint: "Что делают ночью" },
+
+  // A1 — Природа, Еда, Город
+  { id: 21, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "die Brücke", options: ["Мост", "Река", "Дорога", "Берег"], correct: 0, hint: "По ней переходят через реку" },
+  { id: 22, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "die Wolke", options: ["Вода", "Облако", "Ветер", "Земля"], correct: 1, hint: "Бывает на небе" },
+  { id: 23, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Schmetterling", options: ["Жук", "Бабочка", "Стрекоза", "Пчела"], correct: 1, hint: "Летает среди цветов" },
+  { id: 24, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Wald", options: ["Поле", "Лес", "Гора", "Озеро"], correct: 1, hint: "Много деревьев" },
+  { id: 25, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Regen", options: ["Снег", "Туман", "Дождь", "Ветер"], correct: 2, hint: "Капает с неба" },
+  { id: 26, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "die Blume", options: ["Дерево", "Трава", "Куст", "Цветок"], correct: 3, hint: "Растёт в саду, пахнет красиво" },
+  { id: 27, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Schnee", options: ["Лёд", "Снег", "Град", "Иней"], correct: 1, hint: "Белый и холодный" },
+  { id: 28, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится слово?", word: "der Fluss", options: ["Море", "Река", "Озеро", "Ручей"], correct: 1, hint: "Течёт между берегами" },
+  { id: 29, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "der Kuchen", options: ["Хлеб", "Пирог", "Суп", "Сыр"], correct: 1, hint: "Сладкое, часто к кофе" },
+  { id: 30, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "das Brot", options: ["Булочка", "Пирог", "Хлеб", "Печенье"], correct: 2, hint: "Основа немецкого стола" },
+  { id: 31, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "die Kartoffel", options: ["Морковь", "Лук", "Картофель", "Капуста"], correct: 2, hint: "Из неё делают картошку-фри" },
+  { id: 32, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "der Käse", options: ["Масло", "Молоко", "Творог", "Сыр"], correct: 3, hint: "Делают из молока, бывает с дырками" },
+  { id: 33, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "das Ei", options: ["Молоко", "Яйцо", "Мясо", "Рыба"], correct: 1, hint: "Кладут в омлет" },
+  { id: 34, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится слово?", word: "der Apfel", options: ["Груша", "Слива", "Яблоко", "Вишня"], correct: 2, hint: "Красный или зелёный фрукт" },
+  { id: 35, level: "A1", type: "translate", category: "Город", prompt: "Как переводится слово?", word: "der Bahnhof", options: ["Аэропорт", "Вокзал", "Порт", "Стоянка"], correct: 1, hint: "Bahn — поезд, Hof — двор" },
+  { id: 36, level: "A1", type: "translate", category: "Город", prompt: "Как переводится слово?", word: "die Straße", options: ["Площадь", "Переулок", "Улица", "Проспект"], correct: 2, hint: "По ней едут машины" },
+  { id: 37, level: "A1", type: "translate", category: "Город", prompt: "Как переводится слово?", word: "das Krankenhaus", options: ["Школа", "Больница", "Аптека", "Банк"], correct: 1, hint: "Krank — больной, Haus — дом" },
+  { id: 38, level: "A1", type: "translate", category: "Город", prompt: "Как переводится слово?", word: "die Bibliothek", options: ["Музей", "Театр", "Библиотека", "Галерея"], correct: 2, hint: "Там берут книги" },
+  { id: 39, level: "A1", type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "der Kühlschrank", options: ["Плита", "Холодильник", "Шкаф", "Раковина"], correct: 1, hint: "kühl — прохладный" },
+  { id: 40, level: "A1", type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "das Fenster", options: ["Дверь", "Стена", "Окно", "Потолок"], correct: 2, hint: "Через него светит солнце" },
+  { id: 41, level: "A1", type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "der Stuhl", options: ["Стол", "Кровать", "Диван", "Стул"], correct: 3, hint: "На нём сидят" },
+  { id: 42, level: "A1", type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "die Treppe", options: ["Лифт", "Лестница", "Коридор", "Балкон"], correct: 1, hint: "По ней поднимаются на этаж" },
+  { id: 43, level: "A1", type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "die Freude", options: ["Грусть", "Страх", "Радость", "Злость"], correct: 2, hint: "Когда всё хорошо" },
+  { id: 44, level: "A1", type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "die Angst", options: ["Боль", "Страх", "Усталость", "Скука"], correct: 1, hint: "Неприятное чувство перед опасностью" },
+
+  // A1 — Артикли (базовые)
+  { id: 45, level: "A1", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Hund bellt laut.", options: ["Der", "Die", "Das", "Dem"], correct: 0, hint: "Hund — мужской род" },
+  { id: 46, level: "A1", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Sonne scheint.", options: ["Der", "Die", "Das", "Den"], correct: 1, hint: "Sonne — женский род" },
+  { id: 47, level: "A1", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Kind spielt.", options: ["Der", "Die", "Das", "Dem"], correct: 2, hint: "Kind — средний род" },
+  { id: 48, level: "A1", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Buch ist interessant.", options: ["Der", "Die", "Das", "Dem"], correct: 2, hint: "Buch — средний род" },
+  { id: 49, level: "A1", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Katze schläft.", options: ["Der", "Die", "Das", "Den"], correct: 1, hint: "Katze — женский род" },
+  { id: 50, level: "A1", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "___ Wasser ist kalt.", options: ["Der", "Die", "Das", "Den"], correct: 2, hint: "Wasser — средний род" },
+  { id: 51, level: "A1", type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Ich gehe morgen zur Schule.", "Ich gehen morgen zur Schule.", "Ich geht morgen zur Schule.", "Ich gehst morgen zur Schule."], correct: 0, hint: "Ich → первое лицо ед. числа → gehe" },
+  { id: 52, level: "A1", type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Er haben ein Auto.", "Er hat ein Auto.", "Er habe ein Auto.", "Er hast ein Auto."], correct: 1, hint: "er/sie/es → hat" },
+  { id: 53, level: "A1", type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Wir spielen Fußball.", "Wir spielt Fußball.", "Wir spielst Fußball.", "Wir spielen Fußballe."], correct: 0, hint: "wir → spielen (окончание -en)" },
+
+  // A2 — Сложные темы
+  { id: 54, level: "A2", type: "translate", category: "Чувства", prompt: "Как переводится слово?", word: "die Sehnsucht", options: ["Радость", "Скука", "Тоска", "Злость"], correct: 2, hint: "Глубокое тоскливое желание" },
+  { id: 55, level: "A2", type: "translate", category: "Время", prompt: "Как переводится слово?", word: "das Jahrhundert", options: ["Год", "Десятилетие", "Век", "Момент"], correct: 2, hint: "100 лет" },
+  { id: 56, level: "A2", type: "translate", category: "Время", prompt: "Как переводится слово?", word: "die Zukunft", options: ["Прошлое", "Настоящее", "Будущее", "История"], correct: 2, hint: "То, что ещё не случилось" },
+  { id: 57, level: "A2", type: "translate", category: "Время", prompt: "Как переводится слово?", word: "gestern", options: ["Сегодня", "Завтра", "Вчера", "Недавно"], correct: 2, hint: "День до сегодняшнего" },
+  { id: 58, level: "A2", type: "translate", category: "Город", prompt: "Как переводится слово?", word: "das Rathaus", options: ["Тюрьма", "Ратуша", "Церковь", "Замок"], correct: 1, hint: "Центр городского управления" },
+  { id: 59, level: "A2", type: "translate", category: "Дом", prompt: "Как переводится слово?", word: "das Schloss", options: ["Ключ", "Дверь", "Замок", "Окно"], correct: 2, hint: "Может быть и дворцом, и замком на двери" },
+  { id: 60, level: "A2", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Ich sehe ___ Mann.", options: ["der", "die", "das", "den"], correct: 3, hint: "Akkusativ, мужской род → den" },
+  { id: 61, level: "A2", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Sie hilft ___ Frau.", options: ["der", "die", "das", "den"], correct: 0, hint: "Dativ, женский род → der" },
+  { id: 62, level: "A2", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Ich kaufe ___ Apfel.", options: ["der", "die", "den", "das"], correct: 2, hint: "Akkusativ, мужской род → den" },
+  { id: 63, level: "A2", type: "fill", category: "Грамматика", prompt: "Выбери правильный артикль:", word: "Er gibt ___ Kind ein Geschenk.", options: ["der", "die", "dem", "das"], correct: 2, hint: "Dativ, средний род → dem" },
+  { id: 64, level: "A2", type: "choose", category: "Грамматика", prompt: "Выбери правильный порядок слов:", word: null, options: ["Morgen ich gehe ins Kino.", "Ich morgen gehe ins Kino.", "Morgen gehe ich ins Kino.", "Ins Kino ich gehe morgen."], correct: 2, hint: "Если наречие в начале — глагол на 2-м месте" },
+  { id: 65, level: "A2", type: "choose", category: "Грамматика", prompt: "Как правильно сказать в прошедшем времени?", word: null, options: ["Ich habe geschlafen.", "Ich bin geschlafen.", "Ich habe schlafe.", "Ich war schlafe."], correct: 0, hint: "schlafen → Perfekt с haben" },
+  { id: 66, level: "A2", type: "choose", category: "Грамматика", prompt: "Какое предложение верно?", word: null, options: ["Ich bin gegangen.", "Ich habe gegangen.", "Ich war gehen.", "Ich bin gehe."], correct: 0, hint: "gehen → Perfekt с sein" },
+  { id: 67, level: "A2", type: "choose", category: "Грамматика", prompt: "Выбери правильный вариант:", word: null, options: ["Er kommt aus Deutschland.", "Er kommt von Deutschland.", "Er kommt aus der Deutschland.", "Er kommt von der Deutschland."], correct: 0, hint: "aus + страна без артикля" },
+  { id: 68, level: "A2", type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Ich möchte Kaffee trinken.", "Ich möchte Kaffee trinkst.", "Ich möchte Kaffee trinkt.", "Ich möchten Kaffee trinken."], correct: 0, hint: "Модальный глагол + инфинитив в конце" },
+  { id: 69, level: "A2", type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Du gehst ins Kino?", "Du gehst im Kino?", "Du gehen ins Kino?", "Du geht ins Kino?"], correct: 0, hint: "du → gehst; ins = in das" },
 ];
 
-const CATEGORIES = ["Природа", "Еда", "Город", "Дом", "Чувства", "Грамматика"];
-const CATEGORY_ICONS = { "Природа": "🌿", "Еда": "🍞", "Город": "🏙️", "Дом": "🏠", "Чувства": "💜", "Грамматика": "📝" };
+// Вопросы для теста на определение уровня
+const PLACEMENT_TEST = [
+  { id: "p1", prompt: "Что значит «Hallo»?", options: ["Пока", "Привет", "Спасибо", "Да"], correct: 1, hint: null },
+  { id: "p2", prompt: "Что значит «zwei»?", options: ["Один", "Три", "Два", "Пять"], correct: 2, hint: null },
+  { id: "p3", prompt: "Что значит «groß»?", options: ["Маленький", "Быстрый", "Старый", "Большой"], correct: 3, hint: null },
+  { id: "p4", prompt: "Выбери правильный артикль: ___ Hund", options: ["Die", "Das", "Der", "Den"], correct: 2, hint: null },
+  { id: "p5", prompt: "Что значит «der Bahnhof»?", options: ["Аэропорт", "Вокзал", "Магазин", "Школа"], correct: 1, hint: null },
+  { id: "p6", prompt: "Какое предложение верно?", options: ["Ich gehen zur Schule.", "Ich geht zur Schule.", "Ich gehe zur Schule.", "Ich gehst zur Schule."], correct: 2, hint: null },
+  { id: "p7", prompt: "Что значит «die Zukunft»?", options: ["Прошлое", "Настоящее", "Будущее", "Время"], correct: 2, hint: null },
+  { id: "p8", prompt: "Выбери правильный артикль: Ich sehe ___ Mann.", options: ["der", "die", "das", "den"], correct: 3, hint: null },
+  { id: "p9", prompt: "Как сказать «я ходил» (Perfekt)?", options: ["Ich war gehen.", "Ich habe gegangen.", "Ich bin gegangen.", "Ich gehe gegangen."], correct: 2, hint: null },
+  { id: "p10", prompt: "Выбери правильный порядок слов:", options: ["Morgen ich gehe ins Kino.", "Morgen gehe ich ins Kino.", "Ich gehe morgen ins Kino immer.", "Ins Kino morgen ich gehe."], correct: 1, hint: null },
+];
+
+const LEVEL_FROM_SCORE = (score) => {
+  if (score <= 3) return "A0";
+  if (score <= 6) return "A1";
+  return "A2";
+};
+
+const LEVEL_INFO = {
+  A0: { label: "A0 · Начинающий", color: "#10b981", desc: "Базовые слова и фразы" },
+  A1: { label: "A1 · Элементарный", color: "#7C5CFC", desc: "Простая лексика и артикли" },
+  A2: { label: "A2 · Базовый", color: "#f59e0b", desc: "Грамматика и падежи" },
+};
+
+const CATEGORIES_BY_LEVEL = {
+  A0: ["Основы"],
+  A1: ["Природа", "Еда", "Город", "Дом", "Чувства", "Грамматика"],
+  A2: ["Чувства", "Время", "Город", "Дом", "Грамматика"],
+};
+
+const CATEGORY_ICONS = { "Основы": "🔤", "Природа": "🌿", "Еда": "🍞", "Город": "🏙️", "Дом": "🏠", "Чувства": "💜", "Грамматика": "📝", "Время": "⏳" };
 const PARTNER = { name: "Maria", avatar: "🧑‍🎤", level: "A2" };
 const QUESTIONS_PER_ROUND = 8;
 
@@ -63,8 +122,96 @@ function getLevel(xp) { return Math.floor(xp / 200) + 1; }
 function xpToNextLevel(xp) { return 200 - (xp % 200); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-// ── AUTH SCREEN ──────────────────────────────────────────────
-function AuthScreen({ onAuth }) {
+// ── PLACEMENT TEST ────────────────────────────────────────────
+function PlacementTest({ onDone }) {
+  const [qIndex, setQIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+
+  const q = PLACEMENT_TEST[qIndex];
+  const isLast = qIndex === PLACEMENT_TEST.length - 1;
+
+  function answer(i) {
+    if (revealed) return;
+    setSelected(i);
+    setRevealed(true);
+    const newScore = score + (i === q.correct ? 1 : 0);
+    setTimeout(() => {
+      if (isLast) {
+        onDone(LEVEL_FROM_SCORE(newScore), newScore);
+      } else {
+        setQIndex(idx => idx + 1);
+        setSelected(null);
+        setRevealed(false);
+      }
+      if (i === q.correct) setScore(newScore);
+    }, 900);
+  }
+
+  function optStyle(i) {
+    const base = { width: "100%", padding: "14px 18px", borderRadius: 14, border: "1.5px solid", fontSize: 15, fontWeight: 500, cursor: revealed ? "default" : "pointer", textAlign: "left", transition: "all 0.2s" };
+    if (!revealed) return { ...base, background: selected === i ? "rgba(124,92,252,0.2)" : "rgba(255,255,255,0.04)", borderColor: selected === i ? "#7C5CFC" : "rgba(255,255,255,0.1)", color: "#fff" };
+    if (i === q.correct) return { ...base, background: "rgba(16,185,129,0.15)", borderColor: "#10b981", color: "#10b981" };
+    if (i === selected) return { ...base, background: "rgba(239,68,68,0.12)", borderColor: "#ef4444", color: "#ef4444" };
+    return { ...base, background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)" };
+  }
+
+  return (
+    <div style={{ paddingTop: 60 }}>
+      <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · Тест уровня</div>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>Определим твой уровень</h1>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 28 }}>10 вопросов · займёт ~2 минуты</div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 28 }}>
+        {PLACEMENT_TEST.map((_, i) => (
+          <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < qIndex ? "#7C5CFC" : i === qIndex ? "rgba(124,92,252,0.5)" : "rgba(255,255,255,0.12)" }} />
+        ))}
+      </div>
+
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Вопрос {qIndex + 1} из {PLACEMENT_TEST.length}</div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 24, lineHeight: 1.4 }}>{q.prompt}</div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {q.options.map((opt, i) => (
+          <button key={i} onClick={() => answer(i)} style={optStyle(i)}>
+            <span style={{ marginRight: 10, opacity: 0.4, fontSize: 13 }}>{["A", "B", "C", "D"][i]}</span>
+            {opt}
+            {revealed && i === q.correct && <span style={{ float: "right" }}>✓</span>}
+            {revealed && i === selected && selected !== q.correct && <span style={{ float: "right" }}>✗</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── PLACEMENT RESULT ──────────────────────────────────────────
+function PlacementResult({ level, score, onStart }) {
+  const info = LEVEL_INFO[level];
+  return (
+    <div style={{ paddingTop: 60, textAlign: "center" }}>
+      <div style={{ fontSize: 64, marginBottom: 16 }}>🎯</div>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Ты ответил правильно на {score} из 10</div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: "#fff", marginBottom: 24 }}>Твой уровень</div>
+      <div style={{
+        background: `rgba(${level === "A0" ? "16,185,129" : level === "A1" ? "124,92,252" : "245,158,11"},0.15)`,
+        border: `1px solid ${info.color}40`,
+        borderRadius: 20, padding: "28px 32px", marginBottom: 32, display: "inline-block",
+      }}>
+        <div style={{ fontSize: 48, fontWeight: 900, color: info.color, marginBottom: 4 }}>{level}</div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "#fff" }}>{info.label.split("·")[1].trim()}</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>{info.desc}</div>
+      </div>
+      <button onClick={onStart} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+        Начать учить →
+      </button>
+    </div>
+  );
+}
+
+// ── AUTH SCREEN ───────────────────────────────────────────────
+function AuthScreen() {
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -82,22 +229,16 @@ function AuthScreen({ onAuth }) {
       if (error) setError(error.message);
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) { setError(error.message); }
+      if (error) setError(error.message);
       else {
-        if (username && data.user) {
-          await supabase.from("profiles").update({ username }).eq("id", data.user.id);
-        }
+        if (username && data.user) await supabase.from("profiles").update({ username }).eq("id", data.user.id);
         setDone(true);
       }
     }
     setLoading(false);
   }
 
-  const inp = {
-    width: "100%", padding: "14px 16px", borderRadius: 12,
-    background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.12)",
-    color: "#fff", fontSize: 15, outline: "none", boxSizing: "border-box",
-  };
+  const inp = { width: "100%", padding: "14px 16px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: 15, outline: "none", boxSizing: "border-box" };
 
   if (done) return (
     <div style={{ paddingTop: 80, textAlign: "center" }}>
@@ -113,33 +254,17 @@ function AuthScreen({ onAuth }) {
       <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 32px" }}>
         {mode === "login" ? "Добро пожаловать" : "Создать аккаунт"}
       </h1>
-
       <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {mode === "register" && (
-          <input style={inp} placeholder="Никнейм (необязательно)" value={username}
-            onChange={e => setUsername(e.target.value)} />
-        )}
-        <input style={inp} type="email" placeholder="Email" value={email}
-          onChange={e => setEmail(e.target.value)} required />
-        <input style={inp} type="password" placeholder="Пароль" value={password}
-          onChange={e => setPassword(e.target.value)} required />
-
+        {mode === "register" && <input style={inp} placeholder="Никнейм (необязательно)" value={username} onChange={e => setUsername(e.target.value)} />}
+        <input style={inp} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+        <input style={inp} type="password" placeholder="Пароль" value={password} onChange={e => setPassword(e.target.value)} required />
         {error && <div style={{ fontSize: 13, color: "#ef4444", padding: "8px 12px", background: "rgba(239,68,68,0.1)", borderRadius: 8 }}>{error}</div>}
-
-        <button type="submit" disabled={loading} style={{
-          background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 14,
-          padding: "16px", fontSize: 16, fontWeight: 700, cursor: "pointer", marginTop: 4,
-          opacity: loading ? 0.6 : 1,
-        }}>
+        <button type="submit" disabled={loading} style={{ background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "16px", fontSize: 16, fontWeight: 700, cursor: "pointer", marginTop: 4, opacity: loading ? 0.6 : 1 }}>
           {loading ? "..." : mode === "login" ? "Войти" : "Зарегистрироваться"}
         </button>
       </form>
-
       <div style={{ textAlign: "center", marginTop: 20 }}>
-        <button onClick={() => { setMode(m => m === "login" ? "register" : "login"); setError(""); }} style={{
-          background: "none", border: "none", color: "rgba(255,255,255,0.4)",
-          fontSize: 14, cursor: "pointer", textDecoration: "underline",
-        }}>
+        <button onClick={() => { setMode(m => m === "login" ? "register" : "login"); setError(""); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 14, cursor: "pointer", textDecoration: "underline" }}>
           {mode === "login" ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти"}
         </button>
       </div>
@@ -148,16 +273,18 @@ function AuthScreen({ onAuth }) {
 }
 
 // ── XP BAR ───────────────────────────────────────────────────
-function XPBar({ xp, username }) {
+function XPBar({ xp, username, langLevel }) {
   const level = getLevel(xp);
   const progress = (xp % 200) / 200;
+  const info = langLevel ? LEVEL_INFO[langLevel] : null;
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div style={{ flex: 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
         <span style={{ fontSize: 13, color: "#fff", fontWeight: 600 }}>
           {username || "Игрок"} · <span style={{ color: "#7C5CFC" }}>Ур. {level}</span>
+          {info && <span style={{ marginLeft: 8, fontSize: 11, color: info.color, background: `${info.color}20`, padding: "2px 8px", borderRadius: 10 }}>{langLevel}</span>}
         </span>
-        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{xp} XP · ещё {xpToNextLevel(xp)}</span>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{xp} XP</span>
       </div>
       <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${progress * 100}%`, background: "#7C5CFC", borderRadius: 3, transition: "width 0.6s ease" }} />
@@ -166,149 +293,122 @@ function XPBar({ xp, username }) {
   );
 }
 
-// ── PROGRESS BAR ─────────────────────────────────────────────
+// ── PROGRESS BAR ──────────────────────────────────────────────
 function ProgressBar({ current, total }) {
   return (
     <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
       {Array.from({ length: total }).map((_, i) => (
-        <div key={i} style={{
-          flex: 1, height: 4, borderRadius: 2,
-          background: i < current ? "#7C5CFC" : "rgba(255,255,255,0.12)",
-          transition: "background 0.3s",
-        }} />
+        <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < current ? "#7C5CFC" : "rgba(255,255,255,0.12)", transition: "background 0.3s" }} />
       ))}
     </div>
   );
 }
 
-// ── PARTNER BUBBLE ───────────────────────────────────────────
+// ── PARTNER BUBBLE ────────────────────────────────────────────
 function PartnerBubble({ answered, isCorrect }) {
   return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: 10,
-      padding: "10px 14px", borderRadius: 14,
-      background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-      fontSize: 13, color: "rgba(255,255,255,0.6)",
-    }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>
       <span style={{ fontSize: 20 }}>{PARTNER.avatar}</span>
       <div>
         <div style={{ fontWeight: 600, color: "rgba(255,255,255,0.85)", fontSize: 12 }}>{PARTNER.name} · {PARTNER.level}</div>
         <div>{answered === null ? "думает..." : isCorrect ? "✓ тоже правильно!" : "✗ ошиблась"}</div>
       </div>
-      <div style={{
-        marginLeft: "auto", width: 8, height: 8, borderRadius: "50%",
-        background: answered === null ? "#f59e0b" : isCorrect ? "#10b981" : "#ef4444",
-        boxShadow: `0 0 6px ${answered === null ? "#f59e0b" : isCorrect ? "#10b981" : "#ef4444"}`,
-      }} />
+      <div style={{ marginLeft: "auto", width: 8, height: 8, borderRadius: "50%", background: answered === null ? "#f59e0b" : isCorrect ? "#10b981" : "#ef4444", boxShadow: `0 0 6px ${answered === null ? "#f59e0b" : isCorrect ? "#10b981" : "#ef4444"}` }} />
     </div>
   );
 }
 
-// ── SETUP SCREEN ─────────────────────────────────────────────
-function SetupScreen({ onStart }) {
-  const [selected, setSelected] = useState(new Set(CATEGORIES));
+// ── SETUP SCREEN ──────────────────────────────────────────────
+function SetupScreen({ langLevel, onStart }) {
+  const available = CATEGORIES_BY_LEVEL[langLevel] || CATEGORIES_BY_LEVEL["A1"];
+  const [selected, setSelected] = useState(new Set(available));
 
   function toggle(cat) {
     setSelected(prev => {
       const next = new Set(prev);
-      if (next.has(cat)) { if (next.size > 1) next.delete(cat); }
-      else next.add(cat);
+      if (next.has(cat)) { if (next.size > 1) next.delete(cat); } else next.add(cat);
       return next;
     });
   }
 
   return (
     <div style={{ paddingTop: 60 }}>
-      <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · Deutsch</div>
+      <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · {langLevel}</div>
       <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>Выбери темы</h1>
-      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 28 }}>Можно выбрать несколько</div>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 28 }}>Доступны для уровня {langLevel}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
-        {CATEGORIES.map(cat => {
+        {available.map(cat => {
           const on = selected.has(cat);
           return (
-            <button key={cat} onClick={() => toggle(cat)} style={{
-              background: on ? "rgba(124,92,252,0.2)" : "rgba(255,255,255,0.04)",
-              border: `1.5px solid ${on ? "#7C5CFC" : "rgba(255,255,255,0.1)"}`,
-              borderRadius: 14, padding: "14px 12px", cursor: "pointer", textAlign: "left", transition: "all 0.2s",
-            }}>
+            <button key={cat} onClick={() => toggle(cat)} style={{ background: on ? "rgba(124,92,252,0.2)" : "rgba(255,255,255,0.04)", border: `1.5px solid ${on ? "#7C5CFC" : "rgba(255,255,255,0.1)"}`, borderRadius: 14, padding: "14px 12px", cursor: "pointer", textAlign: "left", transition: "all 0.2s" }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>{CATEGORY_ICONS[cat]}</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: on ? "#fff" : "rgba(255,255,255,0.5)" }}>{cat}</div>
               <div style={{ fontSize: 11, color: on ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.2)", marginTop: 2 }}>
-                {ALL_QUESTIONS.filter(q => q.category === cat).length} вопросов
+                {ALL_QUESTIONS.filter(q => q.category === cat && q.level === langLevel).length} вопросов
               </div>
             </button>
           );
         })}
       </div>
-      <button onClick={() => onStart([...selected])} style={{
-        width: "100%", background: "#7C5CFC", color: "#fff", border: "none",
-        borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, cursor: "pointer",
-      }}>Начать квест →</button>
+      <button onClick={() => onStart([...selected])} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+        Начать квест →
+      </button>
     </div>
   );
 }
 
-// ── RESULT SCREEN ────────────────────────────────────────────
+// ── RESULT SCREEN ─────────────────────────────────────────────
 function ResultScreen({ score, total, xpEarned, profile, onRestart, onProfile }) {
   const pct = Math.round((score / total) * 100);
   const emoji = pct >= 80 ? "🏆" : pct >= 60 ? "⭐" : "💪";
   const msg = pct >= 80 ? "Отлично сыграно!" : pct >= 60 ? "Хороший результат!" : "Продолжай тренироваться!";
   const partnerScore = Math.min(total, Math.max(0, score + Math.floor(Math.random() * 3) - 1));
-  const displayName = profile?.username || "ты";
 
   return (
     <div style={{ textAlign: "center", padding: "32px 0" }}>
       <div style={{ fontSize: 64, marginBottom: 16 }}>{emoji}</div>
       <div style={{ fontSize: 28, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{msg}</div>
       <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>Вы с Maria ответили правильно на</div>
-      <div style={{
-        display: "inline-flex", flexDirection: "column", alignItems: "center",
-        background: "rgba(124,92,252,0.15)", border: "1px solid rgba(124,92,252,0.3)",
-        borderRadius: 20, padding: "24px 48px", marginBottom: 20,
-      }}>
+      <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", background: "rgba(124,92,252,0.15)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 20, padding: "24px 48px", marginBottom: 20 }}>
         <div style={{ fontSize: 56, fontWeight: 800, color: "#7C5CFC" }}>{score}/{total}</div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{pct}% точность</div>
       </div>
-      <div style={{
-        background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.2)",
-        borderRadius: 14, padding: "14px 20px", marginBottom: 20,
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-      }}>
+      <div style={{ background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 14, padding: "14px 20px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
         <span style={{ fontSize: 20 }}>⚡</span>
         <span style={{ color: "#7C5CFC", fontWeight: 700, fontSize: 16 }}>+{xpEarned} XP</span>
-        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>· уровень {getLevel((profile?.xp || 0))}</span>
+        <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>· уровень {getLevel(profile?.xp || 0)}</span>
       </div>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 28 }}>
-        {[{ label: displayName, val: score }, { label: "Maria", val: partnerScore }].map(x => (
+        {[{ label: profile?.username || "ты", val: score }, { label: "Maria", val: partnerScore }].map(x => (
           <div key={x.label} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{x.val}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{x.label}</div>
           </div>
         ))}
       </div>
-      <button onClick={onRestart} style={{
-        background: "#7C5CFC", color: "#fff", border: "none",
-        borderRadius: 14, padding: "16px 40px", fontSize: 16,
-        fontWeight: 600, cursor: "pointer", width: "100%", marginBottom: 10,
-      }}>Новый раунд →</button>
-      <button onClick={onProfile} style={{
-        background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: 14, padding: "14px 40px", fontSize: 15,
-        fontWeight: 500, cursor: "pointer", width: "100%",
-      }}>Мой профиль 🧑‍💻</button>
+      <button onClick={onRestart} style={{ background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "16px 40px", fontSize: 16, fontWeight: 600, cursor: "pointer", width: "100%", marginBottom: 10 }}>
+        Новый раунд →
+      </button>
+      <button onClick={onProfile} style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, padding: "14px 40px", fontSize: 15, fontWeight: 500, cursor: "pointer", width: "100%" }}>
+        Мой профиль 🧑‍💻
+      </button>
     </div>
   );
 }
 
-// ── PROFILE SCREEN ───────────────────────────────────────────
-function ProfileScreen({ profile, session, onUpdate, onBack }) {
+// ── PROFILE SCREEN ────────────────────────────────────────────
+function ProfileScreen({ profile, session, onUpdate, onBack, onRetakeTest }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username || "");
   const [saving, setSaving] = useState(false);
 
-  const level = getLevel(profile?.xp || 0);
   const xp = profile?.xp || 0;
+  const level = getLevel(xp);
   const progress = (xp % 200) / 200;
+  const langLevel = profile?.lang_level || "—";
+  const info = LEVEL_INFO[langLevel];
+  const LEVEL_TITLES = ["Новичок", "Ученик", "Практик", "Знаток", "Мастер", "Эксперт"];
+  const title = LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)];
 
   async function save() {
     setSaving(true);
@@ -318,26 +418,16 @@ function ProfileScreen({ profile, session, onUpdate, onBack }) {
     setSaving(false);
   }
 
-  const LEVEL_TITLES = ["Новичок", "Ученик", "Практик", "Знаток", "Мастер", "Эксперт"];
-  const title = LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)];
-
   return (
     <div style={{ paddingTop: 60 }}>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0 }}>
-        ← Назад
-      </button>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0 }}>← Назад</button>
 
       <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ width: 80, height: 80, borderRadius: 24, background: "rgba(124,92,252,0.2)", border: "2px solid rgba(124,92,252,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 16px" }}>
-          🧑‍💻
-        </div>
+        <div style={{ width: 80, height: 80, borderRadius: 24, background: "rgba(124,92,252,0.2)", border: "2px solid rgba(124,92,252,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 16px" }}>🧑‍💻</div>
         {editing ? (
           <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 8 }}>
-            <input value={username} onChange={e => setUsername(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(124,92,252,0.5)", color: "#fff", fontSize: 16, fontWeight: 700, textAlign: "center", outline: "none" }} />
-            <button onClick={save} disabled={saving} style={{ background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600 }}>
-              {saving ? "..." : "✓"}
-            </button>
+            <input value={username} onChange={e => setUsername(e.target.value)} style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(124,92,252,0.5)", color: "#fff", fontSize: 16, fontWeight: 700, textAlign: "center", outline: "none" }} />
+            <button onClick={save} disabled={saving} style={{ background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600 }}>{saving ? "..." : "✓"}</button>
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 4 }}>
@@ -346,13 +436,25 @@ function ProfileScreen({ profile, session, onUpdate, onBack }) {
           </div>
         )}
         <div style={{ fontSize: 13, color: "#7C5CFC", fontWeight: 600 }}>{title}</div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{session.user.email}</div>
       </div>
+
+      {info && (
+        <div style={{ background: `${info.color}15`, border: `1px solid ${info.color}30`, borderRadius: 14, padding: "14px 20px", marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>УРОВЕНЬ НЕМЕЦКОГО</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: info.color }}>{langLevel}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{info.desc}</div>
+          </div>
+          <button onClick={onRetakeTest} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "8px 14px", color: "rgba(255,255,255,0.5)", fontSize: 12, cursor: "pointer" }}>
+            Пройти снова
+          </button>
+        </div>
+      )}
 
       <div style={{ background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 20, padding: 20, marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Уровень {level}</span>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{xp} / {level * 200} XP</span>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{xp} XP</span>
         </div>
         <div style={{ height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
           <div style={{ height: "100%", width: `${progress * 100}%`, background: "#7C5CFC", borderRadius: 4, transition: "width 0.6s ease" }} />
@@ -360,11 +462,11 @@ function ProfileScreen({ profile, session, onUpdate, onBack }) {
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>ещё {xpToNextLevel(xp)} XP до уровня {level + 1}</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
         {[
           { label: "Раундов сыграно", value: profile?.rounds_played || 0, icon: "🎮" },
           { label: "Всего XP", value: xp, icon: "⚡" },
-          { label: "Текущий уровень", value: level, icon: "🏅" },
+          { label: "Игровой уровень", value: level, icon: "🏅" },
           { label: "До след. уровня", value: `${xpToNextLevel(xp)} XP`, icon: "🎯" },
         ].map(item => (
           <div key={item.label} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px" }}>
@@ -375,16 +477,22 @@ function ProfileScreen({ profile, session, onUpdate, onBack }) {
         ))}
       </div>
 
-      <button onClick={() => supabase.auth.signOut()} style={{
-        width: "100%", background: "rgba(239,68,68,0.1)", color: "#ef4444",
-        border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: "14px",
-        fontSize: 15, fontWeight: 600, cursor: "pointer",
-      }}>Выйти из аккаунта</button>
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "16px 20px", marginBottom: 12 }}>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Настройки аккаунта</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Email</span>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{session.user.email}</span>
+        </div>
+      </div>
+
+      <button onClick={() => supabase.auth.signOut()} style={{ width: "100%", background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: "14px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+        Выйти из аккаунта
+      </button>
     </div>
   );
 }
 
-// ── MAIN APP ─────────────────────────────────────────────────
+// ── MAIN APP ──────────────────────────────────────────────────
 export default function DuoPar() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -414,11 +522,22 @@ export default function DuoPar() {
     }
   }, [session]);
 
+  // Показываем тест если lang_level не установлен
+  const needsPlacement = session && profile && !profile.lang_level;
+
   const q = questions[qIndex];
+  const langLevel = profile?.lang_level || "A1";
+
+  async function finishPlacement(level, testScore) {
+    await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
+    setProfile(p => ({ ...p, lang_level: level }));
+    setScreen("placement_result_" + level + "_" + testScore);
+  }
 
   function startGame(categories) {
-    const pool = ALL_QUESTIONS.filter(q => categories.includes(q.category));
-    setQuestions(shuffle(pool).slice(0, QUESTIONS_PER_ROUND));
+    const pool = ALL_QUESTIONS.filter(q => q.level === langLevel && categories.includes(q.category));
+    const fallback = pool.length < QUESTIONS_PER_ROUND ? ALL_QUESTIONS.filter(q => categories.includes(q.category)) : pool;
+    setQuestions(shuffle(fallback).slice(0, QUESTIONS_PER_ROUND));
     setQIndex(0); setSelected(null); setRevealed(false);
     setScore(0); setPartnerState(null); setShowHint(false); setXpEarned(0);
     setScreen("quiz");
@@ -431,8 +550,7 @@ export default function DuoPar() {
         setPartnerState(partnerCorrect);
         setRevealed(true);
         if (selected === q.correct) {
-          const bonus = partnerCorrect ? 20 : 10;
-          setXpEarned(prev => prev + bonus);
+          setXpEarned(prev => prev + (partnerCorrect ? 20 : 10));
           setScore(s => s + 1);
         }
       }, 800 + Math.random() * 1200);
@@ -442,18 +560,13 @@ export default function DuoPar() {
 
   useEffect(() => {
     if (revealed) {
-      let c = 3;
-      setCountdown(c);
+      let c = 3; setCountdown(c);
       const iv = setInterval(() => {
         c -= 1;
         if (c <= 0) {
-          clearInterval(iv);
-          setCountdown(null);
+          clearInterval(iv); setCountdown(null);
           if (qIndex + 1 >= questions.length) setScreen("result");
-          else {
-            setQIndex(i => i + 1);
-            setSelected(null); setRevealed(false); setPartnerState(null); setShowHint(false);
-          }
+          else { setQIndex(i => i + 1); setSelected(null); setRevealed(false); setPartnerState(null); setShowHint(false); }
         } else setCountdown(c);
       }, 1000);
       return () => clearInterval(iv);
@@ -470,16 +583,8 @@ export default function DuoPar() {
   }, [screen]);
 
   function getOptionStyle(i) {
-    const base = {
-      width: "100%", padding: "15px 18px", borderRadius: 14, border: "1.5px solid",
-      fontSize: 15, fontWeight: 500, cursor: revealed ? "default" : "pointer",
-      textAlign: "left", transition: "all 0.2s",
-    };
-    if (!revealed) return {
-      ...base,
-      background: selected === i ? "rgba(124,92,252,0.2)" : "rgba(255,255,255,0.04)",
-      borderColor: selected === i ? "#7C5CFC" : "rgba(255,255,255,0.1)", color: "#fff",
-    };
+    const base = { width: "100%", padding: "15px 18px", borderRadius: 14, border: "1.5px solid", fontSize: 15, fontWeight: 500, cursor: revealed ? "default" : "pointer", textAlign: "left", transition: "all 0.2s" };
+    if (!revealed) return { ...base, background: selected === i ? "rgba(124,92,252,0.2)" : "rgba(255,255,255,0.04)", borderColor: selected === i ? "#7C5CFC" : "rgba(255,255,255,0.1)", color: "#fff" };
     if (i === q.correct) return { ...base, background: "rgba(16,185,129,0.15)", borderColor: "#10b981", color: "#10b981" };
     if (i === selected) return { ...base, background: "rgba(239,68,68,0.12)", borderColor: "#ef4444", color: "#ef4444" };
     return { ...base, background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.3)" };
@@ -489,9 +594,14 @@ export default function DuoPar() {
 
   if (!session) return (
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div style={{ width: "100%", maxWidth: 420, padding: "0 20px 40px" }}>
-        <AuthScreen />
-      </div>
+      <div style={{ width: "100%", maxWidth: 420, padding: "0 20px 40px" }}><AuthScreen /></div>
+    </div>
+  );
+
+  // Ждём загрузку профиля
+  if (!profile) return (
+    <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.3)", fontFamily: "'Inter', system-ui, sans-serif" }}>
+      Загрузка...
     </div>
   );
 
@@ -499,16 +609,30 @@ export default function DuoPar() {
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", padding: "0 0 40px", fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 420, padding: "0 20px" }}>
 
+        {/* PLACEMENT TEST */}
+        {(needsPlacement || screen === "placement") && screen !== "placement_result" && !screen.startsWith("placement_result_") && (
+          <PlacementTest onDone={finishPlacement} />
+        )}
+
+        {/* PLACEMENT RESULT */}
+        {screen.startsWith("placement_result_") && (() => {
+          const parts = screen.split("_");
+          const lvl = parts[2];
+          const sc = parseInt(parts[3]);
+          return <PlacementResult level={lvl} score={sc} onStart={() => setScreen("lobby")} />;
+        })()}
+
         {/* PROFILE */}
-        {screen === "profile" && (
-          <ProfileScreen profile={profile} session={session} onUpdate={setProfile} onBack={() => setScreen("lobby")} />
+        {screen === "profile" && !needsPlacement && (
+          <ProfileScreen profile={profile} session={session} onUpdate={setProfile} onBack={() => setScreen("lobby")}
+            onRetakeTest={() => setScreen("placement")} />
         )}
 
         {/* LOBBY */}
-        {screen === "lobby" && (
+        {screen === "lobby" && !needsPlacement && (
           <div style={{ paddingTop: 60 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-              <div style={{ flex: 1 }}><XPBar xp={profile?.xp || 0} username={profile?.username} /></div>
+              <XPBar xp={profile?.xp || 0} username={profile?.username} langLevel={profile?.lang_level} />
               <button onClick={() => setScreen("profile")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, width: 40, height: 40, fontSize: 18, cursor: "pointer", marginLeft: 12, flexShrink: 0 }}>
                 🧑‍💻
               </button>
@@ -527,9 +651,7 @@ export default function DuoPar() {
             <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 20, marginBottom: 24 }}>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 14, fontWeight: 500 }}>ПАРТНЁР НАЙДЕН</div>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, fontSize: 24, background: "rgba(124,92,252,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  {PARTNER.avatar}
-                </div>
+                <div style={{ width: 48, height: 48, borderRadius: 14, fontSize: 24, background: "rgba(124,92,252,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>{PARTNER.avatar}</div>
                 <div>
                   <div style={{ fontWeight: 700, color: "#fff", fontSize: 16 }}>{PARTNER.name}</div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Уровень {PARTNER.level} · онлайн сейчас</div>
@@ -538,15 +660,14 @@ export default function DuoPar() {
               </div>
             </div>
 
-            <button onClick={() => setScreen("setup")} style={{
-              width: "100%", background: "#7C5CFC", color: "#fff", border: "none",
-              borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, cursor: "pointer",
-            }}>Начать квест →</button>
+            <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+              Начать квест →
+            </button>
           </div>
         )}
 
         {/* SETUP */}
-        {screen === "setup" && <SetupScreen onStart={startGame} />}
+        {screen === "setup" && !needsPlacement && <SetupScreen langLevel={langLevel} onStart={startGame} />}
 
         {/* QUIZ */}
         {screen === "quiz" && q && (
@@ -555,20 +676,15 @@ export default function DuoPar() {
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>{qIndex + 1} / {questions.length}</div>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <span style={{ fontSize: 12, color: "#7C5CFC", fontWeight: 600 }}>⚡ {(profile?.xp || 0) + xpEarned} XP</span>
-                <div style={{ fontSize: 11, background: "rgba(124,92,252,0.15)", color: "#7C5CFC", padding: "4px 10px", borderRadius: 20, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
-                  {TYPE_LABEL[q.type]}
-                </div>
+                <div style={{ fontSize: 11, background: "rgba(124,92,252,0.15)", color: "#7C5CFC", padding: "4px 10px", borderRadius: 20, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>{TYPE_LABEL[q.type]}</div>
               </div>
             </div>
-
             <ProgressBar current={qIndex} total={questions.length} />
             <PartnerBubble answered={selected !== null ? partnerState : null} isCorrect={partnerState} />
-
             <div style={{ margin: "28px 0 24px" }}>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>{q.prompt}</div>
               {q.word && <div style={{ fontSize: 30, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>{q.word}</div>}
             </div>
-
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
               {q.options.map((opt, i) => (
                 <button key={i} onClick={() => !revealed && selected === null && setSelected(i)} style={getOptionStyle(i)}>
@@ -579,7 +695,6 @@ export default function DuoPar() {
                 </button>
               ))}
             </div>
-
             {!revealed && (
               <button onClick={() => setShowHint(h => !h)} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer", padding: "4px 0", textDecoration: "underline", textUnderlineOffset: 3 }}>
                 {showHint ? "Скрыть подсказку" : "Подсказка"}
@@ -591,13 +706,7 @@ export default function DuoPar() {
               </div>
             )}
             {revealed && (
-              <div style={{
-                marginTop: 16, padding: "12px 16px",
-                background: selected === q.correct ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
-                border: `1px solid ${selected === q.correct ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.2)"}`,
-                borderRadius: 12, fontSize: 13, color: selected === q.correct ? "#10b981" : "#ef4444",
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-              }}>
+              <div style={{ marginTop: 16, padding: "12px 16px", background: selected === q.correct ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)", border: `1px solid ${selected === q.correct ? "rgba(16,185,129,0.25)" : "rgba(239,68,68,0.2)"}`, borderRadius: 12, fontSize: 13, color: selected === q.correct ? "#10b981" : "#ef4444", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>{selected === q.correct ? "✓ Правильно!" : `✗ Верно: ${q.options[q.correct]}`}</span>
                 {countdown !== null && <span style={{ opacity: 0.6, fontSize: 12 }}>далее через {countdown}...</span>}
               </div>
@@ -608,7 +717,8 @@ export default function DuoPar() {
         {/* RESULT */}
         {screen === "result" && (
           <div style={{ paddingTop: 60 }}>
-            <ResultScreen score={score} total={questions.length} xpEarned={xpEarned} profile={profile} onRestart={() => setScreen("lobby")} onProfile={() => setScreen("profile")} />
+            <ResultScreen score={score} total={questions.length} xpEarned={xpEarned} profile={profile}
+              onRestart={() => setScreen("lobby")} onProfile={() => setScreen("profile")} />
           </div>
         )}
       </div>
