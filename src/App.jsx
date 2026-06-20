@@ -1107,12 +1107,19 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
 function buildExamQuestions(topic) {
   const flashcards = parseFlashcards(topic);
   // mix flashcard words + hardcoded exam questions, deduplicate
-  const wordQuestions = shuffle(flashcards).slice(0, 6).map(card => ({
-    q: `Как переводится «${card.de}»?`,
-    options: shuffle([card.ru, ...shuffle(flashcards.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
-    answer: null,
-    correctText: card.ru,
-  }));
+  const ARTICLES = new Set(["der","die","das","ein","eine","einen","einem","einer","des","dem","den"]);
+  const wordQuestions = shuffle(flashcards).slice(0, 6).map(card => {
+    const isArticle = ARTICLES.has(card.de.trim().toLowerCase());
+    const q = isArticle
+      ? `Какой род обозначает артикль «${card.de}»?`
+      : `Как переводится «${card.de}»?`;
+    return {
+      q,
+      options: shuffle([card.ru, ...shuffle(flashcards.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
+      answer: null,
+      correctText: card.ru,
+    };
+  });
   const hardcoded = shuffle(topic.exam).slice(0, 4).map(q => ({ ...q, correctText: null }));
   return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
 }
