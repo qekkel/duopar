@@ -2313,6 +2313,10 @@ function MapGameScreen({ onBack, session, profile }) {
   const duelStartRef = useRef(null);
   const [battleScore, setBattleScore] = useState({ player: 0, bot: 0 });
   const [battleRound, setBattleRound] = useState(0);
+  const [topicTurn, setTopicTurn] = useState("player"); // "player" | "bot" — кто выбирает тему
+  const [availableCats, setAvailableCats] = useState([]);
+  const [playerCat, setPlayerCat] = useState(null);
+  const [botCat, setBotCat] = useState(null);
   const [roundMsg, setRoundMsg] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -2354,6 +2358,19 @@ function MapGameScreen({ onBack, session, profile }) {
       setBotPickRevealed(true);
       // if I already picked, proceed
       if (pPickRef.current) proceedOnlinePicks(pPickRef.current, payload.sid);
+    });
+
+    ch.on("broadcast", { event: "topic_pick" }, ({ payload }) => {
+      if (payload.turn === "player") {
+        // opponent (bot-side) picked — now it's our turn (guest picks second)
+        setBotCat(payload.cat);
+        setTopicTurn("bot_done"); // signal that opponent picked, now local player picks
+      } else if (payload.turn === "bot") {
+        // opponent picked their topic — start answering
+        setBotCat(payload.cat);
+        // start answering: local player uses playerCat, opponent uses payload.cat
+        // playerCat is already set
+      }
     });
 
     ch.on("broadcast", { event: "answer" }, ({ payload }) => {
@@ -2434,7 +2451,7 @@ function MapGameScreen({ onBack, session, profile }) {
         startBattle(theirPick);
       } else {
         setIsDuel(false); setIsBattle(false);
-        setRPhase("topic_select");
+        enterTopicSelect();
       }
     }, 1200);
   }
@@ -2450,6 +2467,7 @@ function MapGameScreen({ onBack, session, profile }) {
     setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
     setBattleRound(0); battleRoundRef.current = 0;
     setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
+    setTopicTurn("player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
     setRPhase("territory_select");
   }
 
@@ -2492,7 +2510,7 @@ function MapGameScreen({ onBack, session, profile }) {
       setTimeout(() => startDuel(sid), 1200);
     } else {
       setIsDuel(false);
-      setTimeout(() => setRPhase("topic_select"), 1200);
+      setTimeout(() => enterTopicSelect(), 1200);
     }
   }
 
@@ -2636,13 +2654,45 @@ function MapGameScreen({ onBack, session, profile }) {
   }
 
   // ── TOPIC SELECT ──
+  function enterTopicSelect() {
+    const allCats = [...new Set(ALL_QUESTIONS.map(q => q.category).filter(Boolean))];
+    const shuffled = [...allCats].sort(() => Math.random() - 0.5);
+    const four = shuffled.slice(0, 4);
+    setAvailableCats(four);
+    setPlayerCat(null);
+    setBotCat(null);
+    // player always picks first
+    setTopicTurn("player");
+    setRPhase("topic_select");
+  }
+
   function handleCategoryPick(cat) {
-    const q = pickQ(cat);
-    setQuestion(q); qRef.current = q;
+    if (topicTurn !== "player") return;
+    setPlayerCat(cat);
+    setTopicTurn("bot");
+    if (onlineModeRef.current) {
+      sendOnline("topic_pick", { cat, turn: "player" });
+    } else {
+      // bot picks after 1–2s
+      setTimeout(() => {
+        const botChoice = availableCats[Math.floor(Math.random() * availableCats.length)];
+        setBotCat(botChoice);
+        startAnsweringPhase(cat, botChoice);
+      }, 1000 + Math.random() * 1000);
+    }
+  }
+
+  function startAnsweringPhase(pCat, bCat) {
+    // each player gets a question from their chosen category
+    const pQ = pickQ(pCat);
+    setQuestion(pQ); qRef.current = pQ;
     setPAnswer(null); pAnsRef.current = null;
     setBotDone(false); setBotOk(null); botOkRef.current = null;
     setRPhase("answering");
-    setTimeout(() => { const ok = Math.random() < 0.7; botOkRef.current = ok; setBotOk(ok); setBotDone(true); }, 1500 + Math.random() * 2000);
+    if (!onlineModeRef.current) {
+      const bQ = pickQ(bCat);
+      setTimeout(() => { const ok = Math.random() < 0.7; botOkRef.current = ok; setBotOk(ok); setBotDone(true); }, 1500 + Math.random() * 2000);
+    }
   }
 
   // ── ANSWERING ──
@@ -2691,6 +2741,7 @@ function MapGameScreen({ onBack, session, profile }) {
     setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
     setBattleRound(0); battleRoundRef.current = 0;
     setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
+    setTopicTurn("player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
     setRPhase("territory_select");
     if (onlineModeRef.current) {
       // online: host signals guest to start next round
@@ -2991,32 +3042,52 @@ function MapGameScreen({ onBack, session, profile }) {
   );
 
   // ── TOPIC SELECT ──
-  if (rPhase === "topic_select") return (
-    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
-      <style>{ANIM_CSS}</style>
-      <ScoreBar />
-      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-        <div style={{ flex: 1, background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
-          <div style={{ color: "#a78bfa", fontWeight: 700 }}>ТЫ</div>
-          <div style={{ color: "#fff" }}>🟣 {stateName(playerPick)}</div>
+  if (rPhase === "topic_select") {
+    const myTurn = topicTurn === "player";
+    const botWaiting = topicTurn === "bot" && !botCat;
+    return (
+      <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+        <style>{ANIM_CSS}</style>
+        <ScoreBar />
+        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          <div style={{ flex: 1, background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
+            <div style={{ color: "#a78bfa", fontWeight: 700 }}>ТЫ → {stateName(playerPick)}</div>
+            <div style={{ color: playerCat ? "#a78bfa" : "rgba(255,255,255,0.4)", marginTop: 2 }}>
+              {playerCat ? `${CAT_EMOJI[playerCat] || "📝"} ${playerCat}` : (myTurn ? "выбираешь тему..." : "ждёт")}
+            </div>
+          </div>
+          <div style={{ flex: 1, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
+            <div style={{ color: "#f59e0b", fontWeight: 700 }}>{botName.toUpperCase()} → {stateName(botPick)}</div>
+            <div style={{ color: botCat ? "#f59e0b" : "rgba(255,255,255,0.4)", marginTop: 2, animation: botWaiting ? "pulse 1s ease infinite" : "none" }}>
+              {botCat ? `${CAT_EMOJI[botCat] || "📝"} ${botCat}` : (botWaiting ? "выбирает тему..." : "ждёт")}
+            </div>
+          </div>
         </div>
-        <div style={{ flex: 1, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "8px 10px", fontSize: 11 }}>
-          <div style={{ color: "#f59e0b", fontWeight: 700 }}>{botName.toUpperCase()}</div>
-          <div style={{ color: "#fff" }}>🟡 {stateName(botPick)}</div>
-        </div>
+
+        {myTurn ? (
+          <>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 12 }}>
+              Твоя очередь — выбери тему:
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {availableCats.map(cat => (
+                <button key={cat} onClick={() => handleCategoryPick(cat)}
+                  style={{ background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 12, padding: "14px 10px", color: "#fff", fontSize: 13, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 8, transition: "background 0.15s, border-color 0.15s" }}>
+                  <span style={{ fontSize: 20 }}>{CAT_EMOJI[cat] || "📝"}</span>
+                  <span style={{ fontWeight: 600 }}>{cat}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: "center", paddingTop: 20 }}>
+            {playerCat && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>Ты выбрал: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{CAT_EMOJI[playerCat]} {playerCat}</span></div>}
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", animation: "pulse 1s ease infinite" }}>{botName} выбирает тему...</div>
+          </div>
+        )}
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>Выбери тему вопроса:</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {cats.map(cat => (
-          <button key={cat} onClick={() => handleCategoryPick(cat)}
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "11px 10px", color: "#fff", fontSize: 13, cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 8, transition: "background 0.15s, border-color 0.15s" }}>
-            <span style={{ fontSize: 18 }}>{CAT_EMOJI[cat] || "📝"}</span>
-            <span>{cat}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+    );
+  }
 
   // ── ANSWERING ──
   if (rPhase === "answering") return (
