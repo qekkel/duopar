@@ -188,6 +188,301 @@ function getLevel(xp) { return Math.floor(xp / 200) + 1; }
 function xpToNextLevel(xp) { return 200 - (xp % 200); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
+// ── ПРОГРАММА ОБУЧЕНИЯ ───────────────────────────────────────
+const CURRICULUM = [
+  {
+    id: "greetings",
+    title: "Приветствия",
+    emoji: "👋",
+    level: "A1",
+    cards: [
+      { title: "Как поздороваться", body: "Hallo — Привет\nGuten Morgen — Доброе утро\nGuten Tag — Добрый день\nGuten Abend — Добрый вечер\nHi — Хай (неформально)" },
+      { title: "Как попрощаться", body: "Tschüss — Пока\nAuf Wiedersehen — До свидания\nBis bald — До скорого\nBis morgen — До завтра\nGute Nacht — Спокойной ночи" },
+      { title: "Как спросить «как дела»", body: "Wie geht es Ihnen? — Как вы поживаете? (официально)\nWie geht's? — Как дела? (неформально)\n\nОтветы:\nGut, danke! — Хорошо, спасибо!\nSehr gut! — Очень хорошо!\nEs geht. — Нормально.\nNicht so gut. — Не очень." },
+    ],
+    exam: [
+      { q: "Как сказать «Добрый день» по-немецки?", options: ["Guten Tag", "Gute Nacht", "Auf Wiedersehen", "Tschüss"], answer: 0 },
+      { q: "Что значит «Tschüss»?", options: ["Привет", "Пока", "Спасибо", "Пожалуйста"], answer: 1 },
+      { q: "Как неформально спросить «как дела»?", options: ["Wie heißen Sie?", "Woher kommen Sie?", "Wie geht's?", "Was machen Sie?"], answer: 2 },
+      { q: "«Bis bald» означает:", options: ["До завтра", "До свидания", "До скорого", "Спокойной ночи"], answer: 2 },
+      { q: "Как ответить «Очень хорошо»?", options: ["Es geht.", "Nicht so gut.", "Danke schön.", "Sehr gut!"], answer: 3 },
+    ],
+  },
+  {
+    id: "articles",
+    title: "Артикли",
+    emoji: "📌",
+    level: "A1",
+    cards: [
+      { title: "Три рода в немецком", body: "В немецком у каждого существительного есть род:\n\nder — мужской (der Mann, der Tisch)\ndie — женский (die Frau, die Tür)\ndas — средний (das Kind, das Buch)\n\n💡 Род надо учить вместе со словом — правил мало!" },
+      { title: "Неопределённый артикль", body: "ein/eine — «один, одна» (как «a/an» в английском)\n\nein Mann — мужчина\neine Frau — женщина\nein Kind — ребёнок\n\n⚠️ Для мужского и среднего: ein\nДля женского: eine" },
+      { title: "Когда артикль не нужен", body: "Артикль не ставится:\n\n• Перед именами: Das ist Anna.\n• Перед профессиями: Ich bin Lehrerin.\n• Перед странами: Ich komme aus Deutschland.\n\n💡 Исключение: die Schweiz, die Türkei — с артиклем!" },
+    ],
+    exam: [
+      { q: "Какой артикль у слова «Tisch» (стол)?", options: ["die", "das", "der", "ein"], answer: 2 },
+      { q: "Какой артикль у слова «Frau» (женщина)?", options: ["der", "die", "das", "einen"], answer: 1 },
+      { q: "Какой артикль у слова «Kind» (ребёнок)?", options: ["der", "die", "das", "eine"], answer: 2 },
+      { q: "«Eine Frau» — это:", options: ["Определённый артикль", "Неопределённый артикль", "Без артикля", "Притяжательный"], answer: 1 },
+      { q: "Перед профессией артикль:", options: ["der", "die", "das", "не ставится"], answer: 3 },
+    ],
+  },
+  {
+    id: "numbers",
+    title: "Числа 1–20",
+    emoji: "🔢",
+    level: "A1",
+    cards: [
+      { title: "Числа 1–10", body: "1 — eins\n2 — zwei\n3 — drei\n4 — vier\n5 — fünf\n6 — sechs\n7 — sieben\n8 — acht\n9 — neun\n10 — zehn" },
+      { title: "Числа 11–20", body: "11 — elf\n12 — zwölf\n13 — dreizehn\n14 — vierzehn\n15 — fünfzehn\n16 — sechzehn\n17 — siebzehn\n18 — achtzehn\n19 — neunzehn\n20 — zwanzig\n\n💡 13-19: просто добавляй -zehn (= «-надцать»)" },
+      { title: "Числа 21–100", body: "21 — einundzwanzig\n30 — dreißig\n40 — vierzig\n50 — fünfzig\n100 — hundert\n\n💡 В немецком порядок обратный:\n25 = fünfundzwanzig (пять-и-двадцать)\nКак старорусское «пять да двадцать»!" },
+    ],
+    exam: [
+      { q: "Как по-немецки «семь»?", options: ["sechs", "acht", "sieben", "neun"], answer: 2 },
+      { q: "Что значит «zwölf»?", options: ["11", "12", "13", "20"], answer: 1 },
+      { q: "Как будет «пятнадцать»?", options: ["fünfzehn", "fünfzig", "fünfundzwanzig", "fünf"], answer: 0 },
+      { q: "«Dreißig» — это:", options: ["13", "30", "33", "300"], answer: 1 },
+      { q: "Как сказать «двадцать один»?", options: ["zwanzigeins", "einzwanzig", "einundzwanzig", "zwanzigeiner"], answer: 2 },
+    ],
+  },
+  {
+    id: "family",
+    title: "Семья",
+    emoji: "👨‍👩‍👧",
+    level: "A1",
+    cards: [
+      { title: "Члены семьи", body: "der Vater — папа\ndie Mutter — мама\nder Bruder — брат\ndie Schwester — сестра\nder Sohn — сын\ndie Tochter — дочь\ndie Eltern — родители (мн.ч.)\ndie Kinder — дети (мн.ч.)" },
+      { title: "Расширенная семья", body: "der Großvater / Opa — дедушка\ndie Großmutter / Oma — бабушка\nder Onkel — дядя\ndie Tante — тётя\nder Cousin — двоюродный брат\ndie Cousine — двоюродная сестра\nder Mann — муж\ndie Frau — жена" },
+      { title: "Как рассказать о семье", body: "Ich habe... — У меня есть...\nIch habe einen Bruder. — У меня есть брат.\nIch habe keine Geschwister. — У меня нет братьев и сестёр.\n\nMeine Familie ist groß/klein.\nМоя семья большая/маленькая.\n\nGeschwister = братья и сёстры вместе" },
+    ],
+    exam: [
+      { q: "Как по-немецки «дочь»?", options: ["der Sohn", "die Tochter", "die Schwester", "die Mutter"], answer: 1 },
+      { q: "«Die Eltern» — это:", options: ["дети", "родители", "бабушки и дедушки", "тёти и дяди"], answer: 1 },
+      { q: "Как сказать «У меня есть сестра»?", options: ["Ich bin eine Schwester.", "Ich habe eine Schwester.", "Ich habe einen Schwester.", "Mein Schwester."], answer: 1 },
+      { q: "«Opa» — это разговорное слово для:", options: ["папы", "дяди", "дедушки", "брата"], answer: 2 },
+      { q: "«Geschwister» значит:", options: ["сестра", "брат", "братья и сёстры", "родители"], answer: 2 },
+    ],
+  },
+  {
+    id: "colors",
+    title: "Цвета",
+    emoji: "🎨",
+    level: "A1",
+    cards: [
+      { title: "Основные цвета", body: "rot — красный\nblau — синий\ngelb — жёлтый\ngrün — зелёный\nschwarz — чёрный\nweiß — белый\ngrau — серый\nbraun — коричневый\norange — оранжевый\nlila — фиолетовый\nrosa — розовый" },
+      { title: "Как использовать цвета", body: "Das Auto ist rot. — Машина красная.\nIch mag Blau. — Мне нравится синий.\n\n💡 После глагола «sein» цвет не склоняется:\nDas Haus ist grün. ✓\n\nПеред существительным — склоняется:\nein rotes Haus (красный дом)\neine blaue Tür (синяя дверь)" },
+    ],
+    exam: [
+      { q: "Как по-немецки «красный»?", options: ["blau", "grün", "rot", "gelb"], answer: 2 },
+      { q: "«Schwarz» означает:", options: ["белый", "серый", "чёрный", "коричневый"], answer: 2 },
+      { q: "Как сказать «Машина синяя»?", options: ["Das Auto ist blau.", "Das Auto ist blue.", "Das Auto bin blau.", "Das Auto hat blau."], answer: 0 },
+      { q: "«Weiß» — это:", options: ["серый", "белый", "жёлтый", "розовый"], answer: 1 },
+      { q: "«Grün» означает:", options: ["синий", "коричневый", "зелёный", "фиолетовый"], answer: 2 },
+    ],
+  },
+  {
+    id: "verbs_sein_haben",
+    title: "Глаголы: sein и haben",
+    emoji: "⚡",
+    level: "A1",
+    cards: [
+      { title: "Глагол sein (быть)", body: "ich bin — я есть\ndu bist — ты есть\ner/sie/es ist — он/она/оно есть\nwir sind — мы есть\nihr seid — вы есть\nsie/Sie sind — они/Вы есть\n\nПримеры:\nIch bin müde. — Я устал.\nDu bist nett. — Ты приятный.\nSie ist Lehrerin. — Она учительница." },
+      { title: "Глагол haben (иметь)", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них/Вас есть\n\nПримеры:\nIch habe ein Auto. — У меня есть машина.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)" },
+      { title: "Sein vs Haben", body: "sein — описывает состояние или личность:\nIch bin glücklich. — Я счастлив.\nSie ist Ärztin. — Она врач.\n\nhaben — обозначает владение:\nIch habe Zeit. — У меня есть время.\nWir haben Hunger. — Мы голодны.\n\n💡 Hunger/Durst haben = быть голодным/жаждущим" },
+    ],
+    exam: [
+      { q: "«Du ___ müde.» — вставь правильную форму sein:", options: ["bin", "bist", "ist", "sind"], answer: 1 },
+      { q: "«Wir ___ ein Haus.» — вставь haben:", options: ["habe", "hast", "hat", "haben"], answer: 3 },
+      { q: "«Er ___ Arzt.» — вставь sein:", options: ["bin", "bist", "ist", "sind"], answer: 2 },
+      { q: "Как сказать «У неё есть кот»?", options: ["Sie ist eine Katze.", "Sie hat eine Katze.", "Sie haben eine Katze.", "Sie hast eine Katze."], answer: 1 },
+      { q: "«Ich habe Hunger» буквально значит:", options: ["Я хочу есть", "У меня есть голод", "Мне нужна еда", "Я голодный человек"], answer: 1 },
+    ],
+  },
+  {
+    id: "word_order",
+    title: "Порядок слов",
+    emoji: "📐",
+    level: "A1",
+    cards: [
+      { title: "Основной порядок слов", body: "В немецком предложении глагол ВСЕГДА стоит на 2-м месте:\n\nIch [1] trinke [2] Kaffee.\nHeute [1] trinke [2] ich Kaffee.\nKaffee [1] trinke [2] ich heute.\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
+      { title: "Вопросительные предложения", body: "Вопрос с вопросительным словом:\nWo wohnst du? — Где ты живёшь?\nWas machst du? — Что ты делаешь?\nWer bist du? — Кто ты?\n\nВопрос без вопр. слова (глагол на 1-м):\nKommst du? — Ты придёшь?\nHast du Zeit? — У тебя есть время?" },
+      { title: "Отрицание", body: "nicht — отрицает глагол или прилагательное:\nIch schlafe nicht. — Я не сплю.\nDas ist nicht gut. — Это нехорошо.\n\nkein/keine — отрицает существительное:\nIch habe kein Auto. — У меня нет машины.\nIch habe keine Zeit. — У меня нет времени.\n\n💡 kein = ein + не; keine = eine + не" },
+    ],
+    exam: [
+      { q: "Где в немецком предложении стоит глагол?", options: ["Всегда первый", "Всегда второй", "Всегда последний", "Где угодно"], answer: 1 },
+      { q: "Выбери правильный порядок слов:", options: ["Ich heute trinke Tee.", "Heute ich trinke Tee.", "Heute trinke ich Tee.", "Trinke heute ich Tee."], answer: 2 },
+      { q: "Как задать вопрос «У тебя есть время?»", options: ["Du hast Zeit?", "Hast du Zeit?", "Zeit du hast?", "Hast Zeit du?"], answer: 1 },
+      { q: "«Ich habe ___ Auto» (у меня нет машины):", options: ["nicht", "keine", "kein", "nein"], answer: 2 },
+      { q: "«Ich schlafe ___» (я не сплю):", options: ["kein", "keine", "nicht", "nein"], answer: 2 },
+    ],
+  },
+  {
+    id: "food",
+    title: "Еда и напитки",
+    emoji: "🍽️",
+    level: "A1",
+    cards: [
+      { title: "Основные продукты", body: "das Brot — хлеб\ndie Milch — молоко\ndas Wasser — вода\nder Kaffee — кофе\nder Tee — чай\ndas Fleisch — мясо\nder Käse — сыр\ndas Ei — яйцо\ndas Gemüse — овощи\ndas Obst — фрукты" },
+      { title: "В кафе и ресторане", body: "Ich möchte... — Я бы хотел...\nEin Kaffee, bitte! — Кофе, пожалуйста!\nDie Speisekarte, bitte. — Меню, пожалуйста.\nWas kostet das? — Сколько это стоит?\nDie Rechnung, bitte! — Счёт, пожалуйста!\nEs war sehr lecker! — Было очень вкусно!" },
+    ],
+    exam: [
+      { q: "Как попросить счёт в ресторане?", options: ["Das Menü, bitte!", "Die Rechnung, bitte!", "Ich möchte essen.", "Was kostet das?"], answer: 1 },
+      { q: "«Das Gemüse» — это:", options: ["фрукты", "мясо", "овощи", "хлеб"], answer: 2 },
+      { q: "Как сказать «Я бы хотел кофе»?", options: ["Ich habe Kaffee.", "Ich bin Kaffee.", "Ich möchte Kaffee.", "Ich trinke Kaffee bitte."], answer: 2 },
+      { q: "«Lecker» означает:", options: ["дорогой", "вкусный", "горячий", "холодный"], answer: 1 },
+      { q: "«Das Ei» — это:", options: ["сыр", "молоко", "яйцо", "хлеб"], answer: 2 },
+    ],
+  },
+];
+
+function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
+  const [activeTopicId, setActiveTopicId] = useState(null);
+  const [mode, setMode] = useState(null); // "learn" | "exam"
+
+  if (activeTopicId && mode) {
+    const topic = CURRICULUM.find(t => t.id === activeTopicId);
+    if (mode === "learn") {
+      return <TopicLearnScreen topic={topic} onBack={() => { setMode(null); setActiveTopicId(null); }} onStartExam={() => setMode("exam")} />;
+    }
+    if (mode === "exam") {
+      return <TopicExamScreen topic={topic} onBack={() => setMode("learn")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+    }
+  }
+
+  return (
+    <div style={{ paddingTop: 40 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>Программа A1</h1>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {CURRICULUM.map((topic, i) => {
+          const done = completedTopics.includes(topic.id);
+          const unlocked = i === 0 || completedTopics.includes(CURRICULUM[i - 1].id);
+          return (
+            <div key={topic.id} style={{ background: done ? "rgba(16,185,129,0.08)" : unlocked ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)", border: `1px solid ${done ? "rgba(16,185,129,0.3)" : unlocked ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}`, borderRadius: 18, padding: "18px 20px", opacity: unlocked ? 1 : 0.45 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: unlocked && !done ? 14 : 0 }}>
+                <div style={{ fontSize: 28 }}>{done ? "✅" : unlocked ? topic.emoji : "🔒"}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{i + 1}. {topic.title}</div>
+                  <div style={{ fontSize: 12, color: done ? "#10b981" : "rgba(255,255,255,0.35)", marginTop: 2 }}>{done ? "Пройдено" : unlocked ? `${topic.cards.length} карточки · ${topic.exam.length} вопросов` : "Заблокировано"}</div>
+                </div>
+              </div>
+              {unlocked && !done && (
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => { setActiveTopicId(topic.id); setMode("learn"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                    📖 Учить
+                  </button>
+                  <button onClick={() => { setActiveTopicId(topic.id); setMode("exam"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    ⚡ Сдать экзамен
+                  </button>
+                </div>
+              )}
+              {done && (
+                <button onClick={() => { setActiveTopicId(topic.id); setMode("exam"); }} style={{ marginTop: 10, padding: "8px 14px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: "#10b981", border: "1px solid rgba(16,185,129,0.2)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  Повторить →
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TopicLearnScreen({ topic, onBack, onStartExam }) {
+  const [cardIndex, setCardIndex] = useState(0);
+  const card = topic.cards[cardIndex];
+  const isLast = cardIndex === topic.cards.length - 1;
+
+  return (
+    <div style={{ paddingTop: 40 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
+      <div style={{ fontSize: 12, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>{topic.emoji} {topic.title}</div>
+      <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+        {topic.cards.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= cardIndex ? "#7C5CFC" : "rgba(255,255,255,0.1)" }} />)}
+      </div>
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "28px 24px", minHeight: 220, marginBottom: 20 }}>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 18 }}>{card.title}</div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 2, whiteSpace: "pre-line" }}>{card.body}</div>
+      </div>
+      <div style={{ display: "flex", gap: 10 }}>
+        {cardIndex > 0 && <button onClick={() => setCardIndex(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Назад</button>}
+        {!isLast
+          ? <button onClick={() => setCardIndex(i => i + 1)} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Далее →</button>
+          : <button onClick={onStartExam} style={{ flex: 2, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>⚡ Сдать экзамен!</button>
+        }
+      </div>
+    </div>
+  );
+}
+
+function TopicExamScreen({ topic, onBack, onPass }) {
+  const [qi, setQi] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const passMark = topic.exam.length - 1;
+  const q = topic.exam[qi];
+
+  function pick(i) {
+    if (selected !== null) return;
+    setSelected(i);
+    const correct = i === q.answer;
+    if (correct) { playSound("correct"); setScore(s => s + 1); }
+    else playSound("wrong");
+    setTimeout(() => {
+      if (qi + 1 < topic.exam.length) { setQi(qi + 1); setSelected(null); }
+      else setFinished(true);
+    }, 900);
+  }
+
+  if (finished) {
+    const passed = score >= passMark;
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center" }}>
+        <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🎉" : "😅"}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{passed ? "Тема пройдена!" : "Попробуй ещё раз"}</div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 32 }}>{score} из {topic.exam.length} правильно · нужно {passMark}+</div>
+        {passed
+          ? <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Продолжить →</button>
+          : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button onClick={() => { setQi(0); setSelected(null); setScore(0); setFinished(false); }} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
+              <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Учить тему</button>
+            </div>
+        }
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ paddingTop: 40 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
+      <div style={{ fontSize: 12, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>⚡ Экзамен · {topic.title}</div>
+      <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+        {topic.exam.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < qi ? "#10b981" : i === qi ? "#f59e0b" : "rgba(255,255,255,0.1)" }} />)}
+      </div>
+      <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.4, marginBottom: 28 }}>{q.q}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {q.options.map((opt, i) => {
+          let bg = "rgba(255,255,255,0.05)";
+          let border = "rgba(255,255,255,0.1)";
+          let color = "rgba(255,255,255,0.85)";
+          if (selected !== null) {
+            if (i === q.answer) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
+            else if (i === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
+          }
+          return (
+            <button key={i} onClick={() => pick(i)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 500, transition: "all 0.2s" }}>
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── СЛОВАРЬ GOETHE A1/A2 ─────────────────────────────────────
 const WORD_LEVELS = ["A1", "A2"];
 const WORD_CATEGORIES = ["Люди", "Дом", "Еда", "Город", "Время", "Глаголы", "Прилагательные", "Разное"];
@@ -1056,6 +1351,7 @@ function ProfileScreen({ profile, session, onUpdate, onBack, onRetakeTest }) {
 export default function DuoPar() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [completedTopics, setCompletedTopics] = useState([]);
   const [screen, setScreen] = useState("lobby");
   const [questions, setQuestions] = useState([]);
   const [qIndex, setQIndex] = useState(0);
@@ -1111,6 +1407,7 @@ export default function DuoPar() {
             }
           } else {
             setProfile(data);
+            setCompletedTopics(data.completed_topics || []);
             setScreen("lobby");
           }
         });
@@ -1123,6 +1420,13 @@ export default function DuoPar() {
 
   const q = questions[qIndex];
   const langLevel = profile?.lang_level || "A1";
+
+  function completeTopic(topicId) {
+    if (completedTopics.includes(topicId)) return;
+    const updated = [...completedTopics, topicId];
+    setCompletedTopics(updated);
+    supabase.from("profiles").update({ completed_topics: updated }).eq("id", session.user.id);
+  }
 
   function pickLevel(level) {
     setProfile(p => ({ ...p, lang_level: level }));
@@ -1294,17 +1598,25 @@ export default function DuoPar() {
             </div>
 
             <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-              <button onClick={() => setScreen("learn")} style={{ flex: 1, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-                📖 Учить
+              <button onClick={() => setScreen("curriculum")} style={{ flex: 1, background: "rgba(124,92,252,0.12)", color: "#a78bfa", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                🎓 Программа
               </button>
               <button onClick={() => setScreen("words")} style={{ flex: 1, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
                 🔤 Слова
               </button>
             </div>
+            <button onClick={() => setScreen("learn")} style={{ width: "100%", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer", marginBottom: 10 }}>
+              📖 Грамматика
+            </button>
             <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
               Играть →
             </button>
           </div>
+        )}
+
+        {/* CURRICULUM */}
+        {screen === "curriculum" && (
+          <CurriculumScreen onBack={() => setScreen("lobby")} completedTopics={completedTopics} onTopicDone={completeTopic} />
         )}
 
         {/* WORDS */}
