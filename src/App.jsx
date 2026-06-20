@@ -666,7 +666,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
         card.body.split("\n").forEach(l => {
           if (l.includes(" — ") && !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•")) {
             const [de, ru] = l.split(" — ");
-            if (de && ru) ws.push({ de: de.trim(), ru: ru.trim(), section: card.title });
+            if (de && ru) ws.push({ de: de.trim(), ru: ru.trim().replace(/\s*\(.*?\)/g, ""), section: card.title });
           }
         });
         return ws;
@@ -789,7 +789,7 @@ function parseFlashcards(topic) {
     const lines = card.body.split("\n").filter(l => l.includes(" — ") && !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•"));
     lines.forEach(line => {
       const [de, ru] = line.split(" — ");
-      if (de && ru) cards.push({ de: de.trim(), ru: ru.trim(), section: card.title });
+      if (de && ru) cards.push({ de: de.trim(), ru: ru.trim().replace(/\s*\(.*?\)/g, ""), section: card.title });
     });
   });
   return cards.slice(0, 8);
