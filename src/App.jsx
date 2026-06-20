@@ -402,38 +402,42 @@ function parseFlashcards(topic) {
   return cards;
 }
 
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
 function TopicLearnScreen({ topic, onBack, onStartExam }) {
   const flashcards = parseFlashcards(topic);
   const [idx, setIdx] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [known, setKnown] = useState([]);
-  const [unknown, setUnknown] = useState([]);
-  const [queue, setQueue] = useState(() => [...flashcards]);
+  const [selected, setSelected] = useState(null);
+  const [wrong, setWrong] = useState([]);
   const [done, setDone] = useState(false);
+  const [queue, setQueue] = useState(() => shuffle(flashcards));
 
   const card = queue[idx];
+  const correct = card?.ru;
 
-  function answer(isKnown) {
-    playSound(isKnown ? "correct" : "wrong");
-    if (isKnown) setKnown(k => [...k, card]);
-    else setUnknown(u => [...u, card]);
+  const options = card ? shuffle([
+    correct,
+    ...shuffle(flashcards.filter(f => f.ru !== correct)).slice(0, 3).map(f => f.ru)
+  ]) : [];
 
-    const next = idx + 1;
-    if (next < queue.length) { setIdx(next); setFlipped(false); }
-    else {
-      const retry = unknown.concat(!isKnown ? [card] : []);
-      if (retry.length > 0) {
-        setQueue(retry);
-        setIdx(0);
-        setFlipped(false);
-        setUnknown([]);
-      } else {
-        setDone(true);
+  function pick(opt) {
+    if (selected !== null) return;
+    setSelected(opt);
+    const isCorrect = opt === correct;
+    playSound(isCorrect ? "correct" : "wrong");
+    setTimeout(() => {
+      const next = idx + 1;
+      if (!isCorrect) setWrong(w => [...w, card]);
+      if (next < queue.length) { setIdx(next); setSelected(null); }
+      else {
+        const retry = [...wrong, ...(!isCorrect ? [card] : [])];
+        if (retry.length > 0) { setQueue(shuffle(retry)); setIdx(0); setSelected(null); setWrong([]); }
+        else setDone(true);
       }
-    }
+    }, 900);
   }
 
-  if (flashcards.length === 0) {
+  if (flashcards.length < 4) {
     return (
       <div style={{ paddingTop: 40 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
@@ -450,56 +454,50 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
     return (
       <div style={{ paddingTop: 60, textAlign: "center" }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>🧠</div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Слова изучены!</div>
-        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>{known.length + unknown.length} карточек · все знаешь</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Все слова знаешь!</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>{flashcards.length} слов пройдено</div>
         <button onClick={onStartExam} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>⚡ Сдать экзамен!</button>
       </div>
     );
   }
 
-  const progress = (known.length) / (known.length + queue.length - idx + (unknown.length));
+  const total = flashcards.length;
+  const progress = (idx) / queue.length;
 
   return (
     <div style={{ paddingTop: 40 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0 }}>← Назад</button>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
         <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-          <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${Math.round(progress * 100)}%`, transition: "width 0.3s" }} />
+          <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${Math.round(progress * 100)}%`, transition: "width 0.4s" }} />
         </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{known.length}/{known.length + queue.length - idx}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>{idx}/{queue.length}</div>
       </div>
 
-      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{topic.emoji} {topic.title}</div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 24 }}>{card.section}</div>
+      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 20 }}>{topic.emoji} {topic.title}</div>
 
-      <div onClick={() => setFlipped(f => !f)} style={{ background: flipped ? "rgba(124,92,252,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${flipped ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 24, minHeight: 220, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 32, marginBottom: 20, transition: "all 0.25s", textAlign: "center" }}>
-        {!flipped ? (
-          <>
-            <div style={{ fontSize: 36, fontWeight: 900, color: "#fff", marginBottom: 16 }}>{card.de}</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>нажми чтобы увидеть перевод</div>
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: 22, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>{card.de}</div>
-            <div style={{ fontSize: 36, fontWeight: 900, color: "#a78bfa" }}>{card.ru}</div>
-          </>
-        )}
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 12 }}>Как переводится?</div>
+        <div style={{ fontSize: 38, fontWeight: 900, color: "#fff" }}>{card.de}</div>
       </div>
 
-      {flipped ? (
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => answer(false)} style={{ flex: 1, padding: "16px", borderRadius: 16, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-            😅 Не знал
-          </button>
-          <button onClick={() => answer(true)} style={{ flex: 1, padding: "16px", borderRadius: 16, background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-            ✅ Знал!
-          </button>
-        </div>
-      ) : (
-        <button onClick={() => setFlipped(true)} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-          Показать перевод
-        </button>
-      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {options.map((opt, i) => {
+          let bg = "rgba(255,255,255,0.05)";
+          let border = "rgba(255,255,255,0.1)";
+          let color = "#fff";
+          if (selected !== null) {
+            if (opt === correct) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
+            else if (opt === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
+            else { color = "rgba(255,255,255,0.3)"; }
+          }
+          return (
+            <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s" }}>
+              {opt}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
