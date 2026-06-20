@@ -1189,8 +1189,18 @@ function SetupScreen({ langLevel, onStart }) {
   return (
     <div style={{ paddingTop: 60 }}>
       <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · {langLevel}</div>
-      <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>Выбери темы</h1>
-      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 28 }}>Доступны для уровня {langLevel}</div>
+      <h1 style={{ fontSize: 28, fontWeight: 800, color: "#fff", margin: "0 0 20px" }}>Новая игра</h1>
+
+      <div style={{ background: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 16, padding: "14px 16px", marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, fontSize: 20, background: "rgba(124,92,252,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>{PARTNER.avatar}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, color: "#fff", fontSize: 14 }}>{PARTNER.name} · партнёр найден</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>Уровень {PARTNER.level} · онлайн сейчас</div>
+        </div>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 6px #10b981" }} />
+      </div>
+
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 16 }}>Выбери темы для уровня {langLevel}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
         {available.map(cat => {
           const on = selected.has(cat);
@@ -1585,31 +1595,14 @@ export default function DuoPar() {
               </div>
             </div>
 
-            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: 20, marginBottom: 24 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 14, fontWeight: 500 }}>ПАРТНЁР НАЙДЕН</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, fontSize: 24, background: "rgba(124,92,252,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>{PARTNER.avatar}</div>
-                <div>
-                  <div style={{ fontWeight: 700, color: "#fff", fontSize: 16 }}>{PARTNER.name}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Уровень {PARTNER.level} · онлайн сейчас</div>
-                </div>
-                <div style={{ marginLeft: "auto", width: 10, height: 10, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }} />
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-              <button onClick={() => setScreen("curriculum")} style={{ flex: 1, background: "rgba(124,92,252,0.12)", color: "#a78bfa", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                🎓 Программа
-              </button>
-              <button onClick={() => setScreen("words")} style={{ flex: 1, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
-                🔤 Слова
-              </button>
-            </div>
-            <button onClick={() => setScreen("learn")} style={{ width: "100%", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer", marginBottom: 10 }}>
-              📖 Грамматика
+            <button onClick={() => setScreen("curriculum")} style={{ width: "100%", background: "linear-gradient(135deg, rgba(124,92,252,0.2), rgba(124,92,252,0.08))", color: "#fff", border: "1px solid rgba(124,92,252,0.35)", borderRadius: 20, padding: "20px", fontSize: 16, fontWeight: 700, cursor: "pointer", textAlign: "left", marginBottom: 10 }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>🎓</div>
+              <div>Программа обучения</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
             </button>
+
             <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-              Играть →
+              🎮 Играть →
             </button>
           </div>
         )}
