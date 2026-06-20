@@ -294,6 +294,90 @@ function ResultScreen({ score, total, xpEarned, profile, onRestart }) {
   );
 }
 
+// ── PROFILE SCREEN ───────────────────────────────────────────
+function ProfileScreen({ profile, session, onUpdate, onBack }) {
+  const [editing, setEditing] = useState(false);
+  const [username, setUsername] = useState(profile?.username || "");
+  const [saving, setSaving] = useState(false);
+
+  const level = getLevel(profile?.xp || 0);
+  const xp = profile?.xp || 0;
+  const progress = (xp % 200) / 200;
+
+  async function save() {
+    setSaving(true);
+    await supabase.from("profiles").update({ username }).eq("id", session.user.id);
+    onUpdate({ ...profile, username });
+    setEditing(false);
+    setSaving(false);
+  }
+
+  const LEVEL_TITLES = ["Новичок", "Ученик", "Практик", "Знаток", "Мастер", "Эксперт"];
+  const title = LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)];
+
+  return (
+    <div style={{ paddingTop: 60 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0 }}>
+        ← Назад
+      </button>
+
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <div style={{ width: 80, height: 80, borderRadius: 24, background: "rgba(124,92,252,0.2)", border: "2px solid rgba(124,92,252,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 16px" }}>
+          🧑‍💻
+        </div>
+        {editing ? (
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 8 }}>
+            <input value={username} onChange={e => setUsername(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(124,92,252,0.5)", color: "#fff", fontSize: 16, fontWeight: 700, textAlign: "center", outline: "none" }} />
+            <button onClick={save} disabled={saving} style={{ background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600 }}>
+              {saving ? "..." : "✓"}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 4 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: "#fff" }}>{profile?.username || "Игрок"}</div>
+            <button onClick={() => setEditing(true)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14 }}>✏️</button>
+          </div>
+        )}
+        <div style={{ fontSize: 13, color: "#7C5CFC", fontWeight: 600 }}>{title}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>{session.user.email}</div>
+      </div>
+
+      <div style={{ background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 20, padding: 20, marginBottom: 16 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Уровень {level}</span>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{xp} / {level * 200} XP</span>
+        </div>
+        <div style={{ height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${progress * 100}%`, background: "#7C5CFC", borderRadius: 4, transition: "width 0.6s ease" }} />
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 8 }}>ещё {xpToNextLevel(xp)} XP до уровня {level + 1}</div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
+        {[
+          { label: "Раундов сыграно", value: profile?.rounds_played || 0, icon: "🎮" },
+          { label: "Всего XP", value: xp, icon: "⚡" },
+          { label: "Текущий уровень", value: level, icon: "🏅" },
+          { label: "До след. уровня", value: `${xpToNextLevel(xp)} XP`, icon: "🎯" },
+        ].map(item => (
+          <div key={item.label} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px" }}>
+            <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>{item.value}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{item.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={() => supabase.auth.signOut()} style={{
+        width: "100%", background: "rgba(239,68,68,0.1)", color: "#ef4444",
+        border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: "14px",
+        fontSize: 15, fontWeight: 600, cursor: "pointer",
+      }}>Выйти из аккаунта</button>
+    </div>
+  );
+}
+
 // ── MAIN APP ─────────────────────────────────────────────────
 export default function DuoPar() {
   const [session, setSession] = useState(null);
@@ -409,16 +493,20 @@ export default function DuoPar() {
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", padding: "0 0 40px", fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 420, padding: "0 20px" }}>
 
+        {/* PROFILE */}
+        {screen === "profile" && (
+          <ProfileScreen profile={profile} session={session} onUpdate={setProfile} onBack={() => setScreen("lobby")} />
+        )}
+
         {/* LOBBY */}
         {screen === "lobby" && (
           <div style={{ paddingTop: 60 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <XPBar xp={profile?.xp || 0} username={profile?.username} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+              <div style={{ flex: 1 }}><XPBar xp={profile?.xp || 0} username={profile?.username} /></div>
+              <button onClick={() => setScreen("profile")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, width: 40, height: 40, fontSize: 18, cursor: "pointer", marginLeft: 12, flexShrink: 0 }}>
+                🧑‍💻
+              </button>
             </div>
-            <button onClick={() => supabase.auth.signOut()} style={{
-              background: "none", border: "none", color: "rgba(255,255,255,0.25)",
-              fontSize: 12, cursor: "pointer", marginBottom: 24, padding: 0,
-            }}>Выйти</button>
 
             <div style={{ marginBottom: 32 }}>
               <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · Deutsch</div>
