@@ -170,8 +170,8 @@ const LEVEL_FROM_SCORE = (score) => {
 
 const LEVEL_INFO = {
   A0: { label: "A0 · Начинающий", color: "#10b981", desc: "Базовые слова и фразы" },
-  A1: { label: "A1 · Элементарный", color: "#7C5CFC", desc: "Простая лексика и артикли" },
-  A2: { label: "A2 · Базовый", color: "#f59e0b", desc: "Грамматика и падежи" },
+  A1: { label: "A1 · Базовый", color: "#7C5CFC", desc: "Простая лексика и артикли" },
+  A2: { label: "A2 · Элементарный", color: "#f59e0b", desc: "Грамматика и падежи" },
 };
 
 const CATEGORIES_BY_LEVEL = {
@@ -190,8 +190,8 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 // ── ПРОГРАММА ОБУЧЕНИЯ ───────────────────────────────────────
 const CURRICULUM_LEVELS = {
-  A1: { color: "#7C5CFC", label: "A1 · Начинающий" },
-  A2: { color: "#f59e0b", label: "A2 · Базовый" },
+  A1: { color: "#7C5CFC", label: "A1 · Базовый" },
+  A2: { color: "#f59e0b", label: "A2 · Элементарный" },
 };
 
 const CURRICULUM = [
@@ -1653,8 +1653,8 @@ function LearnScreen({ onBack }) {
 function LevelPicker({ onPick, onTest }) {
   const levels = [
     { id: "A0", icon: "🌱", title: "A0 · Начинающий", desc: "Никогда не учил немецкий" },
-    { id: "A1", icon: "📖", title: "A1 · Элементарный", desc: "Знаю базовые слова и фразы" },
-    { id: "A2", icon: "💬", title: "A2 · Базовый", desc: "Понимаю простые предложения" },
+    { id: "A1", icon: "📖", title: "A1 · Базовый", desc: "Знаю базовые слова и фразы" },
+    { id: "A2", icon: "💬", title: "A2 · Элементарный", desc: "Понимаю простые предложения" },
   ];
   return (
     <div style={{ paddingTop: 60 }}>
