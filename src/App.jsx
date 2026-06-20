@@ -727,8 +727,6 @@ function parseFlashcards(topic) {
   return cards.slice(0, 8);
 }
 
-function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
-
 const BATCH_SIZE = 4;
 
 function TopicLearnScreen({ topic, onBack, onStartExam }) {
