@@ -2065,6 +2065,275 @@ function ProfileScreen({ profile, session, onUpdate, onBack, onRetakeTest }) {
   );
 }
 
+// ── КАРТА ГЕРМАНИИ ───────────────────────────────────────────
+const STATE_ID_MAP = {
+  "Schleswig-Holstein": "sh", "Hamburg": "hh", "Mecklenburg-Vorpommern": "mv",
+  "Niedersachsen": "ni", "Bremen": "hb", "Brandenburg": "bb", "Berlin": "be",
+  "Sachsen-Anhalt": "st", "Nordrhein-Westfalen": "nw", "Sachsen": "sn",
+  "Thüringen": "th", "Hessen": "he", "Rheinland-Pfalz": "rp",
+  "Saarland": "sl", "Baden-Württemberg": "bw", "Bayern": "by",
+};
+
+const BOT_NAMES = ["Фридрих", "Гёте", "Бах", "Кант", "Бисмарк", "Шиллер"];
+
+const GEO_URL = "https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/master/2_bundeslaender/4_niedrig.geo.json";
+
+// простая проекция Меркатор для Германии
+const LON_MIN = 5.87, LON_MAX = 15.05, LAT_MIN = 47.27, LAT_MAX = 55.06;
+function project(lon, lat, W, H) {
+  const x = ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * W;
+  const y = ((LAT_MAX - lat) / (LAT_MAX - LAT_MIN)) * H;
+  return [x, y];
+}
+function ringToD(ring, W, H) {
+  return ring.map(([lon, lat], i) => {
+    const [x, y] = project(lon, lat, W, H);
+    return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ") + "Z";
+}
+function featureToD(feature, W, H) {
+  const geom = feature.geometry;
+  if (geom.type === "Polygon") return geom.coordinates.map(r => ringToD(r, W, H)).join(" ");
+  if (geom.type === "MultiPolygon") return geom.coordinates.flatMap(p => p.map(r => ringToD(r, W, H))).join(" ");
+  return "";
+}
+function centroid(feature) {
+  const geom = feature.geometry;
+  const ring = geom.type === "Polygon" ? geom.coordinates[0] : geom.coordinates[0][0];
+  const n = ring.length;
+  let sumLon = 0, sumLat = 0;
+  ring.forEach(([lon, lat]) => { sumLon += lon; sumLat += lat; });
+  return [sumLon / n, sumLat / n];
+}
+
+function MapGameScreen({ onBack }) {
+  const [geoFeatures, setGeoFeatures] = useState(null);
+  const [phase, setPhase] = useState("matchmaking");
+  const [countdown, setCountdown] = useState(30);
+  const [botName] = useState(() => BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]);
+  const [territories, setTerritories] = useState({});
+  const [selectedState, setSelectedState] = useState(null);
+  const [botTarget, setBotTarget] = useState(null);
+  const [activePlayer, setActivePlayer] = useState("player");
+  const [question, setQuestion] = useState(null);
+  const [chosenAnswer, setChosenAnswer] = useState(null);
+
+  useEffect(() => {
+    fetch(GEO_URL).then(r => r.json()).then(data => setGeoFeatures(data.features));
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "matchmaking") return;
+    if (countdown <= 0) { setPhase("playing"); return; }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, countdown]);
+
+  function getStateId(feature) {
+    const name = feature.properties.GEN || feature.properties.NAME_1 || feature.properties.name || "";
+    return STATE_ID_MAP[name] || null;
+  }
+
+  function pickQuestion() {
+    return ALL_QUESTIONS[Math.floor(Math.random() * ALL_QUESTIONS.length)];
+  }
+
+  function handleStateClick(stateId) {
+    if (activePlayer !== "player" || territories[stateId] || selectedState || phase !== "playing") return;
+    setSelectedState(stateId);
+    setQuestion(pickQuestion());
+    setChosenAnswer(null);
+  }
+
+  function handleAnswer(idx) {
+    if (chosenAnswer !== null) return;
+    setChosenAnswer(idx);
+    const correct = idx === question.correct;
+    playSound(correct ? "correct" : "wrong");
+    setTimeout(() => {
+      const newTerr = correct ? { ...territories, [selectedState]: "player" } : { ...territories };
+      setTerritories(newTerr);
+      setSelectedState(null);
+      setQuestion(null);
+      setChosenAnswer(null);
+      if (Object.keys(newTerr).length >= 16) { setPhase("gameover"); return; }
+      setActivePlayer("bot");
+      startBotTurn(newTerr);
+    }, 1500);
+  }
+
+  function startBotTurn(currentTerr) {
+    const allIds = Object.values(STATE_ID_MAP);
+    const unclaimed = allIds.filter(id => !currentTerr[id]);
+    if (unclaimed.length === 0) { setPhase("gameover"); return; }
+    const target = unclaimed[Math.floor(Math.random() * unclaimed.length)];
+    setBotTarget(target);
+    setTimeout(() => {
+      const botWins = Math.random() < 0.7;
+      const newTerr = botWins ? { ...currentTerr, [target]: "bot" } : { ...currentTerr };
+      setBotTarget(null);
+      setTerritories(newTerr);
+      if (Object.keys(newTerr).length >= 16) { setPhase("gameover"); } else { setActivePlayer("player"); }
+    }, 1800);
+  }
+
+  function restartGame() {
+    setTerritories({});
+    setPhase("matchmaking");
+    setCountdown(30);
+    setActivePlayer("player");
+    setSelectedState(null);
+    setBotTarget(null);
+    setQuestion(null);
+    setChosenAnswer(null);
+  }
+
+  const playerScore = Object.values(territories).filter(v => v === "player").length;
+  const botScore = Object.values(territories).filter(v => v === "bot").length;
+
+  const W = 310, H = 370;
+
+  function getFill(stateId) {
+    if (stateId === selectedState) return "#a78bfa";
+    if (stateId === botTarget) return "#fcd34d";
+    if (territories[stateId] === "player") return "#7C5CFC";
+    if (territories[stateId] === "bot") return "#f59e0b";
+    return "#2a2040";
+  }
+
+  const selectedStateName = selectedState
+    ? Object.keys(STATE_ID_MAP).find(k => STATE_ID_MAP[k] === selectedState)
+    : null;
+
+  if (phase === "matchmaking") {
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center" }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <button onClick={onBack} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Завоевание Германии</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Ищем соперника онлайн...</div>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 36px", animation: "spin 1s linear infinite" }} />
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 24 }}>
+          Если никого нет — бот через <span style={{ color: "#7C5CFC", fontWeight: 700 }}>{countdown}</span> сек
+        </div>
+        <button onClick={() => setPhase("playing")} style={{ background: "rgba(124,92,252,0.12)", border: "1px solid rgba(124,92,252,0.25)", color: "#a78bfa", borderRadius: 14, padding: "12px 28px", fontSize: 14, cursor: "pointer" }}>
+          Играть с ботом сейчас
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === "gameover") {
+    const playerWins = playerScore > botScore;
+    const draw = playerScore === botScore;
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center" }}>
+        {playerWins && <Confetti />}
+        <div style={{ fontSize: 52, marginBottom: 12 }}>{playerWins ? "🏆" : draw ? "🤝" : "😔"}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
+          {playerWins ? "Победа!" : draw ? "Ничья!" : `${botName} победил!`}
+        </div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+          Ты: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{playerScore}</span> · {botName}: <span style={{ color: "#f59e0b", fontWeight: 700 }}>{botScore}</span>
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 40 }}>из 16 земель Германии</div>
+        <button onClick={restartGame} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "14px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
+          Играть снова
+        </button>
+        <button onClick={onBack} style={{ width: "100%", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)", borderRadius: 14, padding: "14px", fontSize: 15, cursor: "pointer" }}>
+          В главное меню
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ paddingTop: 16 }}>
+      <style>{`@keyframes botPulse{0%,100%{opacity:0.75}50%{opacity:1}}`}</style>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <button onClick={onBack} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
+        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, letterSpacing: 1 }}>ТЫ</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{playerScore}</div>
+          </div>
+          <div style={{ fontSize: 18, opacity: 0.4 }}>⚔️</div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700, letterSpacing: 1 }}>{botName.toUpperCase()}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{botScore}</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{playerScore + botScore}/16</div>
+      </div>
+
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)", display: "block", background: "#13101f" }}>
+        {!geoFeatures && (
+          <text x={W/2} y={H/2} textAnchor="middle" fontSize="13" fill="rgba(255,255,255,0.3)">Загружаем карту...</text>
+        )}
+        {geoFeatures && geoFeatures.map(feature => {
+          const id = getStateId(feature);
+          if (!id) return null;
+          const d = featureToD(feature, W, H);
+          const [cLon, cLat] = centroid(feature);
+          const [cx, cy] = project(cLon, cLat, W, H);
+          const isSmall = ["hh", "hb", "be", "sl"].includes(id);
+          const fill = getFill(id);
+          const isBot = id === botTarget;
+          return (
+            <g key={id} onClick={() => handleStateClick(id)}
+              style={{ cursor: !territories[id] && activePlayer === "player" && !selectedState ? "pointer" : "default" }}>
+              <path d={d} fill={fill} stroke="#0f0d1a" strokeWidth="1.2" strokeLinejoin="round"
+                opacity={territories[id] || id === selectedState ? 0.92 : 0.72}
+                style={isBot ? { animation: "botPulse 0.6s ease infinite" } : undefined}
+              />
+              {!isSmall && (
+                <text x={cx} y={cy + 2} textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.6)"
+                  style={{ pointerEvents: "none", userSelect: "none" }}>
+                  {id.toUpperCase()}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+
+      <div style={{ marginTop: 10 }}>
+        {!selectedState && !question && (
+          <div style={{ padding: "12px 16px", background: activePlayer === "player" ? "rgba(124,92,252,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${activePlayer === "player" ? "rgba(124,92,252,0.2)" : "rgba(245,158,11,0.2)"}`, borderRadius: 12, fontSize: 13, color: activePlayer === "player" ? "#a78bfa" : "#f59e0b", textAlign: "center" }}>
+            {activePlayer === "player" ? "👆 Нажми на землю чтобы атаковать" : `${botName} думает...`}
+          </div>
+        )}
+
+        {selectedState && question && (
+          <div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>⚔️ Захвати {selectedStateName}</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 12 }}>{question.word || question.prompt}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {question.options.map((opt, i) => {
+                let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
+                if (chosenAnswer !== null) {
+                  if (i === question.correct) { bg = "rgba(16,185,129,0.18)"; border = "#10b981"; color = "#10b981"; }
+                  else if (i === chosenAnswer) { bg = "rgba(239,68,68,0.18)"; border = "#ef4444"; color = "#ef4444"; }
+                  else { color = "rgba(255,255,255,0.2)"; }
+                }
+                return (
+                  <button key={i} onClick={() => chosenAnswer === null && handleAnswer(i)}
+                    style={{ background: bg, border: `1px solid ${border}`, borderRadius: 12, padding: "11px 16px", color, fontSize: 14, cursor: chosenAnswer !== null ? "default" : "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "all 0.2s" }}>
+                    <span>{opt}</span>
+                    {chosenAnswer !== null && i === question.correct && <span style={{ fontWeight: 800, fontSize: 16 }}>✓</span>}
+                    {chosenAnswer !== null && i === chosenAnswer && i !== question.correct && <span style={{ fontWeight: 800, fontSize: 16 }}>✗</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN APP ──────────────────────────────────────────────────
 export default function DuoPar() {
   const [session, setSession] = useState(null);
@@ -2309,8 +2578,14 @@ export default function DuoPar() {
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
             </button>
 
-            <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+            <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
               🎮 Играть →
+            </button>
+
+            <button onClick={() => setScreen("mapgame")} style={{ width: "100%", background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.06))", color: "#fff", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>🗺️</div>
+              <div>Завоевание Германии</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>Захвати все 16 земель · против бота</div>
             </button>
           </div>
         )}
@@ -2327,6 +2602,9 @@ export default function DuoPar() {
 
         {/* LEARN */}
         {screen === "learn" && <LearnScreen onBack={() => setScreen("lobby")} />}
+
+        {/* MAP GAME */}
+        {screen === "mapgame" && <MapGameScreen onBack={() => setScreen("lobby")} />}
 
         {/* SETUP */}
         {screen === "setup" && !needsPlacement && <SetupScreen langLevel={langLevel} onStart={startGame} onBack={() => setScreen("lobby")} />}
