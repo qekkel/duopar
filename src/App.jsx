@@ -529,22 +529,42 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   );
 }
 
+function buildExamQuestions(topic) {
+  const flashcards = parseFlashcards(topic);
+  // mix flashcard words + hardcoded exam questions, deduplicate
+  const wordQuestions = shuffle(flashcards).slice(0, 6).map(card => ({
+    q: `Как переводится «${card.de}»?`,
+    options: shuffle([card.ru, ...shuffle(flashcards.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
+    answer: null,
+    correctText: card.ru,
+  }));
+  const hardcoded = shuffle(topic.exam).slice(0, 4).map(q => ({ ...q, correctText: null }));
+  return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
+}
+
 function TopicExamScreen({ topic, onBack, onPass }) {
+  const [questions] = useState(() => buildExamQuestions(topic));
   const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const passMark = topic.exam.length - 1;
-  const q = topic.exam[qi];
+  const total = questions.length;
+  const passMark = Math.ceil(total * 0.7);
+  const q = questions[qi];
 
-  function pick(i) {
+  function isCorrect(opt, idx) {
+    if (q.correctText !== null) return opt === q.correctText;
+    return idx === q.answer;
+  }
+
+  function pick(opt, idx) {
     if (selected !== null) return;
-    setSelected(i);
-    const correct = i === q.answer;
+    setSelected(opt);
+    const correct = isCorrect(opt, idx);
     if (correct) { playSound("correct"); setScore(s => s + 1); }
     else playSound("wrong");
     setTimeout(() => {
-      if (qi + 1 < topic.exam.length) { setQi(qi + 1); setSelected(null); }
+      if (qi + 1 < total) { setQi(qi + 1); setSelected(null); }
       else setFinished(true);
     }, 900);
   }
@@ -555,12 +575,12 @@ function TopicExamScreen({ topic, onBack, onPass }) {
       <div style={{ paddingTop: 60, textAlign: "center" }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🎉" : "😅"}</div>
         <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{passed ? "Тема пройдена!" : "Попробуй ещё раз"}</div>
-        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 32 }}>{score} из {topic.exam.length} правильно · нужно {passMark}+</div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 32 }}>{score} из {total} правильно · нужно {passMark}+</div>
         {passed
           ? <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Продолжить →</button>
           : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <button onClick={() => { setQi(0); setSelected(null); setScore(0); setFinished(false); }} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
-              <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Учить тему</button>
+              <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Учить ещё раз</button>
             </div>
         }
       </div>
@@ -572,7 +592,7 @@ function TopicExamScreen({ topic, onBack, onPass }) {
       <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
       <div style={{ fontSize: 12, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>⚡ Экзамен · {topic.title}</div>
       <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
-        {topic.exam.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < qi ? "#10b981" : i === qi ? "#f59e0b" : "rgba(255,255,255,0.1)" }} />)}
+        {questions.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < qi ? "#10b981" : i === qi ? "#f59e0b" : "rgba(255,255,255,0.1)" }} />)}
       </div>
       <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.4, marginBottom: 28 }}>{q.q}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -581,11 +601,11 @@ function TopicExamScreen({ topic, onBack, onPass }) {
           let border = "rgba(255,255,255,0.1)";
           let color = "rgba(255,255,255,0.85)";
           if (selected !== null) {
-            if (i === q.answer) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
-            else if (i === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
+            if (isCorrect(opt, i)) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
+            else if (opt === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
           }
           return (
-            <button key={i} onClick={() => pick(i)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 500, transition: "all 0.2s" }}>
+            <button key={i} onClick={() => pick(opt, i)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 500, transition: "all 0.2s" }}>
               {opt}
             </button>
           );
