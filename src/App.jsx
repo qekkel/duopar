@@ -249,11 +249,12 @@ function SetupScreen({ onStart }) {
 }
 
 // ── RESULT SCREEN ────────────────────────────────────────────
-function ResultScreen({ score, total, xpEarned, profile, onRestart }) {
+function ResultScreen({ score, total, xpEarned, profile, onRestart, onProfile }) {
   const pct = Math.round((score / total) * 100);
   const emoji = pct >= 80 ? "🏆" : pct >= 60 ? "⭐" : "💪";
   const msg = pct >= 80 ? "Отлично сыграно!" : pct >= 60 ? "Хороший результат!" : "Продолжай тренироваться!";
   const partnerScore = Math.min(total, Math.max(0, score + Math.floor(Math.random() * 3) - 1));
+  const displayName = profile?.username || "ты";
 
   return (
     <div style={{ textAlign: "center", padding: "32px 0" }}>
@@ -278,7 +279,7 @@ function ResultScreen({ score, total, xpEarned, profile, onRestart }) {
         <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>· уровень {getLevel((profile?.xp || 0))}</span>
       </div>
       <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 28 }}>
-        {[{ label: profile?.username || "ты", val: score }, { label: "Maria", val: partnerScore }].map(x => (
+        {[{ label: displayName, val: score }, { label: "Maria", val: partnerScore }].map(x => (
           <div key={x.label} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 20px", textAlign: "center" }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{x.val}</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{x.label}</div>
@@ -288,8 +289,13 @@ function ResultScreen({ score, total, xpEarned, profile, onRestart }) {
       <button onClick={onRestart} style={{
         background: "#7C5CFC", color: "#fff", border: "none",
         borderRadius: 14, padding: "16px 40px", fontSize: 16,
-        fontWeight: 600, cursor: "pointer", width: "100%",
+        fontWeight: 600, cursor: "pointer", width: "100%", marginBottom: 10,
       }}>Новый раунд →</button>
+      <button onClick={onProfile} style={{
+        background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 14, padding: "14px 40px", fontSize: 15,
+        fontWeight: 500, cursor: "pointer", width: "100%",
+      }}>Мой профиль 🧑‍💻</button>
     </div>
   );
 }
@@ -602,7 +608,7 @@ export default function DuoPar() {
         {/* RESULT */}
         {screen === "result" && (
           <div style={{ paddingTop: 60 }}>
-            <ResultScreen score={score} total={questions.length} xpEarned={xpEarned} profile={profile} onRestart={() => setScreen("lobby")} />
+            <ResultScreen score={score} total={questions.length} xpEarned={xpEarned} profile={profile} onRestart={() => setScreen("lobby")} onProfile={() => setScreen("profile")} />
           </div>
         )}
       </div>
