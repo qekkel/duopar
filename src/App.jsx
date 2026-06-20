@@ -2290,6 +2290,7 @@ function MapGameScreen({ onBack }) {
   const [rPhase, setRPhase] = useState("territory_select");
   const [playerPick, setPlayerPick] = useState(null);
   const [botPick, setBotPick] = useState(null);
+  const [botPickRevealed, setBotPickRevealed] = useState(false);
   const [isDuel, setIsDuel] = useState(false);
   const [isBattle, setIsBattle] = useState(false);
   const [question, setQuestion] = useState(null);
@@ -2334,42 +2335,32 @@ function MapGameScreen({ onBack }) {
   function getStateId(f) { return STATE_ID_MAP[f.properties.GEN || f.properties.NAME_1 || f.properties.name || ""] || null; }
   function stateName(id) { return Object.keys(STATE_ID_MAP).find(k => STATE_ID_MAP[k] === id) || id; }
 
-  // ── TERRITORY SELECT ──
+
   function handleTerritoryClick(sid) {
     if (rPhase !== "territory_select" || territories[sid] === "player") return;
     const isEnemyTerritory = territories[sid] === "bot";
+
     setPlayerPick(sid); pPickRef.current = sid;
+    setRPhase("selecting");
 
     if (isEnemyTerritory) {
-      // attacking bot territory → battle
+      // player attacks bot territory — bot "defends" (same sid)
       setBotPick(sid); bPickRef.current = sid;
+      setBotPickRevealed(true);
       setIsBattle(true); setIsDuel(false);
-      setRPhase("selecting");
-      setTimeout(() => startBattle(sid), 1600);
+      setTimeout(() => startBattle(sid), 1200);
       return;
     }
 
-    // unclaimed territory
-    const allIds = Object.values(STATE_ID_MAP);
-    const unclaimed = allIds.filter(id => !terrRef.current[id]);
-    let bPick;
-    if (Math.random() < 0.18 && unclaimed.length > 1) {
-      bPick = sid; // duel!
-    } else {
-      const others = unclaimed.filter(id => id !== sid);
-      bPick = others.length ? others[Math.floor(Math.random() * others.length)] : sid;
-    }
-    setBotPick(bPick); bPickRef.current = bPick;
+    const bPick = bPickRef.current;
     setIsBattle(false);
 
     if (bPick === sid) {
       setIsDuel(true);
-      setRPhase("selecting");
-      setTimeout(() => startDuel(sid), 1600);
+      setTimeout(() => startDuel(sid), 1200);
     } else {
       setIsDuel(false);
-      setRPhase("selecting");
-      setTimeout(() => setRPhase("topic_select"), 1600);
+      setTimeout(() => setRPhase("topic_select"), 1200);
     }
   }
 
@@ -2550,9 +2541,9 @@ function MapGameScreen({ onBack }) {
   }
 
   function nextRound() {
-    setRPhase("territory_select");
     setPlayerPick(null); pPickRef.current = null;
     setBotPick(null); bPickRef.current = null;
+    setBotPickRevealed(false);
     setIsDuel(false); setIsBattle(false);
     setQuestion(null); qRef.current = null;
     setPAnswer(null); pAnsRef.current = null;
@@ -2560,6 +2551,16 @@ function MapGameScreen({ onBack }) {
     setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
     setBattleRound(0); battleRoundRef.current = 0;
     setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
+    setRPhase("territory_select");
+    // bot pre-picks after short delay so player sees it appear
+    setTimeout(() => {
+      const allIds = Object.values(STATE_ID_MAP);
+      const unclaimed = allIds.filter(id => !terrRef.current[id]);
+      if (!unclaimed.length) return;
+      const bPick = unclaimed[Math.floor(Math.random() * unclaimed.length)];
+      setBotPick(bPick); bPickRef.current = bPick;
+      setBotPickRevealed(true);
+    }, 600);
   }
 
   function restartGame() { terrRef.current = {}; setTerritories({}); setPhase("matchmaking"); setCdMatch(30); nextRound(); }
@@ -2577,7 +2578,7 @@ function MapGameScreen({ onBack }) {
 
   function getFill(sid) {
     if (sid === playerPick) return "#a78bfa";
-    if (sid === botPick && rPhase !== "territory_select") return "#fcd34d";
+    if (sid === botPick && botPickRevealed) return "#fcd34d";
     if (territories[sid] === "player") return "#7C5CFC";
     if (territories[sid] === "bot") return "#f59e0b";
     return "#2a2040";
@@ -2869,7 +2870,7 @@ function MapGameScreen({ onBack }) {
       <ScoreBar />
       <MapSvg />
       <div style={{ marginTop: 10, padding: "11px 16px", background: "rgba(124,92,252,0.07)", border: "1px solid rgba(124,92,252,0.18)", borderRadius: 12, fontSize: 13, color: "#a78bfa", textAlign: "center" }}>
-        👆 Нажми на землю для захвата · 🟡 жёлтая земля = атаковать Фридриха
+        {botPick && botPickRevealed ? `🟡 ${botName} смотрит на ${stateName(botPick)} — выбери свою землю` : "👆 Выбери землю для захвата"}
       </div>
     </div>
   );
