@@ -775,7 +775,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
       else {
         const retry = [...wrong, ...(!isCorrect ? [card] : [])];
         if (retry.length > 0) { setPracticeQueue(shuffle(retry)); setPracticeIdx(0); setSelected(null); setWrong([]); }
-        else if (isLastBatch) onStartExam();
+        else if (isLastBatch) setPhase("pre_exam");
         else nextBatch();
       }
     }, 900);
@@ -850,6 +850,28 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
       </div>
     </div>
   );
+
+  // PRE-EXAM PHASE
+  if (phase === "pre_exam") {
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center", padding: "60px 24px 24px" }}>
+        <div style={{ fontSize: 56, marginBottom: 16 }}>🎓</div>
+        <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Слова выучены!</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 40 }}>Что хочешь сделать дальше?</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button onClick={onStartExam} style={{ padding: "18px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+            ⚡ Сдать экзамен
+          </button>
+          <button onClick={() => { setBatchIdx(0); setPhase("intro"); setIntroIdx(0); }} style={{ padding: "18px", borderRadius: 16, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: 16, fontWeight: 600, cursor: "pointer" }}>
+            🔁 Повторить слова
+          </button>
+          <button onClick={onBack} style={{ padding: "14px", borderRadius: 16, background: "none", border: "none", color: "rgba(255,255,255,0.35)", fontSize: 14, cursor: "pointer" }}>
+            Выйти
+          </button>
+        </div>
+      </div>
+    );
+  }
 }
 
 function buildExamQuestions(topic) {
