@@ -649,17 +649,31 @@ const CURRICULUM = [
   },
 ];
 
-function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
+function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
+  const STORAGE_KEY = `duopar_blocks_${userId || "guest"}`;
+
   const [activeTopicId, setActiveTopicId] = useState(null);
   const [mode, setMode] = useState(null); // "detail" | "block" | "exam"
   const [activeBlockIdx, setActiveBlockIdx] = useState(null);
-  const [completedBlocks, setCompletedBlocks] = useState({}); // { topicId: Set of block indices }
+  const [completedBlocks, setCompletedBlocks] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      const result = {};
+      Object.keys(saved).forEach(k => { result[k] = new Set(saved[k]); });
+      return result;
+    } catch { return {}; }
+  });
+
+  function saveBlocks(updated) {
+    const serializable = {};
+    Object.keys(updated).forEach(k => { serializable[k] = [...updated[k]]; });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+  }
 
   function doneBlocks(topicId) { return completedBlocks[topicId] || new Set(); }
 
-  if (activeTopicId && mode) {
-    const topic = CURRICULUM.find(t => t.id === activeTopicId);
-    const blocks = topic.cards.map((card, i) => ({
+  function getTopicBlocks(topic) {
+    return topic.cards.map(card => ({
       name: card.title,
       words: (() => {
         const ws = [];
@@ -672,6 +686,11 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
         return ws;
       })(),
     })).filter(b => b.words.length > 0);
+  }
+
+  if (activeTopicId && mode) {
+    const topic = CURRICULUM.find(t => t.id === activeTopicId);
+    const blocks = getTopicBlocks(topic);
 
     if (mode === "block" && activeBlockIdx !== null) {
       const block = blocks[activeBlockIdx];
@@ -683,7 +702,9 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
           setCompletedBlocks(prev => {
             const s = new Set(prev[activeTopicId] || []);
             s.add(activeBlockIdx);
-            return { ...prev, [activeTopicId]: s };
+            const updated = { ...prev, [activeTopicId]: s };
+            saveBlocks(updated);
+            return updated;
           });
           setMode("detail");
         }}
@@ -746,35 +767,35 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {topics.map((topic) => {
                 const i = CURRICULUM.indexOf(topic);
-                const done = completedTopics.includes(topic.id);
-                const unlocked = i === 0 || completedTopics.includes(CURRICULUM[i - 1].id);
-          return (
-            <div key={topic.id} style={{ background: done ? "rgba(16,185,129,0.08)" : unlocked ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.02)", border: `1px solid ${done ? "rgba(16,185,129,0.3)" : unlocked ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}`, borderRadius: 18, padding: "18px 20px", opacity: unlocked ? 1 : 0.45 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: unlocked && !done ? 14 : 0 }}>
-                <div style={{ fontSize: 28 }}>{done ? "✅" : unlocked ? topic.emoji : "🔒"}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{i + 1}. {topic.title}</div>
-                  <div style={{ fontSize: 12, color: done ? "#10b981" : "rgba(255,255,255,0.35)", marginTop: 2 }}>{done ? "Пройдено" : unlocked ? "Доступно" : "Заблокировано"}</div>
-                </div>
-              </div>
-              {unlocked && !done && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: lvlColor, color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                    📖 Учить
+                const examDone = completedTopics.includes(topic.id);
+                const blocks = getTopicBlocks(topic);
+                const done = doneBlocks(topic.id);
+                const blocksTotal = blocks.length;
+                const blocksDone = done.size;
+                const inProgress = blocksDone > 0 && !examDone;
+                return (
+                  <button key={topic.id} onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }}
+                    style={{ background: examDone ? "rgba(16,185,129,0.08)" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: blocksTotal > 0 ? 10 : 0 }}>
+                      <div style={{ fontSize: 26 }}>{examDone ? "✅" : topic.emoji}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{i + 1}. {topic.title}</div>
+                        <div style={{ fontSize: 11, color: examDone ? "#10b981" : inProgress ? "#a78bfa" : "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                          {examDone ? "Экзамен сдан ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
+                        </div>
+                      </div>
+                      <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 14 }}>→</div>
+                    </div>
+                    {blocksTotal > 0 && (
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {blocks.map((_, bi) => (
+                          <div key={bi} style={{ flex: 1, height: 4, borderRadius: 2, background: done.has(bi) ? (examDone ? "#10b981" : lvlColor) : "rgba(255,255,255,0.1)" }} />
+                        ))}
+                      </div>
+                    )}
                   </button>
-                  <button onClick={() => { setActiveTopicId(topic.id); setMode("exam"); }} style={{ flex: 1, padding: "10px", borderRadius: 12, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                    ⚡ Экзамен
-                  </button>
-                </div>
-              )}
-              {done && (
-                <button onClick={() => { setActiveTopicId(topic.id); setMode("exam"); }} style={{ marginTop: 10, padding: "8px 14px", borderRadius: 10, background: "rgba(16,185,129,0.1)", color: "#10b981", border: "1px solid rgba(16,185,129,0.2)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                  Повторить →
-                </button>
-              )}
-            </div>
-          );
-        })}
+                );
+              })}
             </div>
           </div>
         );
@@ -2273,7 +2294,7 @@ export default function DuoPar() {
 
         {/* CURRICULUM */}
         {screen === "curriculum" && (
-          <CurriculumScreen onBack={() => setScreen("lobby")} completedTopics={completedTopics} onTopicDone={completeTopic} />
+          <CurriculumScreen onBack={() => setScreen("lobby")} completedTopics={completedTopics} onTopicDone={completeTopic} userId={session?.user?.id} />
         )}
 
         {/* WORDS */}
