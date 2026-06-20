@@ -885,17 +885,16 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             ))}
           </div>
 
-          {!allDone ? (
-            <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "18px", borderRadius: 16, background: "#7C5CFC", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+          {!allDone && (
+            <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "18px", borderRadius: 16, background: "#7C5CFC", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
               {done.size === 0 ? "▶ Начать" : "▶ Продолжить"}
             </button>
-          ) : (
-            <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "18px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
-              ⚡ Сдать экзамен
-            </button>
           )}
+          <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: allDone ? "linear-gradient(135deg, #7C5CFC, #a78bfa)" : "rgba(124,92,252,0.12)", border: allDone ? "none" : "1px solid rgba(124,92,252,0.3)", color: allDone ? "#fff" : "#a78bfa", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+            ⚡ {allDone ? "Сдать экзамен" : "Попробовать экзамен"}
+          </button>
           {done.size > 0 && !allDone && (
-            <button onClick={() => { setActiveBlockIdx(0); setCompletedBlocks(p => ({ ...p, [activeTopicId]: new Set() })); setMode("block"); }} style={{ marginTop: 12, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
+            <button onClick={() => { setActiveBlockIdx(0); setCompletedBlocks(p => ({ ...p, [activeTopicId]: new Set() })); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
               Начать сначала
             </button>
           )}
@@ -910,7 +909,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>Программа</h1>
       <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
 
-      {["A1", "A2"].map(lvl => {
+      {["A1", "A2", "A3", "A4"].map(lvl => {
         const topics = CURRICULUM.filter(t => t.level === lvl);
         const lvlColor = CURRICULUM_LEVELS[lvl].color;
         return (
