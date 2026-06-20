@@ -298,7 +298,7 @@ const CURRICULUM = [
       { q: "«Du ___ müde.» — вставь правильную форму sein:", options: ["bin", "bist", "ist", "sind"], answer: 1 },
       { q: "«Wir ___ ein Haus.» — вставь haben:", options: ["habe", "hast", "hat", "haben"], answer: 3 },
       { q: "«Er ___ Arzt.» — вставь sein:", options: ["bin", "bist", "ist", "sind"], answer: 2 },
-      { q: "Как сказать «У неё есть кот»?", options: ["Sie ist eine Katze.", "Sie hat eine Katze.", "Sie haben eine Katze.", "Sie hast eine Katze."], answer: 1 },
+      { q: "Как сказать «У неё есть кот»?", options: ["Sie ist einen Kater.", "Sie hat einen Kater.", "Sie haben einen Kater.", "Sie hast einen Kater."], answer: 1 },
       { q: "«Ich habe Hunger» буквально значит:", options: ["Я хочу есть", "У меня есть голод", "Мне нужна еда", "Я голодный человек"], answer: 1 },
     ],
   },
