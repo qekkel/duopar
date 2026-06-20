@@ -2947,7 +2947,7 @@ function MapGameScreen({ onBack, session, profile }) {
         <style>{ANIM_CSS}</style>
         <button onClick={onBack} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Завоевание Германии</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Тур по Германии</div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>С кем сыграем?</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <button onClick={searchOpponent}
@@ -3501,14 +3501,10 @@ export default function DuoPar() {
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
             </button>
 
-            <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
-              🎮 Играть →
-            </button>
-
             <button onClick={() => setScreen("mapgame")} style={{ width: "100%", background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.06))", color: "#fff", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>🗺️</div>
-              <div>Завоевание Германии</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>Захвати все 16 земель · против бота</div>
+              <div>Тур по Германии</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>16 земель · соло или с другом онлайн</div>
             </button>
           </div>
         )}
