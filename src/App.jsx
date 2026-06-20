@@ -214,8 +214,15 @@ const LESSONS = [
       },
       {
         title: "Таблица артиклей",
-        body: "         m      f      n\nNom:   der    die    das\nAkk:   den    die    das\nDat:   dem    der    dem\n\n💡 Запомни: в Akkusativ меняется только мужской род: der → den.",
-        mono: true,
+        type: "table",
+        hint: "💡 В Akkusativ меняется только мужской род: der → den",
+        headers: ["", "мужской", "женский", "средний"],
+        rows: [
+          ["Nominativ", "der", "die", "das"],
+          ["Akkusativ", "den", "die", "das"],
+          ["Dativ", "dem", "der", "dem"],
+        ],
+        highlights: [[1,1],[2,1],[3,2]],
       },
     ],
   },
@@ -331,9 +338,40 @@ function LearnScreen({ onBack }) {
         <div style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${lesson.color}30`, borderRadius: 20, padding: "28px 24px", marginBottom: 24, minHeight: 280 }}>
           <div style={{ fontSize: 11, letterSpacing: 2, color: lesson.color, fontWeight: 700, textTransform: "uppercase", marginBottom: 16 }}>{lesson.icon} {lesson.title}</div>
           <div style={{ fontSize: 19, fontWeight: 800, color: "#fff", marginBottom: 20, lineHeight: 1.3 }}>{card.title}</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, whiteSpace: "pre-line", fontFamily: card.mono ? "monospace" : "inherit" }}>
-            {card.body}
-          </div>
+          {card.type === "table" ? (
+            <div>
+              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+                <thead>
+                  <tr>
+                    {card.headers.map((h, i) => (
+                      <th key={i} style={{ padding: "10px 8px", fontSize: 12, fontWeight: 700, color: i === 0 ? "rgba(255,255,255,0.4)" : lesson.color, textAlign: i === 0 ? "left" : "center", borderBottom: "1px solid rgba(255,255,255,0.1)", textTransform: i === 0 ? "none" : "uppercase", letterSpacing: i === 0 ? 0 : 1 }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {card.rows.map((row, ri) => (
+                    <tr key={ri}>
+                      {row.map((cell, ci) => {
+                        const isHighlight = card.highlights?.some(([r, c]) => r === ri + 1 && c === ci);
+                        return (
+                          <td key={ci} style={{ padding: "12px 8px", fontSize: ci === 0 ? 12 : 18, fontWeight: ci === 0 ? 500 : 800, color: isHighlight ? "#ef4444" : ci === 0 ? "rgba(255,255,255,0.45)" : "#fff", textAlign: ci === 0 ? "left" : "center", borderBottom: ri < card.rows.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none", background: isHighlight ? "rgba(239,68,68,0.08)" : "transparent", borderRadius: 8 }}>
+                            {cell}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {card.hint && <div style={{ fontSize: 13, color: "#f59e0b", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 10, padding: "10px 14px" }}>{card.hint}</div>}
+            </div>
+          ) : (
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, whiteSpace: "pre-line", fontFamily: card.mono ? "monospace" : "inherit" }}>
+              {card.body}
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
@@ -831,9 +869,14 @@ export default function DuoPar() {
     return () => document.head.removeChild(s);
   }, []);
 
+  const isNewSignup = useRef(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_UP") isNewSignup.current = true;
+      setSession(session);
+    });
     return () => subscription.unsubscribe();
   }, []);
 
@@ -841,8 +884,21 @@ export default function DuoPar() {
     if (session?.user) {
       supabase.from("profiles").select("*").eq("id", session.user.id).single()
         .then(({ data }) => {
-          setProfile(data);
-          if (data && !data.lang_level) setScreen("onboarding");
+          if (!data) return;
+          if (!data.lang_level) {
+            if (isNewSignup.current) {
+              // Новый пользователь — показать онбординг
+              setScreen("onboarding");
+            } else {
+              // Возвращающийся без уровня — поставить A1 по умолчанию
+              supabase.from("profiles").update({ lang_level: "A1" }).eq("id", session.user.id);
+              setProfile({ ...data, lang_level: "A1" });
+              setScreen("lobby");
+            }
+          } else {
+            setProfile(data);
+            setScreen("lobby");
+          }
         });
     } else {
       setProfile(null);
@@ -854,18 +910,16 @@ export default function DuoPar() {
   const q = questions[qIndex];
   const langLevel = profile?.lang_level || "A1";
 
-  async function pickLevel(level) {
-    const { error } = await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
-    if (!error) {
-      setProfile(p => ({ ...p, lang_level: level }));
-      setScreen("lobby");
-    }
+  function pickLevel(level) {
+    setProfile(p => ({ ...p, lang_level: level }));
+    setScreen("lobby");
+    supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
   }
 
-  async function finishPlacement(level, testScore) {
-    await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
+  function finishPlacement(level, testScore) {
     setProfile(p => ({ ...p, lang_level: level }));
     setScreen("placement_result_" + level + "_" + testScore);
+    supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
   }
 
   async function retakeTest() {
