@@ -188,6 +188,220 @@ function getLevel(xp) { return Math.floor(xp / 200) + 1; }
 function xpToNextLevel(xp) { return 200 - (xp % 200); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
+// ── СЛОВАРЬ GOETHE A1/A2 ─────────────────────────────────────
+const WORD_LEVELS = ["A1", "A2"];
+const WORD_CATEGORIES = ["Люди", "Дом", "Еда", "Город", "Время", "Глаголы", "Прилагательные", "Разное"];
+
+const DICTIONARY = [
+  // ЛЮДИ
+  { word: "die Frau", level: "A1", category: "Люди", translation: "женщина / жена", gender: "die", plural: "die Frauen", example: "Die Frau arbeitet hier.", exampleRu: "Женщина работает здесь.", tip: "Frau — также вежливое обращение «госпожа»" },
+  { word: "der Mann", level: "A1", category: "Люди", translation: "мужчина / муж", gender: "der", plural: "die Männer", example: "Der Mann kauft Brot.", exampleRu: "Мужчина покупает хлеб.", tip: "Mann с двойным n — не путай с man (безличное «один»)" },
+  { word: "das Kind", level: "A1", category: "Люди", translation: "ребёнок", gender: "das", plural: "die Kinder", example: "Das Kind spielt im Garten.", exampleRu: "Ребёнок играет в саду.", tip: "Kinder — отсюда «Kindergarten» (детский сад)" },
+  { word: "der Freund", level: "A1", category: "Люди", translation: "друг / парень", gender: "der", plural: "die Freunde", example: "Mein Freund wohnt in Berlin.", exampleRu: "Мой друг живёт в Берлине.", tip: "die Freundin — подруга / девушка" },
+  { word: "die Familie", level: "A1", category: "Люди", translation: "семья", gender: "die", plural: "die Familien", example: "Meine Familie ist groß.", exampleRu: "Моя семья большая.", tip: "Похоже на русское «фамилия», но значит «семья»" },
+  { word: "die Mutter", level: "A1", category: "Люди", translation: "мать", gender: "die", plural: "die Mütter", example: "Meine Mutter kocht gut.", exampleRu: "Моя мама хорошо готовит.", tip: "Mutti — ласковое «мамочка»" },
+  { word: "der Vater", level: "A1", category: "Люди", translation: "отец", gender: "der", plural: "die Väter", example: "Mein Vater arbeitet viel.", exampleRu: "Мой папа много работает.", tip: "Vati — ласковое «папочка»" },
+  { word: "der Bruder", level: "A1", category: "Люди", translation: "брат", gender: "der", plural: "die Brüder", example: "Mein Bruder ist 10 Jahre alt.", exampleRu: "Моему брату 10 лет.", tip: "Brüder — умлаут в множественном числе" },
+  { word: "die Schwester", level: "A1", category: "Люди", translation: "сестра", gender: "die", plural: "die Schwestern", example: "Meine Schwester studiert Medizin.", exampleRu: "Моя сестра учится на врача.", tip: "Schwester — также «медсестра» в больнице" },
+  { word: "der Kollege", level: "A2", category: "Люди", translation: "коллега (м)", gender: "der", plural: "die Kollegen", example: "Mein Kollege ist sehr nett.", exampleRu: "Мой коллега очень приятный.", tip: "die Kollegin — коллега-женщина" },
+
+  // ДОМ
+  { word: "das Haus", level: "A1", category: "Дом", translation: "дом", gender: "das", plural: "die Häuser", example: "Das Haus ist groß.", exampleRu: "Дом большой.", tip: "Häuser — умлаут + er в мн.ч." },
+  { word: "die Wohnung", level: "A1", category: "Дом", translation: "квартира", gender: "die", plural: "die Wohnungen", example: "Ich suche eine Wohnung.", exampleRu: "Я ищу квартиру.", tip: "wohnen (жить) → Wohnung (жильё)" },
+  { word: "das Zimmer", level: "A1", category: "Дом", translation: "комната", gender: "das", plural: "die Zimmer", example: "Das Zimmer ist hell.", exampleRu: "Комната светлая.", tip: "Мн.ч. такое же: die Zimmer" },
+  { word: "die Küche", level: "A1", category: "Дом", translation: "кухня", gender: "die", plural: "die Küchen", example: "Wir essen in der Küche.", exampleRu: "Мы едим на кухне.", tip: "Küche — также «кухня» как стиль приготовления" },
+  { word: "das Bett", level: "A1", category: "Дом", translation: "кровать", gender: "das", plural: "die Betten", example: "Das Bett ist sehr bequem.", exampleRu: "Кровать очень удобная.", tip: "ins Bett gehen — идти спать" },
+  { word: "der Tisch", level: "A1", category: "Дом", translation: "стол", gender: "der", plural: "die Tische", example: "Das Buch liegt auf dem Tisch.", exampleRu: "Книга лежит на столе.", tip: "Tisch накрывают (Tisch decken) к обеду" },
+  { word: "der Stuhl", level: "A1", category: "Дом", translation: "стул", gender: "der", plural: "die Stühle", example: "Setz dich auf den Stuhl!", exampleRu: "Садись на стул!", tip: "Не путай с Sessel (кресло)" },
+  { word: "das Fenster", level: "A1", category: "Дом", translation: "окно", gender: "das", plural: "die Fenster", example: "Bitte mach das Fenster auf!", exampleRu: "Пожалуйста, открой окно!", tip: "Мн.ч. такое же: die Fenster" },
+  { word: "die Tür", level: "A1", category: "Дом", translation: "дверь", gender: "die", plural: "die Türen", example: "Die Tür ist zu.", exampleRu: "Дверь закрыта.", tip: "zu = закрыто, auf = открыто" },
+  { word: "der Schlüssel", level: "A1", category: "Дом", translation: "ключ", gender: "der", plural: "die Schlüssel", example: "Ich habe meinen Schlüssel vergessen.", exampleRu: "Я забыл свой ключ.", tip: "Мн.ч. такое же: die Schlüssel" },
+  { word: "das Bad", level: "A1", category: "Дом", translation: "ванная", gender: "das", plural: "die Bäder", example: "Das Bad ist links.", exampleRu: "Ванная слева.", tip: "Baden = купаться; Bad = ванная или курорт" },
+  { word: "der Kühlschrank", level: "A1", category: "Дом", translation: "холодильник", gender: "der", plural: "die Kühlschränke", example: "Der Kühlschrank ist leer.", exampleRu: "Холодильник пустой.", tip: "kühl (прохладный) + Schrank (шкаф)" },
+
+  // ЕДА
+  { word: "das Brot", level: "A1", category: "Еда", translation: "хлеб", gender: "das", plural: "die Brote", example: "Ich esse Brot zum Frühstück.", exampleRu: "Я ем хлеб на завтрак.", tip: "Немцы едят хлеб 2-3 раза в день — это основа!" },
+  { word: "die Milch", level: "A1", category: "Еда", translation: "молоко", gender: "die", plural: "—", example: "Ich trinke Milch.", exampleRu: "Я пью молоко.", tip: "Обычно без множественного числа (несчётное)" },
+  { word: "das Wasser", level: "A1", category: "Еда", translation: "вода", gender: "das", plural: "—", example: "Bitte ein Glas Wasser!", exampleRu: "Стакан воды, пожалуйста!", tip: "Mineralwasser — газированная, Leitungswasser — из крана" },
+  { word: "der Kaffee", level: "A1", category: "Еда", translation: "кофе", gender: "der", plural: "—", example: "Ich trinke jeden Morgen Kaffee.", exampleRu: "Каждое утро я пью кофе.", tip: "В Германии очень популярен фильтр-кофе" },
+  { word: "das Ei", level: "A1", category: "Еда", translation: "яйцо", gender: "das", plural: "die Eier", example: "Ich esse zwei Eier.", exampleRu: "Я ем два яйца.", tip: "Spiegelei — яичница, Rührei — scrambled eggs" },
+  { word: "der Apfel", level: "A1", category: "Еда", translation: "яблоко", gender: "der", plural: "die Äpfel", example: "Ein Apfel pro Tag hält den Arzt fern.", exampleRu: "Яблоко в день — доктор не нужен.", tip: "Äpfel — умлаут в множественном числе" },
+  { word: "das Fleisch", level: "A1", category: "Еда", translation: "мясо", gender: "das", plural: "—", example: "Er isst kein Fleisch.", exampleRu: "Он не ест мясо.", tip: "Fleischer — мясник (профессия)" },
+  { word: "der Käse", level: "A1", category: "Еда", translation: "сыр", gender: "der", plural: "die Käse", example: "Ich mag Käse sehr.", exampleRu: "Я очень люблю сыр.", tip: "Немецкий сыр знаменит — Emmentaler, Gouda" },
+  { word: "das Gemüse", level: "A1", category: "Еда", translation: "овощи", gender: "das", plural: "—", example: "Iss mehr Gemüse!", exampleRu: "Ешь больше овощей!", tip: "Обычно без мн.ч. — собирательное" },
+  { word: "das Obst", level: "A1", category: "Еда", translation: "фрукты", gender: "das", plural: "—", example: "Obst ist gesund.", exampleRu: "Фрукты полезны.", tip: "Тоже собирательное, без мн.ч." },
+  { word: "die Suppe", level: "A1", category: "Еда", translation: "суп", gender: "die", plural: "die Suppen", example: "Die Suppe ist heiß.", exampleRu: "Суп горячий.", tip: "Nudelsuppe — суп с лапшой" },
+  { word: "der Kuchen", level: "A1", category: "Еда", translation: "пирог / торт", gender: "der", plural: "die Kuchen", example: "Zum Kaffee gibt es Kuchen.", exampleRu: "К кофе есть пирог.", tip: "Kaffee und Kuchen — немецкая традиция полдника" },
+
+  // ГОРОД
+  { word: "die Straße", level: "A1", category: "Город", translation: "улица", gender: "die", plural: "die Straßen", example: "Die Straße ist breit.", exampleRu: "Улица широкая.", tip: "В адресе сокращают: Str." },
+  { word: "der Bahnhof", level: "A1", category: "Город", translation: "вокзал", gender: "der", plural: "die Bahnhöfe", example: "Der Zug fährt vom Bahnhof ab.", exampleRu: "Поезд отправляется с вокзала.", tip: "Bahn (поезд) + Hof (двор)" },
+  { word: "die Haltestelle", level: "A1", category: "Город", translation: "остановка", gender: "die", plural: "die Haltestellen", example: "Die Haltestelle ist um die Ecke.", exampleRu: "Остановка за углом.", tip: "halten (останавливаться) + Stelle (место)" },
+  { word: "das Krankenhaus", level: "A1", category: "Город", translation: "больница", gender: "das", plural: "die Krankenhäuser", example: "Er liegt im Krankenhaus.", exampleRu: "Он лежит в больнице.", tip: "krank (больной) + Haus (дом)" },
+  { word: "die Schule", level: "A1", category: "Город", translation: "школа", gender: "die", plural: "die Schulen", example: "Die Kinder gehen in die Schule.", exampleRu: "Дети идут в школу.", tip: "in die Schule gehen — учиться в школе" },
+  { word: "die Universität", level: "A2", category: "Город", translation: "университет", gender: "die", plural: "die Universitäten", example: "Sie studiert an der Universität.", exampleRu: "Она учится в университете.", tip: "Сокращение: die Uni" },
+  { word: "das Geschäft", level: "A1", category: "Город", translation: "магазин / дело", gender: "das", plural: "die Geschäfte", example: "Das Geschäft öffnet um 9 Uhr.", exampleRu: "Магазин открывается в 9.", tip: "Также значит «бизнес, дело»" },
+  { word: "der Supermarkt", level: "A1", category: "Город", translation: "супермаркет", gender: "der", plural: "die Supermärkte", example: "Ich kaufe im Supermarkt ein.", exampleRu: "Я делаю покупки в супермаркете.", tip: "einkaufen — делать покупки" },
+  { word: "das Rathaus", level: "A2", category: "Город", translation: "ратуша", gender: "das", plural: "die Rathäuser", example: "Das Rathaus steht auf dem Marktplatz.", exampleRu: "Ратуша стоит на рыночной площади.", tip: "Rat (совет) + Haus (дом)" },
+  { word: "die Post", level: "A1", category: "Город", translation: "почта", gender: "die", plural: "—", example: "Ich schicke einen Brief per Post.", exampleRu: "Я отправляю письмо по почте.", tip: "Auch: die Post = почтовое отделение" },
+
+  // ВРЕМЯ
+  { word: "die Uhr", level: "A1", category: "Время", translation: "часы / час", gender: "die", plural: "die Uhren", example: "Es ist 3 Uhr.", exampleRu: "Сейчас 3 часа.", tip: "Um 3 Uhr = в 3 часа" },
+  { word: "der Tag", level: "A1", category: "Время", translation: "день", gender: "der", plural: "die Tage", example: "Guten Tag!", exampleRu: "Добрый день!", tip: "Guten Tag — официальное приветствие" },
+  { word: "die Woche", level: "A1", category: "Время", translation: "неделя", gender: "die", plural: "die Wochen", example: "Ich arbeite fünf Tage pro Woche.", exampleRu: "Я работаю пять дней в неделю.", tip: "diese Woche — на этой неделе" },
+  { word: "der Monat", level: "A1", category: "Время", translation: "месяц", gender: "der", plural: "die Monate", example: "Im Monat Januar ist es kalt.", exampleRu: "В январе холодно.", tip: "letzten Monat — в прошлом месяце" },
+  { word: "das Jahr", level: "A1", category: "Время", translation: "год", gender: "das", plural: "die Jahre", example: "Das Jahr hat 12 Monate.", exampleRu: "В году 12 месяцев.", tip: "Ich bin 20 Jahre alt — мне 20 лет" },
+  { word: "der Morgen", level: "A1", category: "Время", translation: "утро", gender: "der", plural: "die Morgen", example: "Guten Morgen!", exampleRu: "Доброе утро!", tip: "morgens — по утрам; morgen — завтра (другое слово!)" },
+  { word: "der Abend", level: "A1", category: "Время", translation: "вечер", gender: "der", plural: "die Abende", example: "Guten Abend!", exampleRu: "Добрый вечер!", tip: "abends — по вечерам" },
+  { word: "die Nacht", level: "A1", category: "Время", translation: "ночь", gender: "die", plural: "die Nächte", example: "Gute Nacht!", exampleRu: "Спокойной ночи!", tip: "nachts — ночью" },
+  { word: "heute", level: "A1", category: "Время", translation: "сегодня", gender: "—", plural: "—", example: "Heute ist Montag.", exampleRu: "Сегодня понедельник.", tip: "Наречие, не изменяется" },
+  { word: "morgen", level: "A1", category: "Время", translation: "завтра", gender: "—", plural: "—", example: "Morgen gehe ich zum Arzt.", exampleRu: "Завтра я иду к врачу.", tip: "Не путай с der Morgen (утро)!" },
+  { word: "gestern", level: "A1", category: "Время", translation: "вчера", gender: "—", plural: "—", example: "Gestern war ich müde.", exampleRu: "Вчера я был уставшим.", tip: "vorgestern — позавчера" },
+
+  // ГЛАГОЛЫ
+  { word: "gehen", level: "A1", category: "Глаголы", translation: "идти / ехать", gender: "—", plural: "—", example: "Ich gehe in die Schule.", exampleRu: "Я иду в школу.", tip: "Perfekt с sein: ich bin gegangen" },
+  { word: "kommen", level: "A1", category: "Глаголы", translation: "приходить", gender: "—", plural: "—", example: "Woher kommst du?", exampleRu: "Откуда ты?", tip: "Perfekt с sein: ich bin gekommen" },
+  { word: "machen", level: "A1", category: "Глаголы", translation: "делать", gender: "—", plural: "—", example: "Was machst du heute?", exampleRu: "Что ты делаешь сегодня?", tip: "Perfekt с haben: ich habe gemacht" },
+  { word: "arbeiten", level: "A1", category: "Глаголы", translation: "работать", gender: "—", plural: "—", example: "Ich arbeite in einem Büro.", exampleRu: "Я работаю в офисе.", tip: "du arbeitest (не забудь -e- перед -st)" },
+  { word: "wohnen", level: "A1", category: "Глаголы", translation: "жить / проживать", gender: "—", plural: "—", example: "Ich wohne in München.", exampleRu: "Я живу в Мюнхене.", tip: "Wohnung (квартира) — от того же корня" },
+  { word: "lernen", level: "A1", category: "Глаголы", translation: "учить / учиться", gender: "—", plural: "—", example: "Ich lerne Deutsch.", exampleRu: "Я учу немецкий.", tip: "lernen = учить (самому), lehren = учить (других)" },
+  { word: "sprechen", level: "A1", category: "Глаголы", translation: "говорить", gender: "—", plural: "—", example: "Sprichst du Deutsch?", exampleRu: "Ты говоришь по-немецки?", tip: "du sprichst, er spricht — корневой умлаут!" },
+  { word: "kaufen", level: "A1", category: "Глаголы", translation: "покупать", gender: "—", plural: "—", example: "Ich kaufe Brot im Supermarkt.", exampleRu: "Я покупаю хлеб в супермаркете.", tip: "verkaufen = продавать (ver- меняет смысл на обратный)" },
+  { word: "schreiben", level: "A1", category: "Глаголы", translation: "писать", gender: "—", plural: "—", example: "Ich schreibe einen Brief.", exampleRu: "Я пишу письмо.", tip: "Perfekt: ich habe geschrieben" },
+  { word: "lesen", level: "A1", category: "Глаголы", translation: "читать", gender: "—", plural: "—", example: "Ich lese ein Buch.", exampleRu: "Я читаю книгу.", tip: "du liest, er liest — корневое изменение!" },
+  { word: "fahren", level: "A1", category: "Глаголы", translation: "ехать", gender: "—", plural: "—", example: "Ich fahre mit dem Auto.", exampleRu: "Я еду на машине.", tip: "Perfekt с sein: ich bin gefahren" },
+  { word: "schlafen", level: "A1", category: "Глаголы", translation: "спать", gender: "—", plural: "—", example: "Ich schlafe 8 Stunden.", exampleRu: "Я сплю 8 часов.", tip: "du schläfst — умлаут в 2-м лице" },
+  { word: "helfen", level: "A1", category: "Глаголы", translation: "помогать", gender: "—", plural: "—", example: "Kannst du mir helfen?", exampleRu: "Ты можешь мне помочь?", tip: "helfen + Dativ: ich helfe DIR (не dich!)" },
+  { word: "brauchen", level: "A1", category: "Глаголы", translation: "нуждаться / нужно", gender: "—", plural: "—", example: "Ich brauche Hilfe.", exampleRu: "Мне нужна помощь.", tip: "Ich brauche = мне нужно" },
+  { word: "verstehen", level: "A1", category: "Глаголы", translation: "понимать", gender: "—", plural: "—", example: "Ich verstehe das nicht.", exampleRu: "Я этого не понимаю.", tip: "Perfekt: ich habe verstanden" },
+  { word: "fragen", level: "A1", category: "Глаголы", translation: "спрашивать", gender: "—", plural: "—", example: "Darf ich fragen?", exampleRu: "Можно спросить?", tip: "fragen + Akkusativ: ich frage ihn" },
+  { word: "antworten", level: "A1", category: "Глаголы", translation: "отвечать", gender: "—", plural: "—", example: "Bitte antworte mir!", exampleRu: "Пожалуйста, ответь мне!", tip: "antworten + Dativ: ich antworte DIR" },
+  { word: "heißen", level: "A1", category: "Глаголы", translation: "называться / звать", gender: "—", plural: "—", example: "Wie heißt du?", exampleRu: "Как тебя зовут?", tip: "Ich heiße Anna. — Меня зовут Анна." },
+
+  // ПРИЛАГАТЕЛЬНЫЕ
+  { word: "groß", level: "A1", category: "Прилагательные", translation: "большой / высокий", gender: "—", plural: "—", example: "Das Haus ist sehr groß.", exampleRu: "Дом очень большой.", tip: "Также значит «высокий» о человеке" },
+  { word: "klein", level: "A1", category: "Прилагательные", translation: "маленький", gender: "—", plural: "—", example: "Das Kind ist noch klein.", exampleRu: "Ребёнок ещё маленький.", tip: "Антоним: groß" },
+  { word: "gut", level: "A1", category: "Прилагательные", translation: "хороший / хорошо", gender: "—", plural: "—", example: "Das Essen ist sehr gut.", exampleRu: "Еда очень хорошая.", tip: "Сравн. ст.: besser — лучше, am besten — лучший" },
+  { word: "neu", level: "A1", category: "Прилагательные", translation: "новый", gender: "—", plural: "—", example: "Ich habe ein neues Auto.", exampleRu: "У меня новая машина.", tip: "Antonym: alt (старый)" },
+  { word: "alt", level: "A1", category: "Прилагательные", translation: "старый / пожилой", gender: "—", plural: "—", example: "Das Buch ist sehr alt.", exampleRu: "Книга очень старая.", tip: "Wie alt bist du? — Сколько тебе лет?" },
+  { word: "schön", level: "A1", category: "Прилагательные", translation: "красивый / хороший", gender: "—", plural: "—", example: "Das Wetter ist schön.", exampleRu: "Погода хорошая.", tip: "Schönen Tag! — Хорошего дня!" },
+  { word: "schnell", level: "A1", category: "Прилагательные", translation: "быстрый / быстро", gender: "—", plural: "—", example: "Das Auto fährt schnell.", exampleRu: "Машина едет быстро.", tip: "Антоним: langsam (медленный)" },
+  { word: "billig", level: "A1", category: "Прилагательные", translation: "дешёвый", gender: "—", plural: "—", example: "Das ist sehr billig.", exampleRu: "Это очень дёшево.", tip: "Антоним: teuer (дорогой)" },
+  { word: "teuer", level: "A2", category: "Прилагательные", translation: "дорогой", gender: "—", plural: "—", example: "Das ist zu teuer!", exampleRu: "Это слишком дорого!", tip: "Антоним: billig (дешёвый)" },
+  { word: "richtig", level: "A2", category: "Прилагательные", translation: "правильный / настоящий", gender: "—", plural: "—", example: "Das ist richtig.", exampleRu: "Это правильно.", tip: "Антоним: falsch (неправильный)" },
+  { word: "wichtig", level: "A2", category: "Прилагательные", translation: "важный", gender: "—", plural: "—", example: "Das ist sehr wichtig.", exampleRu: "Это очень важно.", tip: "Wicht — гном, важная персона (исторически)" },
+
+  // РАЗНОЕ
+  { word: "bitte", level: "A1", category: "Разное", translation: "пожалуйста", gender: "—", plural: "—", example: "Ein Kaffee, bitte!", exampleRu: "Кофе, пожалуйста!", tip: "Также значит «пожалуйста» в ответ на «спасибо»" },
+  { word: "danke", level: "A1", category: "Разное", translation: "спасибо", gender: "—", plural: "—", example: "Danke schön!", exampleRu: "Большое спасибо!", tip: "Danke schön / Danke sehr — усиленное «спасибо»" },
+  { word: "ja", level: "A1", category: "Разное", translation: "да", gender: "—", plural: "—", example: "Ja, ich verstehe.", exampleRu: "Да, я понимаю.", tip: "Ja, genau! — Да, точно!" },
+  { word: "nein", level: "A1", category: "Разное", translation: "нет", gender: "—", plural: "—", example: "Nein, das stimmt nicht.", exampleRu: "Нет, это неверно.", tip: "Nicht = не (для глаголов), kein = ни одного (для сущ.)" },
+  { word: "vielleicht", level: "A1", category: "Разное", translation: "может быть", gender: "—", plural: "—", example: "Vielleicht komme ich morgen.", exampleRu: "Может, я приду завтра.", tip: "viel + leicht = «легко» → возможно" },
+  { word: "natürlich", level: "A1", category: "Разное", translation: "конечно", gender: "—", plural: "—", example: "Natürlich helfe ich dir!", exampleRu: "Конечно, я тебе помогу!", tip: "Часто используют вместо «ja» для выразительности" },
+  { word: "wirklich", level: "A2", category: "Разное", translation: "действительно / правда", gender: "—", plural: "—", example: "Das ist wirklich schön.", exampleRu: "Это действительно красиво.", tip: "Wirklichkeit — реальность" },
+  { word: "auch", level: "A1", category: "Разное", translation: "тоже / также", gender: "—", plural: "—", example: "Ich auch!", exampleRu: "Я тоже!", tip: "Ich auch = Me too — самое частое выражение" },
+  { word: "noch", level: "A1", category: "Разное", translation: "ещё", gender: "—", plural: "—", example: "Ich bin noch müde.", exampleRu: "Я ещё устал.", tip: "noch nicht = ещё не; noch kein = ещё ни одного" },
+  { word: "schon", level: "A1", category: "Разное", translation: "уже", gender: "—", plural: "—", example: "Ich bin schon fertig.", exampleRu: "Я уже готов.", tip: "Не путай: schon (уже) и schön (красивый)" },
+];
+
+const GENDER_COLOR = { der: "#3b82f6", die: "#ec4899", das: "#10b981", "—": "rgba(255,255,255,0.3)" };
+
+function WordsScreen({ onBack, langLevel }) {
+  const [search, setSearch] = useState("");
+  const [filterCat, setFilterCat] = useState("Все");
+  const [filterLevel, setFilterLevel] = useState(langLevel || "A1");
+  const [selected, setSelected] = useState(null);
+
+  const filtered = DICTIONARY.filter(w =>
+    (filterLevel === "Все" || w.level === filterLevel) &&
+    (filterCat === "Все" || w.category === filterCat) &&
+    (search === "" || w.word.toLowerCase().includes(search.toLowerCase()) || w.translation.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  if (selected) {
+    const w = selected;
+    const gColor = GENDER_COLOR[w.gender] || GENDER_COLOR["—"];
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 24, padding: 0 }}>
+          ← Словарь
+        </button>
+
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "28px 24px", marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, background: `${gColor}20`, color: gColor, padding: "4px 10px", borderRadius: 20, fontWeight: 700 }}>{w.gender !== "—" ? w.gender : ""}</span>
+            <span style={{ fontSize: 11, background: "rgba(124,92,252,0.15)", color: "#7C5CFC", padding: "4px 10px", borderRadius: 20, fontWeight: 600 }}>{w.level}</span>
+            <span style={{ fontSize: 11, background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.4)", padding: "4px 10px", borderRadius: 20 }}>{w.category}</span>
+          </div>
+          <div style={{ fontSize: 34, fontWeight: 900, color: "#fff", marginBottom: 8 }}>{w.word}</div>
+          <div style={{ fontSize: 18, color: "rgba(255,255,255,0.6)", marginBottom: 20 }}>{w.translation}</div>
+          {w.plural && w.plural !== "—" && (
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 4 }}>Мн.ч.: <span style={{ color: "rgba(255,255,255,0.6)" }}>{w.plural}</span></div>
+          )}
+        </div>
+
+        <div style={{ background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 16, padding: "18px 20px", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Пример</div>
+          <div style={{ fontSize: 16, color: "#fff", fontWeight: 600, marginBottom: 6 }}>{w.example}</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)" }}>{w.exampleRu}</div>
+        </div>
+
+        <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 16, padding: "16px 20px" }}>
+          <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>💡 Подсказка</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{w.tip}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ paddingTop: 40 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>
+        ← Назад
+      </button>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>Словарь</h1>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 20 }}>{filtered.length} слов · Goethe Institut</div>
+
+      <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск слова..." style={{ width: "100%", padding: "12px 16px", borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 14 }} />
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, overflowX: "auto", paddingBottom: 4 }}>
+        {["A1", "A2", "Все"].map(l => (
+          <button key={l} onClick={() => setFilterLevel(l)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: "none", background: filterLevel === l ? "#7C5CFC" : "rgba(255,255,255,0.07)", color: filterLevel === l ? "#fff" : "rgba(255,255,255,0.45)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{l}</button>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, overflowX: "auto", paddingBottom: 4 }}>
+        {["Все", ...WORD_CATEGORIES].map(c => (
+          <button key={c} onClick={() => setFilterCat(c)} style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 20, border: "none", background: filterCat === c ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.05)", color: filterCat === c ? "#fff" : "rgba(255,255,255,0.4)", fontSize: 12, cursor: "pointer" }}>{c}</button>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filtered.map((w, i) => {
+          const gColor = GENDER_COLOR[w.gender] || GENDER_COLOR["—"];
+          return (
+            <button key={i} onClick={() => setSelected(w)} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
+              {w.gender !== "—" && (
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: `${gColor}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: gColor, flexShrink: 0 }}>
+                  {w.gender}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{w.word}</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{w.translation}</div>
+              </div>
+              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 16 }}>→</span>
+            </button>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div style={{ textAlign: "center", color: "rgba(255,255,255,0.25)", padding: "40px 0", fontSize: 14 }}>Ничего не найдено</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── ТЕОРИЯ ───────────────────────────────────────────────────
 const LESSONS = [
   {
@@ -1079,15 +1293,23 @@ export default function DuoPar() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginBottom: 0 }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
               <button onClick={() => setScreen("learn")} style={{ flex: 1, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
                 📖 Учить
               </button>
-              <button onClick={() => setScreen("setup")} style={{ flex: 2, background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-                Играть →
+              <button onClick={() => setScreen("words")} style={{ flex: 1, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+                🔤 Слова
               </button>
             </div>
+            <button onClick={() => setScreen("setup")} style={{ width: "100%", background: "#7C5CFC", color: "#fff", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+              Играть →
+            </button>
           </div>
+        )}
+
+        {/* WORDS */}
+        {screen === "words" && (
+          <WordsScreen onBack={() => setScreen("lobby")} langLevel={profile?.lang_level} />
         )}
 
         {/* LEARN */}
