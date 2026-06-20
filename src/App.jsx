@@ -146,6 +146,33 @@ const ALL_QUESTIONS = [
   { id: 67, level: "A2", type: "choose", category: "Грамматика", prompt: "Выбери правильный вариант:", word: null, options: ["Er kommt aus Deutschland.", "Er kommt von Deutschland.", "Er kommt aus der Deutschland.", "Er kommt von der Deutschland."], correct: 0, hint: "aus + страна без артикля" },
   { id: 68, level: "A2", type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Ich möchte Kaffee trinken.", "Ich möchte Kaffee trinkst.", "Ich möchte Kaffee trinkt.", "Ich möchten Kaffee trinken."], correct: 0, hint: "Модальный глагол + инфинитив в конце" },
   { id: 69, level: "A2", type: "choose", category: "Грамматика", prompt: "Какое предложение грамматически верно?", word: null, options: ["Du gehst ins Kino?", "Du gehst im Kino?", "Du gehen ins Kino?", "Du geht ins Kino?"], correct: 0, hint: "du → gehst; ins = in das" },
+
+  // A3 — Здоровье, Покупки, Транспорт
+  { id: 70, level: "A3", type: "translate", category: "Здоровье", prompt: "Как переводится слово?", word: "der Husten", options: ["Насморк", "Кашель", "Температура", "Боль"], correct: 1, hint: "Кашляют, когда простудились" },
+  { id: 71, level: "A3", type: "translate", category: "Здоровье", prompt: "Как переводится слово?", word: "das Fieber", options: ["Кашель", "Насморк", "Боль", "Температура"], correct: 3, hint: "Когда жарко — измеряют градусником" },
+  { id: 72, level: "A3", type: "translate", category: "Здоровье", prompt: "Как переводится слово?", word: "die Apotheke", options: ["Больница", "Поликлиника", "Аптека", "Кабинет"], correct: 2, hint: "Там продают лекарства" },
+  { id: 73, level: "A3", type: "translate", category: "Здоровье", prompt: "Как переводится слово?", word: "das Rezept", options: ["Лекарство", "Таблетка", "Рецепт", "Анализ"], correct: 2, hint: "Врач выписывает, аптека принимает" },
+  { id: 74, level: "A3", type: "translate", category: "Здоровье", prompt: "Как переводится слово?", word: "der Rücken", options: ["Живот", "Плечо", "Шея", "Спина"], correct: 3, hint: "Может заболеть от долгого сидения" },
+  { id: 75, level: "A3", type: "translate", category: "Покупки", prompt: "Как переводится слово?", word: "die Bäckerei", options: ["Мясная лавка", "Рынок", "Булочная", "Кондитерская"], correct: 2, hint: "Там продают свежий хлеб" },
+  { id: 76, level: "A3", type: "translate", category: "Покупки", prompt: "Как переводится слово?", word: "teuer", options: ["Дешёвый", "Новый", "Дорогой", "Красивый"], correct: 2, hint: "Антоним billig" },
+  { id: 77, level: "A3", type: "translate", category: "Покупки", prompt: "Как переводится слово?", word: "bezahlen", options: ["Покупать", "Продавать", "Платить", "Считать"], correct: 2, hint: "Что делают на кассе" },
+  { id: 78, level: "A3", type: "translate", category: "Транспорт", prompt: "Как переводится слово?", word: "die Abfahrt", options: ["Прибытие", "Остановка", "Платформа", "Отправление"], correct: 3, hint: "Противоположность Ankunft" },
+  { id: 79, level: "A3", type: "translate", category: "Транспорт", prompt: "Как переводится слово?", word: "der Fahrplan", options: ["Билет", "Маршрут", "Расписание", "Платформа"], correct: 2, hint: "Fahren + Plan — план поездок" },
+  { id: 80, level: "A3", type: "translate", category: "Транспорт", prompt: "Как переводится слово?", word: "der Bahnsteig", options: ["Вокзал", "Платформа", "Перрон входа", "Расписание"], correct: 1, hint: "Там ждут поезд" },
+  { id: 81, level: "A3", type: "choose", category: "Здоровье", prompt: "Как сказать «У меня болит голова»?", word: null, options: ["Ich habe Kopf.", "Mein Kopf tut weh.", "Der Kopf ist krank.", "Ich bin krank Kopf."], correct: 1, hint: "tut weh = болит" },
+  { id: 82, level: "A3", type: "choose", category: "Транспорт", prompt: "Как сказать «Идите прямо»?", word: null, options: ["Gehen Sie links.", "Gehen Sie rechts.", "Gehen Sie geradeaus.", "Gehen Sie zurück."], correct: 2, hint: "gerade = прямо, aus = вперёд" },
+
+  // A4 — Работа, Досуг, Общение
+  { id: 83, level: "A4", type: "translate", category: "Работа", prompt: "Как переводится слово?", word: "das Gehalt", options: ["Должность", "Офис", "Зарплата", "Договор"], correct: 2, hint: "Получают раз в месяц" },
+  { id: 84, level: "A4", type: "translate", category: "Работа", prompt: "Как переводится слово?", word: "die Besprechung", options: ["Перерыв", "Совещание", "Отпуск", "Командировка"], correct: 1, hint: "Все сотрудники собираются вместе" },
+  { id: 85, level: "A4", type: "translate", category: "Работа", prompt: "Как переводится слово?", word: "die Überstunden", options: ["Выходные", "Перерыв", "Сверхурочные", "Смена"], correct: 2, hint: "Работа сверх нормы" },
+  { id: 86, level: "A4", type: "translate", category: "Досуг", prompt: "Как переводится слово?", word: "die Ausstellung", options: ["Концерт", "Выставка", "Экскурсия", "Спектакль"], correct: 1, hint: "Обычно бывает в музее или галерее" },
+  { id: 87, level: "A4", type: "translate", category: "Досуг", prompt: "Как переводится слово?", word: "wandern", options: ["Плавать", "Бегать", "Ехать на велосипеде", "Ходить в походы"], correct: 3, hint: "Популярно в горах и лесах Германии" },
+  { id: 88, level: "A4", type: "translate", category: "Общение", prompt: "Как переводится слово?", word: "die Staatsangehörigkeit", options: ["Адрес", "Профессия", "Гражданство", "Дата рождения"], correct: 2, hint: "Указывают в паспорте и анкетах" },
+  { id: 89, level: "A4", type: "translate", category: "Общение", prompt: "Как переводится слово?", word: "die Postleitzahl", options: ["Телефон", "Почтовый индекс", "Улица", "Страна"], correct: 1, hint: "PLZ — 5 цифр перед городом в адресе" },
+  { id: 90, level: "A4", type: "choose", category: "Работа", prompt: "Как правильно сказать «Я учительница»?", word: null, options: ["Ich bin eine Lehrerin.", "Ich bin die Lehrerin.", "Ich bin Lehrerin.", "Ich habe Lehrerin."], correct: 2, hint: "Профессия — без артикля!" },
+  { id: 91, level: "A4", type: "choose", category: "Общение", prompt: "Как попрощаться по телефону?", word: null, options: ["Auf Wiedersehen!", "Guten Abend!", "Auf Wiederhören!", "Tschüss auf Telefon!"], correct: 2, hint: "hören = слышать — особое прощание для телефона" },
+  { id: 92, level: "A4", type: "choose", category: "Досуг", prompt: "«Hast du Lust ins Kino zu gehen?» — что это значит?", word: null, options: ["Ты уже был в кино?", "Хочешь пойти в кино?", "Тебе понравилось кино?", "Ты идёшь в кино?"], correct: 1, hint: "Lust haben = хотеть, иметь желание" },
 ];
 
 // Вопросы для теста на определение уровня
@@ -192,6 +219,8 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 const CURRICULUM_LEVELS = {
   A1: { color: "#7C5CFC", label: "A1 · Базовый" },
   A2: { color: "#f59e0b", label: "A2 · Элементарный" },
+  A3: { color: "#ef4444", label: "A3 · Средний" },
+  A4: { color: "#8b5cf6", label: "A4 · Эксперт" },
 };
 
 const CURRICULUM = [
@@ -645,6 +674,118 @@ const CURRICULUM = [
       { q: "«Wenn» означает:", options: ["потому что", "что", "когда/если", "хотя"], answer: 2 },
       { q: "«Ich denke, ___ du recht hast.»", options: ["weil", "wenn", "dass", "ob"], answer: 2 },
       { q: "Что нужно поставить между главным и придаточным предложением?", options: ["точку", "запятую", "двоеточие", "ничего"], answer: 1 },
+    ],
+  },
+
+  // ── A3 СРЕДНИЙ ────────────────────────────────────────────────
+  {
+    id: "health",
+    title: "Здоровье и тело",
+    emoji: "🏥",
+    level: "A3",
+    cards: [
+      { title: "Части тела", body: "der Kopf — голова\nder Hals — шея / горло\nder Arm — рука (от плеча)\ndie Hand — кисть руки\ndas Bein — нога\nder Fuß — ступня\nder Bauch — живот\nder Rücken — спина\ndas Ohr — ухо\ndas Auge — глаз\nder Mund — рот\ndie Nase — нос" },
+      { title: "У меня болит...", body: "Ich habe Schmerzen. — У меня болит.\nMir ist schlecht. — Мне плохо.\nIch fühle mich krank. — Я чувствую себя больным.\n\nWo tut es weh? — Где болит?\nMein Kopf tut weh. — У меня болит голова.\nMein Bauch tut weh. — У меня болит живот.\n\n💡 tut weh / tun weh — болит / болят" },
+      { title: "Врач и аптека", body: "der Arzt / die Ärztin — врач\ndas Krankenhaus — больница\ndie Apotheke — аптека\ndas Rezept — рецепт\ndie Tablette — таблетка\ndas Medikament — лекарство\ndie Erkältung — простуда\ndas Fieber — температура\nder Husten — кашель\n\n💡 Ich brauche ein Rezept. — Мне нужен рецепт." },
+    ],
+    exam: [
+      { q: "Как сказать «У меня болит голова»?", options: ["Ich habe Kopf.", "Mein Kopf tut weh.", "Der Kopf ist krank.", "Ich bin Kopf schlecht."], answer: 1 },
+      { q: "«Die Apotheke» — это:", options: ["больница", "поликлиника", "аптека", "кабинет врача"], answer: 2 },
+      { q: "«Das Fieber» означает:", options: ["кашель", "насморк", "температура", "простуда"], answer: 2 },
+      { q: "«Mir ist schlecht» значит:", options: ["Мне скучно", "Мне плохо", "Мне холодно", "Мне грустно"], answer: 1 },
+      { q: "Как спросить «Где болит?»", options: ["Wo bist du krank?", "Was hast du?", "Wo tut es weh?", "Wie geht es weh?"], answer: 2 },
+    ],
+  },
+  {
+    id: "shopping",
+    title: "Покупки и деньги",
+    emoji: "🛒",
+    level: "A3",
+    cards: [
+      { title: "В магазине", body: "der Supermarkt — супермаркет\ndas Geschäft — магазин\nder Markt — рынок\ndie Bäckerei — булочная\ndie Metzgerei — мясная лавка\n\nkaufen — покупать\nbezahlen — платить\nkosten — стоить\n\nWas kostet das? — Сколько это стоит?\nIch möchte das kaufen. — Я хочу это купить." },
+      { title: "Цены и деньги", body: "der Euro — евро\nder Cent — цент\ndas Geld — деньги\nteuer — дорогой\nbillig / günstig — дешёвый / выгодный\n\nDas ist zu teuer. — Это слишком дорого.\nHaben Sie etwas Günstigeres? — Есть что-то подешевле?\n\n💡 Das macht 5 Euro. — Это стоит 5 евро.\nStimmt so! — Сдачи не надо!" },
+      { title: "Одежда и размеры", body: "die Kleidung — одежда\ndas Hemd — рубашка\ndie Hose — брюки\ndas Kleid — платье\nder Mantel — пальто\ndie Jacke — куртка\nder Schuh — туфля / ботинок\n\nWelche Größe? — Какой размер?\nDarf ich das anprobieren? — Можно примерить?\n\n💡 Größe 38, 40, 42... — немецкие размеры одежды" },
+    ],
+    exam: [
+      { q: "«Was kostet das?» означает:", options: ["Что это такое?", "Сколько это стоит?", "Где это купить?", "Как это называется?"], answer: 1 },
+      { q: "«Die Bäckerei» — это:", options: ["мясная лавка", "рынок", "аптека", "булочная"], answer: 3 },
+      { q: "Как сказать «Можно примерить?»", options: ["Darf ich das kaufen?", "Darf ich das anprobieren?", "Kann ich das sehen?", "Ich möchte das."], answer: 1 },
+      { q: "«Günstig» означает:", options: ["дорогой", "новый", "выгодный / дешёвый", "красивый"], answer: 2 },
+      { q: "«Stimmt so!» говорят, когда:", options: ["товар не нравится", "не хотят сдачи", "просят скидку", "уходят из магазина"], answer: 1 },
+    ],
+  },
+  {
+    id: "transport",
+    title: "Транспорт и дорога",
+    emoji: "🚆",
+    level: "A3",
+    cards: [
+      { title: "Виды транспорта", body: "der Zug — поезд\ndie U-Bahn — метро\ndie S-Bahn — городская электричка\nder Bus — автобус\ndie Straßenbahn — трамвай\ndas Taxi — такси\ndas Fahrrad — велосипед\ndas Auto — машина\ndas Flugzeug — самолёт\n\n💡 mit dem Zug fahren — ехать на поезде\nzu Fuß gehen — идти пешком" },
+      { title: "Вокзал и билеты", body: "der Bahnhof — вокзал\ndie Haltestelle — остановка\nder Fahrplan — расписание\ndie Fahrkarte / das Ticket — билет\ndie Abfahrt — отправление\ndie Ankunft — прибытие\nder Bahnsteig — платформа\n\nEine Fahrkarte nach Berlin, bitte.\nОдин билет до Берлина, пожалуйста.\n\nWann fährt der nächste Zug? — Когда следующий поезд?" },
+      { title: "Как спросить дорогу", body: "Entschuldigung! — Извините!\nWo ist...? — Где находится...?\nWie komme ich zum Bahnhof? — Как добраться до вокзала?\n\nGehen Sie geradeaus. — Идите прямо.\nBiegen Sie links/rechts ab. — Сверните налево/направо.\nEs ist in der Nähe. — Это рядом.\nEs ist weit. — Это далеко.\n\n💡 die erste Straße links — первая улица слева" },
+    ],
+    exam: [
+      { q: "«Die Abfahrt» означает:", options: ["прибытие", "остановка", "отправление", "расписание"], answer: 2 },
+      { q: "Как попросить билет до Берлина?", options: ["Ich will Berlin.", "Eine Fahrkarte nach Berlin, bitte.", "Geben Sie mir Berlin.", "Ticket für Berlin fahren."], answer: 1 },
+      { q: "«Gehen Sie geradeaus» значит:", options: ["Сверните налево", "Идите прямо", "Остановитесь здесь", "Вернитесь назад"], answer: 1 },
+      { q: "«Die U-Bahn» — это:", options: ["трамвай", "автобус", "метро", "электричка"], answer: 2 },
+      { q: "Как по-немецки «расписание»?", options: ["der Bahnsteig", "die Haltestelle", "der Fahrplan", "das Ticket"], answer: 2 },
+    ],
+  },
+
+  // ── A4 ЭКСПЕРТ ────────────────────────────────────────────────
+  {
+    id: "work_jobs",
+    title: "Работа и профессии",
+    emoji: "💼",
+    level: "A4",
+    cards: [
+      { title: "Профессии", body: "der Arzt / die Ärztin — врач\nder Lehrer / die Lehrerin — учитель\nder Ingenieur / die Ingenieurin — инженер\nder Koch / die Köchin — повар\nder Verkäufer / die Verkäuferin — продавец\nder Polizist / die Polizistin — полицейский\nder Student / die Studentin — студент\n\n💡 В немецком всегда два варианта: мужской и женский. Ich bin Ärztin. (без артикля!)" },
+      { title: "На работе", body: "die Arbeit — работа\ndas Büro — офис\ndie Firma — фирма, компания\nder Chef / die Chefin — начальник\nder Kollege / die Kollegin — коллега\ndie Besprechung — совещание\ndas Gehalt — зарплата\ndie Stelle / der Job — должность, работа\n\nIch arbeite bei Siemens. — Я работаю в Siemens.\nIch suche eine Stelle. — Я ищу работу." },
+      { title: "Рабочее время", body: "Wann fangen Sie an? — Когда вы начинаете?\nIch fange um 8 Uhr an. — Я начинаю в 8.\nIch mache um 17 Uhr Feierabend. — Я заканчиваю в 17.\n\ndie Pause — перерыв\ndie Überstunden — сверхурочные\nder Urlaub — отпуск\nkrank sein — болеть\n\n💡 Feierabend! — Рабочий день окончен! (буквально «праздничный вечер»)" },
+    ],
+    exam: [
+      { q: "Как сказать «Я врач» (женщина говорит)?", options: ["Ich bin eine Ärztin.", "Ich bin die Ärztin.", "Ich bin Ärztin.", "Ich habe Ärztin."], answer: 2 },
+      { q: "«Das Gehalt» — это:", options: ["должность", "зарплата", "офис", "отпуск"], answer: 1 },
+      { q: "«Ich suche eine Stelle» значит:", options: ["Я занял место", "Я ищу работу", "Я нашёл работу", "Мне нужен офис"], answer: 1 },
+      { q: "«Feierabend» означает:", options: ["праздник", "выходной", "конец рабочего дня", "перерыв"], answer: 2 },
+      { q: "«Der Kollege» — это:", options: ["начальник", "клиент", "коллега", "сотрудник службы безопасности"], answer: 2 },
+    ],
+  },
+  {
+    id: "free_time",
+    title: "Досуг и хобби",
+    emoji: "🎭",
+    level: "A4",
+    cards: [
+      { title: "Хобби и спорт", body: "das Hobby — хобби\nder Sport — спорт\nschwimmen — плавать\nFußball spielen — играть в футбол\nRadfahren — ездить на велосипеде\nwandern — ходить в походы\nlesen — читать\nMusik hören — слушать музыку\nKochen — готовить\n\nWas machst du in deiner Freizeit?\nЧем ты занимаешься в свободное время?" },
+      { title: "Культура и развлечения", body: "das Kino — кино\ndas Theater — театр\ndas Konzert — концерт\ndas Museum — музей\ndie Ausstellung — выставка\n\nIch gehe ins Kino. — Я иду в кино.\nIch gehe ins Theater. — Я иду в театр.\n\n💡 ins = in das (в — для мест куда идём)\nim = in dem (в — для мест где находимся)\nIch bin im Kino. — Я в кино." },
+      { title: "Приглашения", body: "Hast du Lust...? — Хочешь...? / Есть желание...?\nHast du Zeit? — У тебя есть время?\nIch lade dich ein. — Я тебя приглашаю.\nGerne! — С удовольствием!\nLeider nicht. — К сожалению, нет.\nVielleicht ein anderes Mal. — Может, в другой раз.\n\nHast du Lust, ins Kino zu gehen?\nХочешь пойти в кино?" },
+    ],
+    exam: [
+      { q: "«Hast du Lust?» означает:", options: ["Ты устал?", "У тебя есть деньги?", "Хочешь / есть желание?", "Ты свободен?"], answer: 2 },
+      { q: "«Ich gehe ins Kino» — «ins» это сокращение от:", options: ["in das", "in dem", "in den", "in der"], answer: 0 },
+      { q: "Как сказать «С удовольствием»?", options: ["Leider nicht.", "Vielleicht.", "Gerne!", "Danke schön."], answer: 2 },
+      { q: "«Die Ausstellung» — это:", options: ["концерт", "выставка", "спектакль", "экскурсия"], answer: 1 },
+      { q: "«Wandern» означает:", options: ["плавать", "бегать", "ходить в походы", "ехать на велосипеде"], answer: 2 },
+    ],
+  },
+  {
+    id: "communication",
+    title: "Телефон и общение",
+    emoji: "📱",
+    level: "A4",
+    cards: [
+      { title: "Телефонный разговор", body: "das Telefon / das Handy — телефон / мобильник\nanrufen — звонить\nAuf Wiederhören! — До свидания! (по телефону)\n\nHallo, hier ist Anna. — Привет, это Анна.\nKann ich bitte mit Herrn Müller sprechen?\nМожно поговорить с господином Мюллером?\nEinen Moment, bitte. — Одну минуту, пожалуйста.\nEr ist gerade nicht da. — Его сейчас нет.\n\n💡 Ich rufe später zurück. — Я перезвоню позже." },
+      { title: "Сообщения и почта", body: "die E-Mail — электронная почта\ndie Nachricht — сообщение\nschreiben — писать\nschicken — отправлять\nbekommen / erhalten — получать\n\nIch schreibe eine E-Mail. — Я пишу письмо.\nHaben Sie meine Nachricht bekommen?\nВы получили моё сообщение?\n\n💡 die SMS — смс-сообщение\nder Brief — бумажное письмо" },
+      { title: "Личные данные", body: "der Name — имя\nder Vorname — имя (личное)\nder Familienname — фамилия\ndie Adresse — адрес\ndie Postleitzahl (PLZ) — почтовый индекс\ndie Telefonnummer — номер телефона\ndie E-Mail-Adresse — адрес почты\ndas Geburtsdatum — дата рождения\ndie Staatsangehörigkeit — гражданство\n\n💡 Wie schreibt man das? — Как это пишется?" },
+    ],
+    exam: [
+      { q: "«Auf Wiederhören!» говорят:", options: ["при встрече", "по телефону прощаясь", "когда опаздывают", "на совещании"], answer: 1 },
+      { q: "«Hier ist Anna» в телефонном разговоре значит:", options: ["Здесь Анна", "Это говорит Анна", "Анна дома", "Позовите Анну"], answer: 1 },
+      { q: "«Die Postleitzahl» — это:", options: ["номер телефона", "почтовый индекс", "домашний адрес", "номер паспорта"], answer: 1 },
+      { q: "«Ich rufe später zurück» означает:", options: ["Я позвоню завтра", "Я перезвоню позже", "Перезвони мне", "Я занят"], answer: 1 },
+      { q: "«Die Staatsangehörigkeit» — это:", options: ["адрес", "профессия", "гражданство", "дата рождения"], answer: 2 },
     ],
   },
 ];
