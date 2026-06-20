@@ -931,12 +931,13 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {options.map((opt, i) => {
           let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
+          let icon = null;
           if (selected !== null) {
-            if (opt === correct) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
-            else if (opt === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
-            else color = "rgba(255,255,255,0.25)";
+            if (opt === correct) { bg = "rgba(16,185,129,0.25)"; border = "#10b981"; color = "#10b981"; icon = "✓"; }
+            else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
+            else color = "rgba(255,255,255,0.2)";
           }
-          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s" }}>{opt}</button>;
+          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
         })}
       </div>
     </div>
@@ -1045,12 +1046,13 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {options.map((opt, i) => {
           let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
+          let icon = null;
           if (selected !== null) {
-            if (opt === correct) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
-            else if (opt === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
-            else color = "rgba(255,255,255,0.25)";
+            if (opt === correct) { bg = "rgba(16,185,129,0.25)"; border = "#10b981"; color = "#10b981"; icon = "✓"; }
+            else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
+            else color = "rgba(255,255,255,0.2)";
           }
-          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s" }}>{opt}</button>;
+          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
         })}
       </div>
     </div>
@@ -1128,13 +1130,15 @@ function TopicExamScreen({ topic, onBack, onPass }) {
           let bg = "rgba(255,255,255,0.05)";
           let border = "rgba(255,255,255,0.1)";
           let color = "rgba(255,255,255,0.85)";
+          let icon = null;
           if (selected !== null) {
-            if (isCorrect(opt, i)) { bg = "rgba(16,185,129,0.15)"; border = "#10b981"; color = "#10b981"; }
-            else if (opt === selected) { bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#ef4444"; }
+            if (isCorrect(opt, i)) { bg = "rgba(16,185,129,0.25)"; border = "#10b981"; color = "#10b981"; icon = "✓"; }
+            else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
+            else color = "rgba(255,255,255,0.2)";
           }
           return (
-            <button key={i} onClick={() => pick(opt, i)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 500, transition: "all 0.2s" }}>
-              {opt}
+            <button key={i} onClick={() => pick(opt, i)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 500, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>{opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}
             </button>
           );
         })}
