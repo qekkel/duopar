@@ -2288,7 +2288,9 @@ function MapGameScreen({ onBack, session, profile }) {
 
   // ── ONLINE STATE ──
   const [onlineMode, setOnlineMode] = useState(false);
-  const [onlineSetup, setOnlineSetup] = useState("choice"); // choice | creating | waiting | joining
+  const [onlineSetup, setOnlineSetup] = useState("choice"); // choice | creating | waiting | joining | searching
+  const lobbyRef = useRef(null);
+  const matchedRef = useRef(false);
   const [myRole, setMyRole] = useState(null); // "host" | "guest"
   const [roomCode, setRoomCode] = useState("");
   const [joinInput, setJoinInput] = useState("");
@@ -2434,6 +2436,62 @@ function MapGameScreen({ onBack, session, profile }) {
       sendOnline("opponent_joined", { username: myUsername() });
       sendOnline("start_game", { hostUsername: myUsername() });
     }, 800);
+  }
+
+  function searchOpponent() {
+    matchedRef.current = false;
+    setOnlineSetup("searching");
+    const lobby = supabase.channel("matchmaking-lobby", { config: { broadcast: { self: false } } });
+    lobbyRef.current = lobby;
+
+    lobby.on("broadcast", { event: "looking" }, ({ payload }) => {
+      // I received someone looking — I become host, create room, invite them
+      if (matchedRef.current) return;
+      matchedRef.current = true;
+      lobby.send({ type: "broadcast", event: "matched", payload: { to: payload.id, hostId: myUsername(), code: "" } });
+      // generate code and setup
+      const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+      setRoomCode(code);
+      setMyRole("host"); myRoleRef.current = "host";
+      lobby.send({ type: "broadcast", event: "invite", payload: { to: payload.id, code, hostUsername: myUsername() } });
+      lobby.unsubscribe();
+      setupChannel(code, "host");
+      setOnlineSetup("waiting");
+    });
+
+    lobby.on("broadcast", { event: "invite" }, ({ payload }) => {
+      // I was invited by host
+      if (matchedRef.current) return;
+      if (payload.to !== myUsername()) return;
+      matchedRef.current = true;
+      lobby.unsubscribe();
+      const code = payload.code;
+      setRoomCode(code);
+      setMyRole("guest"); myRoleRef.current = "guest";
+      setupChannel(code, "guest");
+      setTimeout(() => {
+        sendOnline("opponent_joined", { username: myUsername() });
+        sendOnline("start_game", { hostUsername: myUsername() });
+      }, 800);
+    });
+
+    lobby.subscribe(() => {
+      // announce I'm looking
+      setTimeout(() => {
+        if (!matchedRef.current) {
+          lobby.send({ type: "broadcast", event: "looking", payload: { id: myUsername() } });
+        }
+      }, 400);
+    });
+
+    // fallback to bot after 15s
+    setTimeout(() => {
+      if (!matchedRef.current) {
+        matchedRef.current = true;
+        lobby.unsubscribe();
+        setPhase("playing");
+      }
+    }, 15000);
   }
 
   function proceedOnlinePicks(myPick, theirPick) {
@@ -2870,6 +2928,19 @@ function MapGameScreen({ onBack, session, profile }) {
       </div>
     );
 
+    // Searching for random opponent
+    if (onlineSetup === "searching") return (
+      <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
+        <style>{ANIM_CSS}</style>
+        <button onClick={() => { matchedRef.current = true; lobbyRef.current?.unsubscribe(); setOnlineSetup("choice"); }} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
+        <div style={{ fontSize: 40, marginBottom: 20 }}>🌐</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Ищем соперника</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Подбираем игрока онлайн...</div>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 28px", animation: "spin 1s linear infinite" }} />
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Если никого нет — через 15 сек играешь с ботом</div>
+      </div>
+    );
+
     // Default: choice screen
     return (
       <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
@@ -2879,21 +2950,25 @@ function MapGameScreen({ onBack, session, profile }) {
         <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Завоевание Германии</div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>С кем сыграем?</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button onClick={searchOpponent}
+            style={{ width: "100%", background: "linear-gradient(135deg,#10b981,#34d399)", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+            🌐 Найти соперника онлайн
+          </button>
           <button onClick={() => { setOnlineSetup("creating"); createRoom(); }}
-            style={{ width: "100%", background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+            style={{ width: "100%", background: "rgba(124,92,252,0.15)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, color: "#a78bfa", cursor: "pointer" }}>
             👥 Создать комнату для друга
           </button>
           <button onClick={() => setOnlineSetup("joining")}
-            style={{ width: "100%", background: "rgba(124,92,252,0.12)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, color: "#a78bfa", cursor: "pointer" }}>
+            style={{ width: "100%", background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 600, color: "#a78bfa", cursor: "pointer" }}>
             🔑 Войти по коду
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>или</div>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)" }}>или</div>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
           </div>
           <button onClick={() => setPhase("playing")}
-            style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.5)", cursor: "pointer" }}>
+            style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}>
             🤖 Играть с ботом
           </button>
         </div>
