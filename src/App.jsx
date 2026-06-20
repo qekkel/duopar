@@ -2317,6 +2317,7 @@ function MapGameScreen({ onBack, session, profile }) {
   const [availableCats, setAvailableCats] = useState([]);
   const [playerCat, setPlayerCat] = useState(null);
   const [botCat, setBotCat] = useState(null);
+  const [autoPickTerr, setAutoPickTerr] = useState(null); // territory being auto-selected (blink)
   const [roundMsg, setRoundMsg] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -2787,6 +2788,21 @@ function MapGameScreen({ onBack, session, profile }) {
     return () => clearTimeout(t);
   }, [rPhase]);
 
+  // auto-pick last remaining territory with blink animation
+  useEffect(() => {
+    if (rPhase !== "territory_select") return;
+    const allIds = Object.values(STATE_ID_MAP);
+    const unclaimed = allIds.filter(id => !terrRef.current[id]);
+    if (unclaimed.length !== 1) return;
+    const lastId = unclaimed[0];
+    setAutoPickTerr(lastId);
+    const t = setTimeout(() => {
+      setAutoPickTerr(null);
+      handleTerritoryClick(lastId);
+    }, 1800);
+    return () => clearTimeout(t);
+  }, [rPhase, territories]);
+
   const pScore = Object.values(territories).filter(v => v === "player").length;
   const bScore = Object.values(territories).filter(v => v === "bot").length;
   const W = 310, H = 370;
@@ -2797,6 +2813,10 @@ function MapGameScreen({ onBack, session, profile }) {
     if (territories[sid] === "player") return "#7C5CFC";
     if (territories[sid] === "bot") return "#f59e0b";
     return "#2a2040";
+  }
+  function getAutoPickStyle(sid) {
+    if (sid !== autoPickTerr) return {};
+    return { animation: "autoPick 0.5s ease-in-out infinite alternate" };
   }
   function getOpacity(sid) {
     if (sid === playerPick || sid === botPick) return 0.95;
@@ -2814,6 +2834,7 @@ function MapGameScreen({ onBack, session, profile }) {
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
     @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     @keyframes flash{0%,100%{opacity:1}50%{opacity:0.6}}
+    @keyframes autoPick{from{fill:#2a2040;filter:drop-shadow(0 0 6px #fff)}to{fill:#e2e8f0;filter:drop-shadow(0 0 14px #fff)}}
   `;
 
   // ── MATCHMAKING ──
@@ -2911,8 +2932,8 @@ function MapGameScreen({ onBack, session, profile }) {
           const clickable = rPhase === "territory_select" && territories[id] !== "player";
           return (
             <g key={id} onClick={() => handleTerritoryClick(id)} style={{ cursor: clickable ? "pointer" : "default" }}>
-              <path d={d} fill={getFill(id)} stroke={getStroke(id)} strokeWidth={id === playerPick || id === botPick ? 2 : 1.2}
-                strokeLinejoin="round" opacity={getOpacity(id)} style={{ transition: "fill 0.5s ease, opacity 0.3s ease, stroke 0.3s ease" }} />
+              <path d={d} fill={getFill(id)} stroke={id === autoPickTerr ? "#ffffff" : getStroke(id)} strokeWidth={id === playerPick || id === botPick || id === autoPickTerr ? 2.5 : 1.2}
+                strokeLinejoin="round" opacity={getOpacity(id)} style={{ transition: id === autoPickTerr ? "none" : "fill 0.5s ease, opacity 0.3s ease, stroke 0.3s ease", ...getAutoPickStyle(id) }} />
               {!isSmall && <text x={cx} y={cy+2} textAnchor="middle" fontSize="6" fill="rgba(255,255,255,0.6)" style={{ pointerEvents:"none", userSelect:"none" }}>{id.toUpperCase()}</text>}
             </g>
           );
