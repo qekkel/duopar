@@ -1,5 +1,71 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
+
+// ── ЗВУКИ (Web Audio API) ─────────────────────────────────────
+function playSound(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (type === "correct") {
+      [523, 659, 784].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = "sine";
+        gain.gain.setValueAtTime(0.25, ctx.currentTime + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.25);
+        osc.start(ctx.currentTime + i * 0.1);
+        osc.stop(ctx.currentTime + i * 0.1 + 0.25);
+      });
+    } else {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 180; osc.type = "sawtooth";
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.35);
+    }
+  } catch {}
+}
+
+// ── КОНФЕТТИ ─────────────────────────────────────────────────
+function Confetti() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    const pieces = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      w: 8 + Math.random() * 8,
+      h: 5 + Math.random() * 5,
+      color: ["#7C5CFC","#10b981","#f59e0b","#ef4444","#3b82f6","#ec4899"][Math.floor(Math.random()*6)],
+      speed: 2 + Math.random() * 4,
+      angle: Math.random() * Math.PI * 2,
+      spin: (Math.random() - 0.5) * 0.2,
+    }));
+    let frame;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        p.y += p.speed; p.angle += p.spin;
+        if (p.y > canvas.height) p.y = -20;
+        ctx.save(); ctx.translate(p.x + p.w/2, p.y + p.h/2);
+        ctx.rotate(p.angle); ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      });
+      frame = requestAnimationFrame(draw);
+    }
+    draw();
+    const t = setTimeout(() => cancelAnimationFrame(frame), 3500);
+    return () => { cancelAnimationFrame(frame); clearTimeout(t); };
+  }, []);
+  return <canvas ref={canvasRef} style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 99 }} />;
+}
 
 // ── ВОПРОСЫ ПО УРОВНЯМ ───────────────────────────────────────
 
@@ -121,6 +187,50 @@ const QUESTIONS_PER_ROUND = 8;
 function getLevel(xp) { return Math.floor(xp / 200) + 1; }
 function xpToNextLevel(xp) { return 200 - (xp % 200); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+// ── LEVEL PICKER ─────────────────────────────────────────────
+function LevelPicker({ onPick, onTest }) {
+  const levels = [
+    { id: "A0", icon: "🌱", title: "A0 · Начинающий", desc: "Никогда не учил немецкий" },
+    { id: "A1", icon: "📖", title: "A1 · Элементарный", desc: "Знаю базовые слова и фразы" },
+    { id: "A2", icon: "💬", title: "A2 · Базовый", desc: "Понимаю простые предложения" },
+  ];
+  return (
+    <div style={{ paddingTop: 60 }}>
+      <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · Deutsch</div>
+      <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 6px" }}>Какой у тебя уровень?</h1>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 28 }}>Выбери сам или пройди тест</div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+        {levels.map(l => (
+          <button key={l.id} onClick={() => onPick(l.id)} style={{
+            background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)",
+            borderRadius: 16, padding: "18px 20px", cursor: "pointer", textAlign: "left",
+            display: "flex", alignItems: "center", gap: 16, transition: "all 0.2s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#7C5CFC"; e.currentTarget.style.background = "rgba(124,92,252,0.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
+          >
+            <span style={{ fontSize: 28 }}>{l.icon}</span>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{l.title}</div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{l.desc}</div>
+            </div>
+            <span style={{ marginLeft: "auto", color: "rgba(255,255,255,0.25)", fontSize: 18 }}>→</span>
+          </button>
+        ))}
+      </div>
+
+      <button onClick={onTest} style={{
+        width: "100%", background: "transparent", border: "1.5px dashed rgba(255,255,255,0.15)",
+        borderRadius: 16, padding: "16px", cursor: "pointer", color: "rgba(255,255,255,0.45)",
+        fontSize: 14, fontWeight: 500,
+      }}>
+        🤔 Не знаю свой уровень — пройти тест
+      </button>
+    </div>
+  );
+}
 
 // ── PLACEMENT TEST ────────────────────────────────────────────
 function PlacementTest({ onDone }) {
@@ -466,7 +576,7 @@ function ProfileScreen({ profile, session, onUpdate, onBack, onRetakeTest }) {
         {[
           { label: "Раундов сыграно", value: profile?.rounds_played || 0, icon: "🎮" },
           { label: "Всего XP", value: xp, icon: "⚡" },
-          { label: "Игровой уровень", value: level, icon: "🏅" },
+          { label: "Серия дней", value: `${profile?.streak || 0} 🔥`, icon: "📅" },
           { label: "До след. уровня", value: `${xpToNextLevel(xp)} XP`, icon: "🎯" },
         ].map(item => (
           <div key={item.label} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "14px 16px" }}>
@@ -506,6 +616,22 @@ export default function DuoPar() {
   const [showHint, setShowHint] = useState(false);
   const [countdown, setCountdown] = useState(null);
   const [xpEarned, setXpEarned] = useState(0);
+  const [animState, setAnimState] = useState(null); // "shake" | "pop"
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  // Inject keyframe animations once
+  useEffect(() => {
+    const s = document.createElement("style");
+    s.textContent = `
+      @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+      @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+      @keyframes streakPop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+      .shake{animation:shake 0.4s ease}
+      .pop{animation:pop 0.3s ease}
+    `;
+    document.head.appendChild(s);
+    return () => document.head.removeChild(s);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -522,11 +648,17 @@ export default function DuoPar() {
     }
   }, [session]);
 
-  // Показываем тест если lang_level не установлен
-  const needsPlacement = session && profile && !profile.lang_level;
+  // Показываем выбор уровня если lang_level не установлен
+  const needsPlacement = session && profile && !profile.lang_level && screen !== "placement";
 
   const q = questions[qIndex];
   const langLevel = profile?.lang_level || "A1";
+
+  async function pickLevel(level) {
+    await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
+    setProfile(p => ({ ...p, lang_level: level }));
+    setScreen("lobby");
+  }
 
   async function finishPlacement(level, testScore) {
     await supabase.from("profiles").update({ lang_level: level }).eq("id", session.user.id);
@@ -545,11 +677,16 @@ export default function DuoPar() {
 
   useEffect(() => {
     if (selected !== null && !revealed) {
+      const isCorrect = selected === q.correct;
+      playSound(isCorrect ? "correct" : "wrong");
+      setAnimState(isCorrect ? "pop" : "shake");
+      setTimeout(() => setAnimState(null), 450);
+
       const timer = setTimeout(() => {
         const partnerCorrect = Math.random() > 0.35;
         setPartnerState(partnerCorrect);
         setRevealed(true);
-        if (selected === q.correct) {
+        if (isCorrect) {
           setXpEarned(prev => prev + (partnerCorrect ? 20 : 10));
           setScore(s => s + 1);
         }
@@ -574,11 +711,21 @@ export default function DuoPar() {
   }, [revealed]);
 
   useEffect(() => {
-    if (screen === "result" && xpEarned > 0 && session?.user) {
+    if (screen === "result" && session?.user) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3500);
+
+      const today = new Date().toISOString().split("T")[0];
+      const last = profile?.last_played;
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+      const newStreak = last === today ? (profile?.streak || 1)
+        : last === yesterday ? (profile?.streak || 0) + 1
+        : 1;
+
       const newXP = (profile?.xp || 0) + xpEarned;
       const newRounds = (profile?.rounds_played || 0) + 1;
-      supabase.from("profiles").update({ xp: newXP, rounds_played: newRounds }).eq("id", session.user.id)
-        .then(() => setProfile(p => ({ ...p, xp: newXP, rounds_played: newRounds })));
+      supabase.from("profiles").update({ xp: newXP, rounds_played: newRounds, streak: newStreak, last_played: today }).eq("id", session.user.id)
+        .then(() => setProfile(p => ({ ...p, xp: newXP, rounds_played: newRounds, streak: newStreak, last_played: today })));
     }
   }, [screen]);
 
@@ -609,8 +756,13 @@ export default function DuoPar() {
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", padding: "0 0 40px", fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 420, padding: "0 20px" }}>
 
+        {/* LEVEL PICKER */}
+        {needsPlacement && (
+          <LevelPicker onPick={pickLevel} onTest={() => setScreen("placement")} />
+        )}
+
         {/* PLACEMENT TEST */}
-        {(needsPlacement || screen === "placement") && screen !== "placement_result" && !screen.startsWith("placement_result_") && (
+        {screen === "placement" && !screen.startsWith("placement_result_") && (
           <PlacementTest onDone={finishPlacement} />
         )}
 
@@ -643,8 +795,15 @@ export default function DuoPar() {
               <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", margin: 0, lineHeight: 1.2 }}>
                 Учи немецкий<br /><span style={{ color: "#7C5CFC" }}>вместе</span>
               </h1>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginTop: 12 }}>
-                {profile?.rounds_played || 0} раундов сыграно
+              <div style={{ display: "flex", gap: 16, marginTop: 14 }}>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
+                  🎮 {profile?.rounds_played || 0} раундов
+                </div>
+                {(profile?.streak || 0) > 0 && (
+                  <div style={{ fontSize: 13, color: "#f59e0b", fontWeight: 600 }}>
+                    🔥 {profile.streak} {profile.streak === 1 ? "день" : profile.streak < 5 ? "дня" : "дней"} подряд
+                  </div>
+                )}
               </div>
             </div>
 
@@ -685,7 +844,7 @@ export default function DuoPar() {
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>{q.prompt}</div>
               {q.word && <div style={{ fontSize: 30, fontWeight: 800, color: "#fff", lineHeight: 1.2 }}>{q.word}</div>}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+            <div className={animState || ""} style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
               {q.options.map((opt, i) => (
                 <button key={i} onClick={() => !revealed && selected === null && setSelected(i)} style={getOptionStyle(i)}>
                   <span style={{ marginRight: 10, opacity: 0.4, fontSize: 13 }}>{["A", "B", "C", "D"][i]}</span>
@@ -717,6 +876,7 @@ export default function DuoPar() {
         {/* RESULT */}
         {screen === "result" && (
           <div style={{ paddingTop: 60 }}>
+            {showConfetti && <Confetti />}
             <ResultScreen score={score} total={questions.length} xpEarned={xpEarned} profile={profile}
               onRestart={() => setScreen("lobby")} onProfile={() => setScreen("profile")} />
           </div>
