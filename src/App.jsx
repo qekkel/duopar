@@ -2789,9 +2789,9 @@ function MapGameScreen({ onBack, session, profile }) {
 
   function checkGameOver(terr) {
     const allIds = Object.values(STATE_ID_MAP);
-    // game over when no territory is selectable (unclaimed or bot-owned)
-    const selectable = allIds.filter(id => !terr[id] || terr[id] === "bot");
-    if (selectable.length === 0) {
+    // game over when all 16 territories are claimed (no unclaimed left)
+    const unclaimed = allIds.filter(id => !terr[id]);
+    if (unclaimed.length === 0) {
       setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 1800);
       return true;
     }
