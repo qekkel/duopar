@@ -930,7 +930,12 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   // PRACTICE PHASE
   const card = practiceQueue[practiceIdx];
   const correct = card?.ru;
-  const options = card ? shuffle([correct, ...shuffle(allCards.filter(f => f.ru !== correct)).slice(0, 3).map(f => f.ru)]) : [];
+  const isSentence = w => /[.!?]$/.test(w.de.trim());
+  const pool = card ? (() => {
+    const sameType = allCards.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
+    return sameType.length >= 3 ? sameType : allCards.filter(f => f.ru !== correct);
+  })() : [];
+  const options = card ? shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]) : [];
 
   return (
     <div style={{ paddingTop: 40 }}>
@@ -1050,7 +1055,12 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
 
   const card = practiceQueue[practiceIdx];
   const correct = card?.ru;
-  const options = card ? shuffle([correct, ...shuffle(allWords.filter(f => f.ru !== correct)).slice(0, 3).map(f => f.ru)]) : [];
+  const isSentence = w => /[.!?]$/.test(w.de.trim());
+  const pool2 = card ? (() => {
+    const sameType = allWords.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
+    return sameType.length >= 3 ? sameType : allWords.filter(f => f.ru !== correct);
+  })() : [];
+  const options = card ? shuffle([correct, ...shuffle(pool2).slice(0, 3).map(f => f.ru)]) : [];
   return (
     <div style={{ paddingTop: 40 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
