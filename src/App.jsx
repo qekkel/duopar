@@ -243,6 +243,25 @@ const CURRICULUM = [
     ],
   },
   {
+    id: "alphabet",
+    title: "Алфавит и произношение",
+    emoji: "🔤",
+    level: "A1",
+    bonus: true,
+    cards: [
+      { title: "Немецкий алфавит", body: "A — А\nB — Б\nC — Ц/К\nD — Д\nE — Э\nF — Ф\nG — Г\nH — Х\nI — И\nJ — Й\nK — К\nL — Л\nM — М\nN — Н\nO — О\nP — П\nQ — К\nR — Р\nS — С/З\nT — Т\nU — У\nV — Ф\nW — В\nX — КС\nY — Ю\nZ — Ц\n\nУмлауты: Ä — Э, Ö — Ё, Ü — Ю\nß — эсцет (двойное С)" },
+      { title: "Произношение", body: "ch — после a/o/u: как Х (Bach)\nch — после e/i: мягкое Х (ich)\nsch — Ш (Schule)\nei — АЙ (ein)\nie — ИЕ (wie)\neu / äu — ОЙ (neu, Häuser)\nst / sp в начале слова — ШТ / ШП (Stadt, Sport)\n\n💡 Все буквы читаются — немецкий фонетический язык!" },
+      { title: "Часто путают", body: "w — читается как В: Wasser, Wort\nv — читается как Ф: Vater, von\nz — читается как Ц: Zeit, Zug\nj — читается как Й: ja, Jahr\ny — читается как Ю: Symbol, Typ\n\n⚠️ Nicht «double-u» как в английском — W это просто В!\n\nПримеры:\nwarm — варм (тёплый)\nvier — фир (четыре)\nzeit — цайт (время)\njetzt — йецт (сейчас)" },
+    ],
+    exam: [
+      { q: "Как читается буква W в немецком?", options: ["В (как в слове вода)", "У", "Дубль-В", "Ф"], answer: 0 },
+      { q: "Как читается буква V в немецком?", options: ["В", "Ф", "У", "Б"], answer: 1 },
+      { q: "Буква Z в немецком читается как:", options: ["З", "С", "Ц", "Ж"], answer: 2 },
+      { q: "Сочетание «sch» читается как:", options: ["СХ", "Ш", "СЧ", "Щ"], answer: 1 },
+      { q: "Сочетание «ei» в словах типа «ein» читается как:", options: ["ЕИ", "ИЕ", "АЙ", "ЭЙ"], answer: 2 },
+    ],
+  },
+  {
     id: "articles",
     title: "Артикли",
     emoji: "📌",
@@ -328,6 +347,7 @@ const CURRICULUM = [
     cards: [
       { title: "Основные цвета", body: "rot — красный\nblau — синий\ngelb — жёлтый\ngrün — зелёный\nschwarz — чёрный\nweiß — белый\ngrau — серый\nbraun — коричневый\norange — оранжевый\nlila — фиолетовый\nrosa — розовый" },
       { title: "Как использовать цвета", body: "Das Auto ist rot. — Машина красная.\nIch mag Blau. — Мне нравится синий.\n\n💡 После глагола «sein» цвет не склоняется:\nDas Haus ist grün. ✓\n\nПеред существительным — склоняется:\nein rotes Haus (красный дом)\neine blaue Tür (синяя дверь)" },
+      { title: "Цвета в предложениях", body: "Mein Lieblingsfarbe ist Blau. — Мой любимый цвет синий.\nIch trage ein grünes T-Shirt. — Я ношу зелёную футболку.\nDas rote Auto gehört mir. — Красная машина моя.\n\nСочетания цветов:\nhellblau — светло-синий\ndunkelrot — тёмно-красный\nschwarz-weiß — чёрно-белый\n\n⚠️ hell / dunkel добавляются слитно:\nhellgrün (не «hell grün»)" },
     ],
     exam: [
       { q: "Как по-немецки «красный»?", options: ["blau", "grün", "rot", "gelb"], answer: 2 },
@@ -335,6 +355,25 @@ const CURRICULUM = [
       { q: "Как сказать «Машина синяя»?", options: ["Das Auto ist blau.", "Das Auto ist blue.", "Das Auto bin blau.", "Das Auto hat blau."], answer: 0 },
       { q: "«Weiß» — это:", options: ["серый", "белый", "жёлтый", "розовый"], answer: 1 },
       { q: "«Grün» означает:", options: ["синий", "коричневый", "зелёный", "фиолетовый"], answer: 2 },
+    ],
+  },
+  {
+    id: "appearance",
+    title: "Описание внешности",
+    emoji: "🪞",
+    level: "A1",
+    bonus: true,
+    cards: [
+      { title: "Волосы и глаза", body: "blonde Haare — светлые волосы\nbraune Haare — каштановые волосы\nschwarze Haare — чёрные волосы\nrote Haare — рыжие волосы\ngraue Haare — седые волосы\n\nblaue Augen — голубые глаза\ngrüne Augen — зелёные глаза\nbraune Augen — карие глаза\n\n💡 Er hat braune Haare. — У него каштановые волосы." },
+      { title: "Внешность", body: "groß — высокий\nklein — низкий\nschlank — стройный\ndick — толстый\njung — молодой\nalt — старый\nhübsch — симпатичный\nschön — красивый\n\n⚠️ Dick в немецком означает «толстый» — не «грубый» как в английском!" },
+      { title: "Описать человека", body: "Er hat blaue Augen. — У него голубые глаза.\nSie hat lange Haare. — У неё длинные волосы.\nEr ist groß und schlank. — Он высокий и стройный.\nSie ist jung und hübsch. — Она молодая и симпатичная.\n\nWie sieht er aus? — Как он выглядит?\nWie sieht sie aus? — Как она выглядит?\n\n💡 aussehen — выглядеть (разделяемый глагол!)" },
+    ],
+    exam: [
+      { q: "«Blonde Haare» — это:", options: ["чёрные волосы", "рыжие волосы", "светлые волосы", "седые волосы"], answer: 2 },
+      { q: "«Braune Augen» — это:", options: ["голубые глаза", "зелёные глаза", "серые глаза", "карие глаза"], answer: 3 },
+      { q: "«Wie sieht er aus?» значит:", options: ["Где он?", "Как его зовут?", "Как он выглядит?", "Сколько ему лет?"], answer: 2 },
+      { q: "«Schlank» означает:", options: ["высокий", "толстый", "стройный", "низкий"], answer: 2 },
+      { q: "Как сказать «У неё длинные волосы»?", options: ["Sie ist lange Haare.", "Sie hat lange Haare.", "Ihre Haare lang.", "Sie trägt lange Haare."], answer: 1 },
     ],
   },
   {
@@ -381,6 +420,7 @@ const CURRICULUM = [
     cards: [
       { title: "Основные продукты", body: "das Brot — хлеб\ndie Milch — молоко\ndas Wasser — вода\nder Kaffee — кофе\nder Tee — чай\ndas Fleisch — мясо\nder Käse — сыр\ndas Ei — яйцо\ndas Gemüse — овощи\ndas Obst — фрукты" },
       { title: "В кафе и ресторане", body: "Ich möchte... — Я бы хотел...\nEin Kaffee, bitte! — Кофе, пожалуйста!\nDie Speisekarte, bitte. — Меню, пожалуйста.\nWas kostet das? — Сколько это стоит?\nDie Rechnung, bitte! — Счёт, пожалуйста!\nEs war sehr lecker! — Было очень вкусно!" },
+      { title: "Немецкие блюда", body: "die Brezel — крендель\ndie Wurst — колбаса\nder Döner — донер-кебаб\ndas Schnitzel — шницель\ndas Sauerkraut — квашеная капуста\nder Kartoffelsalat — картофельный салат\ndie Bratwurst — жареная колбаса\n\n💡 Döner — самый популярный фастфуд в Германии!\n\n⚠️ Wurst имеет десятки сортов — Bratwurst, Currywurst, Leberwurst..." },
     ],
     exam: [
       { q: "Как попросить счёт в ресторане?", options: ["Das Menü, bitte!", "Die Rechnung, bitte!", "Ich möchte essen.", "Was kostet das?"], answer: 1 },
@@ -388,6 +428,25 @@ const CURRICULUM = [
       { q: "Как сказать «Я бы хотел кофе»?", options: ["Ich habe Kaffee.", "Ich bin Kaffee.", "Ich möchte Kaffee.", "Ich trinke Kaffee bitte."], answer: 2 },
       { q: "«Lecker» означает:", options: ["дорогой", "вкусный", "горячий", "холодный"], answer: 1 },
       { q: "«Das Ei» — это:", options: ["сыр", "молоко", "яйцо", "хлеб"], answer: 2 },
+    ],
+  },
+  {
+    id: "german_cuisine",
+    title: "Немецкая кухня",
+    emoji: "🥨",
+    level: "A1",
+    bonus: true,
+    cards: [
+      { title: "Типичные блюда", body: "die Brezel — крендель\ndie Bratwurst — жареная колбаса\ndas Schnitzel — шницель\nder Döner — донер-кебаб\ndas Sauerkraut — квашеная капуста\nder Kartoffelsalat — картофельный салат\ndie Currywurst — колбаса карри\ndas Eisbein — рулька\n\n💡 Currywurst — берлинский фастфуд, изобретён в 1949 году!" },
+      { title: "В пекарне", body: "das Brötchen — булочка\ndas Schwarzbrot — чёрный хлеб\nder Kuchen — торт / пирог\ndie Torte — торт (слоёный)\ndie Semmel — булочка (Бавария)\ndas Croissant — круассан\nder Bäcker — пекарь\ndie Bäckerei — пекарня\n\n💡 Немцы едят много хлеба! Более 300 сортов хлеба в Германии." },
+      { title: "Традиции еды", body: "das Frühstück — завтрак (7-9 утра)\ndas Mittagessen — обед (12-14 часов)\ndas Abendbrot — ужин (18-20 часов)\n\nТипичный завтрак: Brötchen mit Butter und Käse\nТипичный обед: горячее блюдо\nТипичный ужин: холодные закуски, хлеб, колбаса\n\n⚠️ Abendbrot — буквально «вечерний хлеб»: ужин часто холодный!" },
+    ],
+    exam: [
+      { q: "«Die Brezel» — это:", options: ["шницель", "колбаса", "крендель", "пирог"], answer: 2 },
+      { q: "«Das Schwarzbrot» — это:", options: ["белый хлеб", "чёрный хлеб", "булочка", "пирог"], answer: 1 },
+      { q: "«Das Abendbrot» — это:", options: ["завтрак", "обед", "полдник", "ужин"], answer: 3 },
+      { q: "«Die Bäckerei» — это:", options: ["мясная лавка", "ресторан", "пекарня", "кондитерская"], answer: 2 },
+      { q: "Currywurst — это блюдо города:", options: ["Мюнхен", "Гамбург", "Берлин", "Кёльн"], answer: 2 },
     ],
   },
 
@@ -400,6 +459,7 @@ const CURRICULUM = [
     cards: [
       { title: "Профессии", body: "der Arzt / die Ärztin — врач\nder Lehrer / die Lehrerin — учитель\nder Ingenieur — инженер\nder Koch / die Köchin — повар\nder Polizist — полицейский\ndie Krankenschwester — медсестра\nder Verkäufer — продавец\nder Student — студент" },
       { title: "Как говорить о профессии", body: "Ich bin Lehrerin. — Я учительница.\nEr ist Arzt. — Он врач.\nSie arbeitet als Köchin. — Она работает поваром.\n\n💡 Перед профессией НЕТ артикля:\nIch bin Arzt. ✓ (не «ein Arzt»)\n\nWas bist du von Beruf? — Кем ты работаешь?" },
+      { title: "Место работы", body: "das Büro — офис\ndie Schule — школа\ndas Krankenhaus — больница\ndie Fabrik — завод\ndas Geschäft — магазин\ndie Firma — фирма / компания\ndas Restaurant — ресторан\n\nWo arbeitest du? — Где ты работаешь?\nIch arbeite in einer Schule. — Я работаю в школе.\nIch arbeite bei einer Firma. — Я работаю в фирме." },
     ],
     exam: [
       { q: "Как сказать «Я врач»?", options: ["Ich habe ein Arzt.", "Ich bin ein Arzt.", "Ich bin Arzt.", "Ich arbeite Arzt."], answer: 2 },
@@ -417,6 +477,7 @@ const CURRICULUM = [
     cards: [
       { title: "Дни недели", body: "der Montag — понедельник\nder Dienstag — вторник\nder Mittwoch — среда\nder Donnerstag — четверг\nder Freitag — пятница\nder Samstag — суббота\nder Sonntag — воскресенье" },
       { title: "Как использовать дни", body: "Am Montag — в понедельник\nAm Wochenende — на выходных\nMontagmorgen — утро понедельника\n\n💡 Все дни мужского рода: der\nСокращения: Mo Di Mi Do Fr Sa So\n\nHeute ist Mittwoch. — Сегодня среда." },
+      { title: "Распорядок дня", body: "Am Montag gehe ich zur Arbeit. — В понедельник я иду на работу.\nAm Mittwoch habe ich Sport. — В среду у меня спорт.\nAm Freitag treffe ich Freunde. — В пятницу я встречаюсь с друзьями.\nAm Wochenende schlafe ich lange. — На выходных я долго сплю.\n\nJeden Tag — каждый день\nJede Woche — каждую неделю\nJeden Montag — каждый понедельник\n\n💡 jeden / jede = каждый/ую" },
     ],
     exam: [
       { q: "Как по-немецки «пятница»?", options: ["Donnerstag", "Freitag", "Samstag", "Montag"], answer: 1 },
@@ -434,6 +495,7 @@ const CURRICULUM = [
     cards: [
       { title: "Месяцы", body: "Januar — январь\nFebruar — февраль\nMärz — март\nApril — апрель\nMai — май\nJuni — июнь\nJuli — июль\nAugust — август\nSeptember — сентябрь\nOktober — октябрь\nNovember — ноябрь\nDezember — декабрь" },
       { title: "Времена года", body: "der Frühling — весна\nder Sommer — лето\nder Herbst — осень\nder Winter — зима\n\nim Sommer — летом\nim Winter — зимой\n\n💡 Im Januar = в январе\n(im = in dem, предлог + артикль)" },
+      { title: "Праздники и события", body: "Weihnachten — Рождество (25 декабря)\nSilvester — Новый год / канун Нового года (31 декабря)\nOstern — Пасха (март/апрель)\nder Karneval — карнавал (февраль)\nder Oktoberfest — Октоберфест (сентябрь-октябрь)\nder Nationalfeiertag — День единства (3 октября)\n\n💡 Oktoberfest начинается в сентябре — несмотря на название!" },
     ],
     exam: [
       { q: "Как по-немецки «март»?", options: ["Mai", "März", "April", "Februar"], answer: 1 },
@@ -451,6 +513,7 @@ const CURRICULUM = [
     cards: [
       { title: "Как спросить время", body: "Wie viel Uhr ist es? — Который час?\nWie spät ist es? — Сколько времени?\n\nEs ist... — Сейчас...\nein Uhr — час\nzwei Uhr — два часа\ndrei Uhr — три часа\nzwölf Uhr — двенадцать часов" },
       { title: "Минуты и части дня", body: "Es ist halb drei. — Половина третьего (2:30)\nEs ist Viertel nach vier. — Четверть пятого (4:15)\nEs ist Viertel vor fünf. — Без четверти пять (4:45)\n\n💡 halb drei = половина ДО трёх = 2:30\nОтличается от русского!" },
+      { title: "Официальное время", body: "В официальных ситуациях (транспорт, ТВ) используют 24-часовой формат:\n\nEs ist 14:30 Uhr — vierzehn Uhr dreißig\nEs ist 09:00 Uhr — neun Uhr\nEs ist 21:15 Uhr — einundzwanzig Uhr fünfzehn\nEs ist 00:00 Uhr — null Uhr / Mitternacht\n\n💡 В расписаниях всегда 24ч формат:\nDer Zug fährt um 18:45 Uhr ab.\n\n⚠️ На вокзале не говорят «halb sieben» — только «18:30 Uhr»!" },
     ],
     exam: [
       { q: "Как спросить «который час»?", options: ["Was ist die Zeit?", "Wie viel Uhr ist es?", "Wann ist es?", "Um wie Uhr?"], answer: 1 },
@@ -468,6 +531,7 @@ const CURRICULUM = [
     cards: [
       { title: "Предметы одежды", body: "das T-Shirt — футболка\ndie Hose — брюки\ndas Kleid — платье\nder Rock — юбка\ndie Jacke — куртка\nder Mantel — пальто\ndie Schuhe — туфли / обувь\ndie Socken — носки\nder Hut — шляпа\ndie Mütze — шапка" },
       { title: "Покупка одежды", body: "Ich suche... — Я ищу...\nWelche Größe? — Какой размер?\nKann ich das anprobieren? — Можно примерить?\nDas passt gut! — Хорошо подходит!\nDas ist zu groß/klein. — Это слишком большое/маленькое.\nIch nehme es. — Я это возьму." },
+      { title: "Погода и одежда", body: "Bei Regen — в дождь\nBei Schnee — в снег\nBei Sonne — в солнечную погоду\nBei Kälte — в холод\n\nBei Regen — die Jacke anziehen — в дождь надевай куртку\nBei Sonne — die Sonnenbrille tragen — в солнце носи очки\nBei Kälte — den Mantel anziehen — в холод надевай пальто\nBei Schnee — die Stiefel tragen — в снег носи сапоги\n\ndie Sonnenbrille — солнечные очки\ndie Stiefel — сапоги / ботинки\nanziehen — надевать" },
     ],
     exam: [
       { q: "«Die Jacke» — это:", options: ["платье", "юбка", "куртка", "пальто"], answer: 2 },
@@ -485,6 +549,7 @@ const CURRICULUM = [
     cards: [
       { title: "Части тела", body: "der Kopf — голова\ndas Auge — глаз\ndie Nase — нос\nder Mund — рот\ndas Ohr — ухо\nder Arm — рука (рука до плеча)\ndie Hand — рука (кисть)\ndas Bein — нога\nder Fuß — стопа\nder Bauch — живот\nder Rücken — спина" },
       { title: "У врача", body: "Ich bin krank. — Я болен.\nMir ist schlecht. — Мне плохо.\nIch habe Kopfschmerzen. — У меня болит голова.\nIch habe Fieber. — У меня температура.\nRufen Sie einen Arzt! — Вызовите врача!\n\n💡 _schmerzen = боль в...\nBauchschmerzen — боль в животе\nHalsschmerzen — боль в горле" },
+      { title: "Аптека и лекарства", body: "die Apotheke — аптека\ndas Pflaster — пластырь\ndie Tablette — таблетка\ndas Medikament — лекарство\nder Hustensaft — сироп от кашля\ndie Salbe — мазь\ndas Rezept — рецепт\n\nIch brauche etwas gegen Kopfschmerzen. — Мне нужно что-то от головной боли.\nIch brauche etwas gegen Husten. — Мне нужно что-то от кашля.\n\n⚠️ В Германии многие лекарства только по рецепту (Rezept)!" },
     ],
     exam: [
       { q: "«Der Kopf» — это:", options: ["рука", "нога", "голова", "спина"], answer: 2 },
@@ -502,6 +567,7 @@ const CURRICULUM = [
     cards: [
       { title: "Покупки", body: "Was kostet das? — Сколько это стоит?\nWie viel kostet...? — Сколько стоит...?\nDas ist zu teuer. — Это слишком дорого.\nIch nehme das. — Я это возьму.\nHaben Sie...? — У вас есть...?\nWo ist die Kasse? — Где касса?\nEin Pfund — полкило (500г)" },
       { title: "Деньги и цены", body: "der Euro — евро\nder Cent — цент\nEs kostet 5 Euro. — Это стоит 5 евро.\nBezahlen Sie bar oder mit Karte?\nВы платите наличными или картой?\n\nbar — наличными\nmit Karte — картой\nDas Wechselgeld — сдача" },
+      { title: "На рынке и в супермаркете", body: "der Markt — рынок\nder Supermarkt — супермаркет\ndie Bäckerei — булочная\ndie Metzgerei — мясная лавка\n\nНа рынке: свежие продукты, торговля, можно торговаться\nВ супермаркете: фиксированные цены, самообслуживание\nВ булочной: свежий хлеб, Brötchen каждое утро\n\n💡 Samstag — лучший день для рынка в Германии!\nÖffnungszeiten — часы работы\n\n⚠️ Многие магазины закрыты по воскресеньям!" },
     ],
     exam: [
       { q: "Как спросить «Сколько стоит?»", options: ["Was haben Sie?", "Was kostet das?", "Wo ist das?", "Was möchten Sie?"], answer: 1 },
@@ -519,6 +585,7 @@ const CURRICULUM = [
     cards: [
       { title: "Виды транспорта", body: "der Bus — автобус\ndie U-Bahn — метро\ndie S-Bahn — электричка\nder Zug — поезд\ndas Auto — машина\ndas Fahrrad — велосипед\ndas Taxi — такси\ndas Flugzeug — самолёт\nzu Fuß — пешком" },
       { title: "На вокзале и остановке", body: "Wo fährt der Bus ab? — Откуда отходит автобус?\nEinen Fahrschein, bitte. — Один билет, пожалуйста.\nWann kommt der Zug an? — Когда прибывает поезд?\nEin Ticket nach Berlin. — Билет до Берлина.\nGleis 3 — третий путь (платформа)\numsteigen — делать пересадку" },
+      { title: "Как добраться", body: "Entschuldigung, wie komme ich zum Bahnhof?\nИзвините, как добраться до вокзала?\n\nGehen Sie geradeaus. — Идите прямо.\nBiegen Sie links ab. — Сверните налево.\nBiegen Sie rechts ab. — Сверните направо.\nDie erste Straße rechts. — Первая улица направо.\nEs ist in der Nähe. — Это рядом.\n\n⚠️ links / rechts abbiegen — «biegen Sie» для вежливого обращения!" },
     ],
     exam: [
       { q: "«Die U-Bahn» — это:", options: ["автобус", "трамвай", "метро", "поезд"], answer: 2 },
@@ -536,6 +603,7 @@ const CURRICULUM = [
     cards: [
       { title: "Хобби", body: "lesen — читать\nmusik hören — слушать музыку\nfernsehen — смотреть телевизор\nsport treiben — заниматься спортом\nkochen — готовить\nreisen — путешествовать\nzeichnen — рисовать\ntanzen — танцевать\nsingen — петь\nspielen — играть" },
       { title: "Как говорить о хобби", body: "Ich lese gern. — Я люблю читать.\nIch spiele gern Fußball. — Я люблю играть в футбол.\nIch mag Musik. — Мне нравится музыка.\n\n💡 gern = охотно, с удовольствием\nIch ... gern = Я люблю...\n\nWas machst du in der Freizeit?\nЧто ты делаешь в свободное время?" },
+      { title: "Спорт в Германии", body: "der Fußball — футбол\nder Handball — гандбол\ndas Radfahren — езда на велосипеде\ndas Wandern — пешеходный туризм\ndas Schwimmen — плавание\nder Wintersport — зимний спорт\n\n💡 Fußball — самый популярный спорт в Германии!\nDie Bundesliga — немецкая футбольная лига\n\nIch fahre gern Rad. — Я люблю ездить на велосипеде.\nIch gehe gern wandern. — Я люблю ходить в походы." },
     ],
     exam: [
       { q: "«Ich lese gern» значит:", options: ["Я умею читать", "Я люблю читать", "Я читаю сейчас", "Я буду читать"], answer: 1 },
@@ -553,6 +621,7 @@ const CURRICULUM = [
     cards: [
       { title: "können, müssen, wollen", body: "können — мочь, уметь\nIch kann schwimmen. — Я умею плавать.\n\nmüssen — должен, нужно\nIch muss arbeiten. — Мне нужно работать.\n\nwollen — хотеть\nIch will nach Berlin. — Я хочу в Берлин.\n\ndürfen — иметь право, разрешено\nDarf ich rauchen? — Можно курить?" },
       { title: "Формы модальных глаголов", body: "können: ich kann, du kannst, er/sie kann\nmüssen: ich muss, du musst, er/sie muss\nwollen: ich will, du willst, er/sie will\ndürfen: ich darf, du darfst, er/sie darf\n\n💡 Инфинитив идёт В КОНЕЦ предложения:\nIch kann heute nicht kommen.\nМне не удастся прийти сегодня." },
+      { title: "möchten и sollen", body: "möchten — хотел бы (вежливое желание)\nIch möchte einen Kaffee. — Я бы хотел кофе.\n\nмöchte — я бы хотел\nmöchtest — ты бы хотел\nmöchte — он/она бы хотел\n\nsollen — должен (по чужому требованию)\nIch soll um 8 da sein. — Мне велели быть там в 8.\n\nsoll — я должен\nsollst — ты должен\nsoll — он/она должен\n\n💡 möchten = вежливее чем wollen!" },
     ],
     exam: [
       { q: "«Ich kann Deutsch sprechen» значит:", options: ["Я хочу говорить по-немецки", "Я могу говорить по-немецки", "Я должен говорить по-немецки", "Я не говорю по-немецки"], answer: 1 },
@@ -560,6 +629,25 @@ const CURRICULUM = [
       { q: "Где стоит инфинитив с модальным глаголом?", options: ["В начале", "На втором месте", "В конце", "После подлежащего"], answer: 2 },
       { q: "«Darf ich...?» используют когда:", options: ["хотят что-то", "спрашивают разрешение", "описывают умение", "говорят об обязанности"], answer: 1 },
       { q: "«Ich will schlafen» значит:", options: ["Я должен спать", "Я умею спать", "Я хочу спать", "Я могу спать"], answer: 2 },
+    ],
+  },
+  {
+    id: "polite_german",
+    title: "Вежливый немецкий",
+    emoji: "🎩",
+    level: "A1",
+    bonus: true,
+    cards: [
+      { title: "Sie и du", body: "du — неформальное обращение (друзья, семья, дети)\nSie — формальное обращение (незнакомые, начальник, пожилые)\n\nWie heißt du? — Как тебя зовут?\nWie heißen Sie? — Как вас зовут?\n\nKannst du mir helfen? — Ты можешь мне помочь?\nKönnen Sie mir helfen? — Вы можете мне помочь?\n\n⚠️ Sie (формальное) всегда пишется с большой буквы!" },
+      { title: "Вежливые фразы", body: "Entschuldigung! — Извините!\nEs tut mir leid. — Мне очень жаль.\nDarf ich...? — Разрешите...?\nWürden Sie bitte... — Не могли бы вы...\nKönnten Sie bitte... — Могли бы вы...\n\n💡 Дarf ich...? — самый вежливый способ спросить разрешение\nKönnten / Würden — сослагательное наклонение для вежливости" },
+      { title: "Bitte и Danke", body: "Bitte! — Пожалуйста!\nDanke! — Спасибо!\nDanke schön! — Большое спасибо!\nBitte schön! — Пожалуйста!\nGern geschehen! — С удовольствием!\nKeine Ursache! — Не за что!\nBitte sehr! — Пожалуйста (ответ на спасибо)\n\n💡 В Германии говорят «bitte» и когда просят, и когда отвечают на «danke»!" },
+    ],
+    exam: [
+      { q: "Когда используют «Sie» вместо «du»?", options: ["С детьми", "С друзьями", "В формальной обстановке", "В семье"], answer: 2 },
+      { q: "«Es tut mir leid» значит:", options: ["Спасибо", "Пожалуйста", "Мне очень жаль", "Не за что"], answer: 2 },
+      { q: "«Gern geschehen» — это ответ на:", options: ["Извините", "Спасибо", "Здравствуйте", "До свидания"], answer: 1 },
+      { q: "«Darf ich...?» используют для:", options: ["приветствия", "просьбы о разрешении", "прощания", "описания"], answer: 1 },
+      { q: "Формальное «Sie» в немецком пишется:", options: ["с маленькой буквы", "с большой буквы", "заглавными", "курсивом"], answer: 1 },
     ],
   },
 
@@ -624,6 +712,7 @@ const CURRICULUM = [
     cards: [
       { title: "Что такое разделяемые глаголы", body: "Приставка отделяется и идёт В КОНЕЦ:\n\naufstehen — вставать\nIch stehe um 7 auf. — Я встаю в 7.\n\nanrufen — звонить\nIch rufe dich an. — Я тебе позвоню.\n\neinkaufen — делать покупки\nIch kaufe heute ein. — Сегодня я иду за покупками.\n\nabfahren — отправляться\nDer Zug fährt um 10 ab." },
       { title: "Частые разделяемые глаголы", body: "aufmachen — открывать\nzumachen — закрывать\nankommen — прибывать\naussteigen — выходить (из транспорта)\neinsteigen — входить (в транспорт)\nfernsehen — смотреть телевизор\naufräumen — убирать (комнату)\nmitnehmen — брать с собой\n\n💡 В инфинитиве и Partizip II приставка сохраняется!" },
+      { title: "Partizip II разделяемых глаголов", body: "В Partizip II приставка остаётся прикреплённой — ge- вставляется между приставкой и основой:\n\naufstehen — aufgestanden\nanrufen — angerufen\neinkaufen — eingekauft\naufräumen — aufgeräumt\nankommen — angekommen\naussteigen — ausgestiegen\n\n💡 Схема: приставка + ge + основа + en/t\nauf + ge + stand + en = aufgestanden\n\n⚠️ НЕ «geaufgestanden» — ge- всегда между приставкой и корнем!" },
     ],
     exam: [
       { q: "«Ich stehe um 7 ___» (aufstehen) — куда идёт приставка?", options: ["В начало", "После подлежащего", "В конец предложения", "После глагола"], answer: 2 },
@@ -641,6 +730,7 @@ const CURRICULUM = [
     cards: [
       { title: "Погода", body: "die Sonne — солнце\nder Regen — дождь\nder Schnee — снег\nder Wind — ветер\nder Nebel — туман\ndas Gewitter — гроза\ndie Wolke — облако\n\nEs ist sonnig. — Солнечно.\nEs regnet. — Идёт дождь.\nEs schneit. — Идёт снег.\nEs ist windig. — Ветрено." },
       { title: "Температура и прогноз", body: "Wie ist das Wetter heute? — Какая сегодня погода?\nEs ist warm/kalt/heiß. — Тепло/холодно/жарко.\nEs sind 20 Grad. — 20 градусов.\nDer Wetterbericht sagt... — Прогноз говорит...\n\nheiß — жарко (выше 30°)\nwarm — тепло (15-25°)\nkühl — прохладно (10-15°)\nkalt — холодно (ниже 10°)" },
+      { title: "Погода в Германии", body: "Германия — умеренный климат:\nLenz (Frühling) — прохладная весна, часто дождь\nSommer — тёплое лето, до 30°\nHerbst — дождливая осень, туманы\nWinter — умеренно холодный, снег не всегда\n\nТипичная одежда:\nRegenjacke — дождевик (нужна часто!)\nPullover — свитер (для осени)\nSchal — шарф (для зимы)\n\n💡 В Германии говорят: «Es gibt kein schlechtes Wetter, nur schlechte Kleidung!»\nНет плохой погоды — только плохая одежда!" },
     ],
     exam: [
       { q: "«Es regnet» значит:", options: ["Идёт снег", "Идёт дождь", "Ветрено", "Солнечно"], answer: 1 },
@@ -658,6 +748,7 @@ const CURRICULUM = [
     cards: [
       { title: "В отеле", body: "das Hotel — отель\ndas Zimmer — номер\ndie Rezeption — ресепшн\nIch habe ein Zimmer reserviert. — Я забронировал номер.\nFür wie viele Nächte? — На сколько ночей?\nder Schlüssel — ключ\ndas Frühstück — завтрак\nIst das Frühstück inklusive? — Завтрак включён?" },
       { title: "Путешествие", body: "der Reisepass — паспорт\ndas Visum — виза\nder Koffer — чемодан\ndie Unterkunft — жильё\ndie Sehenswürdigkeit — достопримечательность\nbesichtigen — осматривать\nder Stadtplan — карта города\nWo ist...? — Где находится...?" },
+      { title: "Немецкие города", body: "Berlin — Берлин (столица, 3,7 млн)\nMünchen — Мюнхен (пиво, Альпы, BMW)\nHamburg — Гамбург (порт, второй по величине)\nKöln — Кёльн (собор, карнавал)\nFrankfurt — Франкфурт (банки, аэропорт)\nDresden — Дрезден (барокко, Саксония)\n\n💡 Berlin — самый популярный туристический город Германии!\nBrandenburger Tor — символ Берлина" },
     ],
     exam: [
       { q: "«Ich habe ein Zimmer reserviert» значит:", options: ["Я ищу номер", "Я забронировал номер", "Я хочу номер", "Мне нужен номер"], answer: 1 },
@@ -675,6 +766,7 @@ const CURRICULUM = [
     cards: [
       { title: "Сравнительная степень", body: "Добавляем -er:\nschnell → schneller (быстрее)\nklein → kleiner (меньше)\nalt → älter (старше) ← умлаут!\ngroß → größer (больше)\n\nA ist ... als B — A ... чем B:\nIch bin größer als du. — Я выше тебя.\nDer Zug ist schneller als der Bus.\nПоезд быстрее автобуса." },
       { title: "Превосходная степень", body: "am ...-sten / der/die/das ...-ste\n\nschnell → am schnellsten (быстрее всего)\ngroß → am größten (самый большой)\nalt → am ältesten (самый старый)\n\nНеправильные:\ngut → besser → am besten\nviel → mehr → am meisten\ngern → lieber → am liebsten\n\n💡 gut/viel/gern — учи отдельно!" },
+      { title: "Неправильные степени", body: "gut — besser — am besten (хороший)\nviel — mehr — am meisten (много)\ngern — lieber — am liebsten (охотно)\n\nДополнительно:\nhoch — höher — am höchsten\nОчень высокий→выше→самый высокий\n\nnah — näher — am nächsten\nБлизко→ближе→самый ближний\n\n⚠️ hoch перед существительным теряет -ch: ein hohes Gebäude (не hochs!)\n\n💡 nächste также значит «следующий»: die nächste Straße — следующая улица" },
     ],
     exam: [
       { q: "Сравнительная степень от «schnell» — это:", options: ["schnellst", "schneller", "schnellste", "mehr schnell"], answer: 1 },
@@ -692,6 +784,7 @@ const CURRICULUM = [
     cards: [
       { title: "Союзы weil, dass, wenn", body: "weil — потому что (глагол в конец!)\nIch lerne Deutsch, weil ich in Deutschland wohne.\nЯ учу немецкий, потому что живу в Германии.\n\ndass — что\nIch denke, dass das richtig ist.\nЯ думаю, что это правильно.\n\nwenn — когда / если\nWenn ich Zeit habe, lese ich.\nКогда у меня есть время, я читаю." },
       { title: "Порядок слов в придаточном", body: "В придаточном предложении глагол идёт В КОНЕЦ:\n\nweil ich müde BIN (не «bin ich»)\ndass er kommen WILL\nwenn sie Zeit HAT\n\n💡 Главное предложение + запятая + придаточное\n\nIch bleibe zu Hause, weil es regnet.\nЯ остаюсь дома, потому что идёт дождь." },
+      { title: "Союзы ob и als", body: "ob — является ли / ли (косвенный вопрос)\nIch weiß nicht, ob er kommt. — Я не знаю, придёт ли он.\nSie fragt, ob ich Zeit habe. — Она спрашивает, есть ли у меня время.\n\nals — когда (в прошлом, однократно)\nAls ich jung war, spielte ich Fußball.\nКогда я был молодым, я играл в футбол.\n\n⚠️ als (прошлое) vs. wenn (настоящее/будущее/повторяющееся):\nWenn ich Zeit habe... (каждый раз когда)\nAls ich Kind war... (однажды в прошлом)" },
     ],
     exam: [
       { q: "«Ich lerne Deutsch, ___ ich in Deutschland wohne.» (потому что)", options: ["wenn", "dass", "weil", "aber"], answer: 2 },
