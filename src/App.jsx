@@ -197,8 +197,8 @@ const LEVEL_FROM_SCORE = (score) => {
 
 const LEVEL_INFO = {
   A0: { label: "A0 · Начинающий", color: "#10b981", desc: "Базовые слова и фразы" },
-  A1: { label: "A1 · Базовый", color: "#7C5CFC", desc: "Простая лексика и артикли" },
-  A2: { label: "A2 · Элементарный", color: "#f59e0b", desc: "Грамматика и падежи" },
+  A1: { label: "A1", color: "#7C5CFC", desc: "Простая лексика и артикли" },
+  A2: { label: "A2", color: "#f59e0b", desc: "Грамматика и падежи" },
 };
 
 const CATEGORIES_BY_LEVEL = {
@@ -217,10 +217,10 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 // ── ПРОГРАММА ОБУЧЕНИЯ ───────────────────────────────────────
 const CURRICULUM_LEVELS = {
-  A1: { color: "#7C5CFC", label: "A1 · Базовый" },
-  A2: { color: "#f59e0b", label: "A2 · Элементарный" },
-  A3: { color: "#ef4444", label: "A3 · Средний" },
-  A4: { color: "#8b5cf6", label: "A4 · Эксперт" },
+  A1: { color: "#7C5CFC", label: "A1" },
+  A2: { color: "#f59e0b", label: "A2" },
+  A3: { color: "#ef4444", label: "A3" },
+  A4: { color: "#8b5cf6", label: "A4" },
 };
 
 const CURRICULUM = [
