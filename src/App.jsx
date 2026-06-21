@@ -256,7 +256,7 @@ const CURRICULUM = [
       { q: "Какой артикль у слова «Tisch» (стол)?", options: ["die", "das", "der", "ein"], answer: 2 },
       { q: "Какой артикль у слова «Frau» (женщина)?", options: ["der", "die", "das", "einen"], answer: 1 },
       { q: "Какой артикль у слова «Kind» (ребёнок)?", options: ["der", "die", "das", "eine"], answer: 2 },
-      { q: "«Eine Frau» — это:", options: ["Определённый артикль", "Неопределённый артикль", "Без артикля", "Притяжательный"], answer: 1 },
+      { q: "Какой артикль используется в «eine Frau»?", options: ["der", "die", "das", "eine"], answer: 3 },
       { q: "Перед профессией артикль:", options: ["der", "die", "das", "не ставится"], answer: 3 },
     ],
   },
@@ -978,7 +978,6 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                   <button key={topic.id} onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }}
                     style={{ background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus && !examDone ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(251,191,36,0.06))" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus && !examDone ? "rgba(245,158,11,0.45)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", boxShadow: topic.bonus && !examDone ? "0 0 12px rgba(245,158,11,0.15)" : "none" }}>
                     {topic.bonus && !examDone && (
-                      <div style={{ fontSize: 10, fontWeight: 800, color: "#f59e0b", letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>⭐ Бонусный материал</div>
                     )}
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: blocksTotal > 0 ? 10 : 0 }}>
                       <div style={{ fontSize: 26 }}>{examDone ? "✅" : topic.emoji}</div>
