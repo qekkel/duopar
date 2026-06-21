@@ -1528,7 +1528,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
     }, 900);
   }
 
-  const progress = phase === "intro" ? (introIdx + 1) / words.length / 2 : 0.5 + (practiceIdx + 1) / practiceQueue.length / 2;
+  const progress = phase === "intro" ? introIdx / words.length / 2 : 0.5 + practiceIdx / practiceQueue.length / 2;
 
   if (phase === "tip") {
     return (
