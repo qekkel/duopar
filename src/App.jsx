@@ -216,6 +216,16 @@ function xpToNextLevel(xp) { return 200 - (xp % 200); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 // ── ПРОГРАММА ОБУЧЕНИЯ ───────────────────────────────────────
+// Типы заданий — scaffold для будущих упражнений
+const EXERCISE_TYPES = {
+  CHOOSE_TRANSLATION: { id: "choose_translation", label: "Выбери перевод", icon: "🔤", ready: true },
+  BUILD_PHRASE:       { id: "build_phrase",        label: "Собери фразу",   icon: "🧩", ready: false },
+  FILL_BLANK:         { id: "fill_blank",          label: "Вставь слово",   icon: "✏️",  ready: false },
+  DIALOGUE_CHOICE:    { id: "dialogue_choice",     label: "Диалог",         icon: "💬", ready: false },
+  LISTEN_CHOOSE:      { id: "listen_choose",       label: "Послушай",       icon: "🎧", ready: false },
+  MINI_EXAM:          { id: "mini_exam",           label: "Мини-экзамен",   icon: "⚡", ready: true  },
+};
+
 const CURRICULUM_LEVELS = {
   A1: { color: "#7C5CFC", label: "A1 · Базовый", short: "A1·1" },
   A2: { color: "#7C5CFC", label: "A1 · Часть 2", short: "A1·2" },
@@ -245,8 +255,8 @@ const CURRICULUM = [
   },
   {
     id: "greetings_dialect",
-    title: "Диалект",
-    emoji: "🗺️",
+    title: "Живой немецкий",
+    emoji: "🎙️",
     level: "A1",
     bonus: true,
     linkedBonus: true,
@@ -270,7 +280,7 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "articles_bonus",
     cards: [
-      { title: "Три рода в немецком", tip: "В немецком у каждого слова есть род:\nder — мужской\ndie — женский\ndas — средний\n\nЭто не логика — запоминай артикль вместе со словом.", body: "В немецком у каждого существительного есть род:\n\nder — мужской (der Mann, der Tisch)\ndie — женский (die Frau, die Tür)\ndas — средний (das Kind, das Buch)\n\n💡 Род надо учить вместе со словом — правил мало!" },
+      { title: "Три рода в немецком", tip: "В немецком у каждого слова есть род:\nder — мужской род\ndie — женский род\ndas — средний род\n\nЭто не логика — запоминай артикль вместе со словом.", fixedOptions: ["мужской род", "женский род", "средний род"], body: "der — мужской род\ndie — женский род\ndas — средний род\n\n💡 Род надо учить вместе со словом — правил мало!" },
       { title: "Неопределённый артикль", tip: "ein/eine — как «a/an» в английском.\n\nОбозначает что-то неконкретное, впервые упомянутое.\n\nМужской и средний род → ein\nЖенский род → eine", body: "ein/eine — «один, одна» (как «a/an» в английском)\n\nein Mann — мужчина\neine Frau — женщина\nein Kind — ребёнок\n\n⚠️ Для мужского и среднего: ein\nДля женского: eine" },
       { title: "Когда артикль не нужен", tip: "Артикль не ставится перед:\n• именами — Das ist Anna\n• профессиями — Ich bin Lehrerin\n• большинством стран — aus Deutschland\n\nЗапомни эти три случая — они встречаются постоянно.", body: "Артикль не ставится:\n\n• Перед именами: Das ist Anna.\n• Перед профессиями: Ich bin Lehrerin.\n• Перед странами: Ich komme aus Deutschland.\n\n💡 Исключение: die Schweiz, die Türkei — с артиклем!" },
     ],
@@ -280,6 +290,25 @@ const CURRICULUM = [
       { q: "Какой артикль у слова «Kind» (ребёнок)?", options: ["der", "die", "das", "eine"], answer: 2 },
       { q: "Какой артикль используется в «eine Frau»?", options: ["der", "die", "das", "eine"], answer: 3 },
       { q: "Перед профессией артикль:", options: ["der", "die", "das", "не ставится"], answer: 3 },
+    ],
+  },
+  {
+    id: "verbs_sein_haben",
+    title: "Глаголы: sein и haben",
+    emoji: "⚡",
+    level: "A1",
+    bonusTopicId: "verbs_bonus",
+    cards: [
+      { title: "Глагол sein (быть)", tip: "sein = «быть»\n\nОписывает, кто ты или что ты из себя представляешь.\n\nСпрягается по-особому — форму нужно просто запомнить.", body: "ich bin — я есть\ndu bist — ты есть\ner/sie/es ist — он/она/оно есть\nwir sind — мы есть\nihr seid — вы есть\nsie/Sie sind — они/Вы есть\n\nПримеры:\nIch bin müde. — Я устал.\nDu bist nett. — Ты приятный.\nSie ist Lehrerin. — Она учительница." },
+      { title: "Глагол haben (иметь)", tip: "haben = «иметь»\n\nИспользуется для обозначения владения чем-либо.\n\nВместе с sein — один из двух важнейших глаголов немецкого языка.", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них/Вас есть\n\nПримеры:\nIch habe ein Buch. — У меня есть книга.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)" },
+      { title: "Sein vs Haben", tip: "sein — описывает состояние или кто ты есть.\n\nhaben — что у тебя есть.\n\nТам, где по-русски «мне холодно», по-немецки: Ich habe Kälte (у меня есть холод).", body: "sein — описывает состояние или личность:\nIch bin glücklich. — Я счастлив.\nSie ist Lehrerin. — Она учительница.\n\nhaben — обозначает владение:\nIch habe Zeit. — У меня есть время.\nWir haben Hunger. — Мы голодны.\n\n💡 Hunger/Durst haben = быть голодным/жаждущим" },
+    ],
+    exam: [
+      { q: "«Du ___ müde.» — вставь правильную форму sein:", options: ["bin", "bist", "ist", "sind"], answer: 1 },
+      { q: "«Wir ___ ein Haus.» — вставь haben:", options: ["habe", "hast", "hat", "haben"], answer: 3 },
+      { q: "«Er ___ Arzt.» — вставь sein:", options: ["bin", "bist", "ist", "sind"], answer: 2 },
+      { q: "Как сказать «У неё есть книга»?", options: ["Sie ist ein Buch.", "Sie hat ein Buch.", "Sie haben ein Buch.", "Sie hast ein Buch."], answer: 1 },
+      { q: "«Ich habe Hunger» буквально значит:", options: ["Я хочу есть", "У меня есть голод", "Мне нужна еда", "Я голодный человек"], answer: 1 },
     ],
   },
   {
@@ -346,22 +375,41 @@ const CURRICULUM = [
     ],
   },
   {
+    id: "word_order",
+    title: "Порядок слов",
+    emoji: "📐",
+    level: "A1",
+    bonusTopicId: "word_order_bonus",
+    cards: [
+      { title: "Основной порядок слов", tip: "Главное правило немецкого:\nглагол всегда стоит на ВТОРОМ месте.\n\nНе на первом, не в конце — всегда второй.\n\nДаже если предложение начинается не с подлежащего.", body: "В немецком предложении глагол ВСЕГДА стоит на 2-м месте:\n\nIch [1] bin [2] müde.\nHeute [1] bin [2] ich müde.\nMüde [1] bin [2] ich.\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
+      { title: "Вопросительные предложения", tip: "С вопросительным словом (wo, was, wer...):\nглагол на втором месте — как обычно.\n\nБез вопросительного слова:\nглагол на ПЕРВОМ месте, подлежащее — на втором.", body: "Вопрос с вопросительным словом:\nWer bist du? — Кто ты?\nWas ist das? — Что это?\nWo ist die Mutter? — Где мама?\n\nВопрос без вопр. слова (глагол на 1-м):\nBist du müde? — Ты устал?\nHast du Zeit? — У тебя есть время?" },
+      { title: "Отрицание", tip: "nicht — отрицает глагол или прилагательное.\n\nkein/keine — отрицает существительное\n(там, где в утверждении стоит ein/eine).\n\nВыбор зависит от того, что именно ты отрицаешь.", body: "nicht — отрицает глагол или прилагательное:\nIch bin nicht müde. — Я не устал.\nDas ist nicht gut. — Это нехорошо.\n\nkein/keine — отрицает существительное:\nIch habe kein Buch. — У меня нет книги.\nIch habe keine Zeit. — У меня нет времени.\n\n💡 kein = ein + не; keine = eine + не" },
+    ],
+    exam: [
+      { q: "Где в немецком предложении стоит глагол?", options: ["Всегда первый", "Всегда второй", "Всегда последний", "Где угодно"], answer: 1 },
+      { q: "Выбери правильный порядок слов:", options: ["Ich heute bin müde.", "Heute ich bin müde.", "Heute bin ich müde.", "Bin heute ich müde."], answer: 2 },
+      { q: "Как задать вопрос «У тебя есть время?»", options: ["Du hast Zeit?", "Hast du Zeit?", "Zeit du hast?", "Hast Zeit du?"], answer: 1 },
+      { q: "«Ich habe ___ Buch» (у меня нет книги):", options: ["nicht", "keine", "kein", "nein"], answer: 2 },
+      { q: "«Ich bin ___ müde» (я не устал):", options: ["kein", "keine", "nicht", "nein"], answer: 2 },
+    ],
+  },
+  {
     id: "colors",
     title: "Цвета",
     emoji: "🎨",
     level: "A1",
     bonusTopicId: "colors_bonus",
     cards: [
-      { title: "Основные цвета", body: "rot — красный\nblau — синий\ngelb — жёлтый\ngrün — зелёный\nschwarz — чёрный\nweiß — белый\ngrau — серый\nbraun — коричневый\norange — оранжевый\nlila — фиолетовый\nrosa — розовый" },
+      { title: "Основные цвета", body: "schwarz — чёрный\nweiß — белый\ngrau — серый\nrot — красный\nblau — синий\ngrün — зелёный\ngelb — жёлтый\nbraun — коричневый" },
       { title: "Как использовать цвета", body: "Das ist rot. — Это красное.\nDas ist blau. — Это синее.\nDas ist grün. — Это зелёное.\nDas ist gelb. — Это жёлтое.\nDas ist schwarz. — Это чёрное.\nDas ist weiß. — Это белое.\n\n💡 Цвет ставится после «ist» и не меняется:\nDas ist rot. Das ist blau. Das ist grün. ✓" },
-      { title: "Цвета в предложениях", body: "Das Hemd ist blau. — Рубашка синяя.\nDie Jacke ist rot. — Куртка красная.\nDer Hut ist gelb. — Шляпа жёлтая.\nDas Kleid ist grün. — Платье зелёное.\nhellblau — светло-голубой\ndunkelrot — тёмно-красный\nschwarzweiß — чёрно-белый\n\n⚠️ hell- и dunkel- пишутся слитно:\nhellgrün, dunkelblau, hellgrau" },
+      { title: "Цвета в предложениях", body: "Das Hemd ist blau. — Рубашка синяя.\nDie Jacke ist rot. — Куртка красная.\nDer Hut ist gelb. — Шляпа жёлтая.\nDas Kleid ist grün. — Платье зелёное.\nDie Hose ist grau. — Брюки серые.\nDer Schuh ist braun. — Туфля коричневая.\n\n💡 Цвет стоит после «ist» и не изменяется." },
     ],
     exam: [
       { q: "Как по-немецки «красный»?", options: ["blau", "grün", "rot", "gelb"], answer: 2 },
       { q: "«Schwarz» означает:", options: ["белый", "серый", "чёрный", "коричневый"], answer: 2 },
-      { q: "Как сказать «Машина синяя»?", options: ["Das Auto ist blau.", "Das Auto ist blue.", "Das Auto bin blau.", "Das Auto hat blau."], answer: 0 },
-      { q: "«Weiß» — это:", options: ["серый", "белый", "жёлтый", "розовый"], answer: 1 },
-      { q: "«Grün» означает:", options: ["синий", "коричневый", "зелёный", "фиолетовый"], answer: 2 },
+      { q: "Как сказать «Это синее»?", options: ["Das ist blau.", "Das ist blue.", "Das bin blau.", "Das hat blau."], answer: 0 },
+      { q: "«Weiß» — это:", options: ["серый", "белый", "жёлтый", "коричневый"], answer: 1 },
+      { q: "«Braun» означает:", options: ["синий", "серый", "зелёный", "коричневый"], answer: 3 },
     ],
   },
   {
@@ -373,52 +421,14 @@ const CURRICULUM = [
     cards: [
       { title: "Волосы и глаза", body: "blonde Haare — светлые волосы\nbraune Haare — каштановые волосы\nschwarze Haare — чёрные волосы\nrote Haare — рыжие волосы\ngraue Haare — седые волосы\n\nblaue Augen — голубые глаза\ngrüne Augen — зелёные глаза\nbraune Augen — карие глаза\n\n💡 Er hat braune Haare. — У него каштановые волосы." },
       { title: "Внешность", body: "groß — высокий\nklein — низкий\nschlank — стройный\ndick — толстый\njung — молодой\nalt — старый\nhübsch — симпатичный\nschön — красивый\n\n⚠️ Dick в немецком означает «толстый» — не «грубый» как в английском!" },
-      { title: "Описать человека", body: "Er hat blaue Augen. — У него голубые глаза.\nSie hat lange Haare. — У неё длинные волосы.\nEr ist groß und schlank. — Он высокий и стройный.\nSie ist jung und hübsch. — Она молодая и симпатичная.\n\nWie sieht er aus? — Как он выглядит?\nWie sieht sie aus? — Как она выглядит?\n\n💡 aussehen — выглядеть (разделяемый глагол!)" },
+      { title: "Описать человека", body: "Er hat blaue Augen. — У него голубые глаза.\nSie hat braune Haare. — У неё каштановые волосы.\nEr ist groß. — Он высокий.\nSie ist jung. — Она молодая.\n\nWie sieht er aus? — Как он выглядит?\nWie sieht sie aus? — Как она выглядит?\n\n💡 aussehen — выглядеть (разделяемый глагол!)" },
     ],
     exam: [
       { q: "«Blonde Haare» — это:", options: ["чёрные волосы", "рыжие волосы", "светлые волосы", "седые волосы"], answer: 2 },
       { q: "«Braune Augen» — это:", options: ["голубые глаза", "зелёные глаза", "серые глаза", "карие глаза"], answer: 3 },
       { q: "«Wie sieht er aus?» значит:", options: ["Где он?", "Как его зовут?", "Как он выглядит?", "Сколько ему лет?"], answer: 2 },
       { q: "«Schlank» означает:", options: ["высокий", "толстый", "стройный", "низкий"], answer: 2 },
-      { q: "Как сказать «У неё длинные волосы»?", options: ["Sie ist lange Haare.", "Sie hat lange Haare.", "Ihre Haare lang.", "Sie trägt lange Haare."], answer: 1 },
-    ],
-  },
-  {
-    id: "verbs_sein_haben",
-    title: "Глаголы: sein и haben",
-    emoji: "⚡",
-    level: "A1",
-    bonusTopicId: "verbs_bonus",
-    cards: [
-      { title: "Глагол sein (быть)", tip: "sein = «быть»\n\nОписывает, кто ты или что ты из себя представляешь.\n\nСпрягается по-особому — форму нужно просто запомнить.", body: "ich bin — я есть\ndu bist — ты есть\ner/sie/es ist — он/она/оно есть\nwir sind — мы есть\nihr seid — вы есть\nsie/Sie sind — они/Вы есть\n\nПримеры:\nIch bin müde. — Я устал.\nDu bist nett. — Ты приятный.\nSie ist Lehrerin. — Она учительница." },
-      { title: "Глагол haben (иметь)", tip: "haben = «иметь»\n\nИспользуется для обозначения владения чем-либо.\n\nВместе с sein — один из двух важнейших глаголов немецкого языка.", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них/Вас есть\n\nПримеры:\nIch habe ein Auto. — У меня есть машина.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)" },
-      { title: "Sein vs Haben", tip: "sein — описывает состояние или кто ты есть.\n\nhaben — что у тебя есть.\n\nТам, где по-русски «мне холодно», по-немецки: Ich habe Kälte (у меня есть холод).", body: "sein — описывает состояние или личность:\nIch bin glücklich. — Я счастлив.\nSie ist Ärztin. — Она врач.\n\nhaben — обозначает владение:\nIch habe Zeit. — У меня есть время.\nWir haben Hunger. — Мы голодны.\n\n💡 Hunger/Durst haben = быть голодным/жаждущим" },
-    ],
-    exam: [
-      { q: "«Du ___ müde.» — вставь правильную форму sein:", options: ["bin", "bist", "ist", "sind"], answer: 1 },
-      { q: "«Wir ___ ein Haus.» — вставь haben:", options: ["habe", "hast", "hat", "haben"], answer: 3 },
-      { q: "«Er ___ Arzt.» — вставь sein:", options: ["bin", "bist", "ist", "sind"], answer: 2 },
-      { q: "Как сказать «У неё есть кот»?", options: ["Sie ist einen Kater.", "Sie hat einen Kater.", "Sie haben einen Kater.", "Sie hast einen Kater."], answer: 1 },
-      { q: "«Ich habe Hunger» буквально значит:", options: ["Я хочу есть", "У меня есть голод", "Мне нужна еда", "Я голодный человек"], answer: 1 },
-    ],
-  },
-  {
-    id: "word_order",
-    title: "Порядок слов",
-    emoji: "📐",
-    level: "A1",
-    bonusTopicId: "word_order_bonus",
-    cards: [
-      { title: "Основной порядок слов", tip: "Главное правило немецкого:\nглагол всегда стоит на ВТОРОМ месте.\n\nНе на первом, не в конце — всегда второй.\n\nДаже если предложение начинается не с подлежащего.", body: "В немецком предложении глагол ВСЕГДА стоит на 2-м месте:\n\nIch [1] trinke [2] Kaffee.\nHeute [1] trinke [2] ich Kaffee.\nKaffee [1] trinke [2] ich heute.\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
-      { title: "Вопросительные предложения", tip: "С вопросительным словом (wo, was, wer...):\nглагол на втором месте — как обычно.\n\nБез вопросительного слова:\nглагол на ПЕРВОМ месте, подлежащее — на втором.", body: "Вопрос с вопросительным словом:\nWo wohnst du? — Где ты живёшь?\nWas machst du? — Что ты делаешь?\nWer bist du? — Кто ты?\n\nВопрос без вопр. слова (глагол на 1-м):\nKommst du? — Ты придёшь?\nHast du Zeit? — У тебя есть время?" },
-      { title: "Отрицание", tip: "nicht — отрицает глагол или прилагательное.\n\nkein/keine — отрицает существительное\n(там, где в утверждении стоит ein/eine).\n\nВыбор зависит от того, что именно ты отрицаешь.", body: "nicht — отрицает глагол или прилагательное:\nIch schlafe nicht. — Я не сплю.\nDas ist nicht gut. — Это нехорошо.\n\nkein/keine — отрицает существительное:\nIch habe kein Auto. — У меня нет машины.\nIch habe keine Zeit. — У меня нет времени.\n\n💡 kein = ein + не; keine = eine + не" },
-    ],
-    exam: [
-      { q: "Где в немецком предложении стоит глагол?", options: ["Всегда первый", "Всегда второй", "Всегда последний", "Где угодно"], answer: 1 },
-      { q: "Выбери правильный порядок слов:", options: ["Ich heute trinke Tee.", "Heute ich trinke Tee.", "Heute trinke ich Tee.", "Trinke heute ich Tee."], answer: 2 },
-      { q: "Как задать вопрос «У тебя есть время?»", options: ["Du hast Zeit?", "Hast du Zeit?", "Zeit du hast?", "Hast Zeit du?"], answer: 1 },
-      { q: "«Ich habe ___ Auto» (у меня нет машины):", options: ["nicht", "keine", "kein", "nein"], answer: 2 },
-      { q: "«Ich schlafe ___» (я не сплю):", options: ["kein", "keine", "nicht", "nein"], answer: 2 },
+      { q: "Как сказать «У неё каштановые волосы»?", options: ["Sie ist braune Haare.", "Sie hat braune Haare.", "Ihre Haare braun.", "Sie trägt braune Haare."], answer: 1 },
     ],
   },
   {
@@ -1084,7 +1094,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           const parts = trimmed.split(" — ");
           if (parts.length >= 2) {
             const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
-            if (de && ru) ws.push({ de, ru, section: card.title });
+            if (de && ru) ws.push({ de, ru, section: card.title, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
           }
         } else if (!isEmoji) {
           tipLines.push(trimmed);
@@ -1120,7 +1130,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     }
 
     if (mode === "exam") {
-      return <TopicExamScreen topic={topic} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+      return <TopicExamScreen topic={topic} topicId={activeTopicId} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
     }
 
     if (mode === "level_exam") {
@@ -1502,6 +1512,8 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const [practiceQueue, setPracticeQueue] = useState(() => shuffle(words));
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [multiSelected, setMultiSelected] = useState([]);
+  const [multiConfirmed, setMultiConfirmed] = useState(false);
   const [wrong, setWrong] = useState([]);
   const [retryWords, setRetryWords] = useState([]);
 
@@ -1516,6 +1528,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const correct = reversed ? practiceCard?.de : practiceCard?.ru;
   const options = useMemo(() => {
     if (!practiceCard) return [];
+    if (practiceCard.fixedOptions) return shuffle(practiceCard.fixedOptions);
     if (reversed) {
       const wordCount = practiceCard.de.trim().split(/\s+/).length;
       const pool = optionPool.filter(f => f.de !== practiceCard.de && f.de.trim().split(/\s+/).length === wordCount);
@@ -1530,23 +1543,43 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
     return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
   }, [practiceIdx, practiceQueue]);
 
-  function startPractice() { setPracticeQueue(shuffle(words).map((w, i) => ({ ...w, reversed: i % 2 === 1 }))); setPracticeIdx(0); setSelected(null); setWrong([]); setPhase("practice"); }
+  function startPractice() { setPracticeQueue(shuffle(words).map((w, i) => ({ ...w, reversed: i % 2 === 1 }))); setPracticeIdx(0); setSelected(null); setMultiSelected([]); setMultiConfirmed(false); setWrong([]); setPhase("practice"); }
+
+  function advance(isCorrect) {
+    if (!isCorrect) setWrong(w => [...w, practiceCard]);
+    const next = practiceIdx + 1;
+    if (next < practiceQueue.length) {
+      setPracticeIdx(next);
+      setSelected(null);
+      setMultiSelected([]);
+      setMultiConfirmed(false);
+    } else {
+      const retry = [...wrong, ...(!isCorrect ? [practiceCard] : [])];
+      if (retry.length > 0) { setRetryWords(retry); setPhase("retry_intro"); }
+      else onDone();
+    }
+  }
 
   function pick(opt) {
     if (selected !== null) return;
     setSelected(opt);
     const isCorrect = reversed ? opt === practiceCard.de : opt === practiceCard.ru;
     playSound(isCorrect ? "correct" : "wrong");
-    setTimeout(() => {
-      if (!isCorrect) setWrong(w => [...w, practiceCard]);
-      const next = practiceIdx + 1;
-      if (next < practiceQueue.length) { setPracticeIdx(next); setSelected(null); }
-      else {
-        const retry = [...wrong, ...(!isCorrect ? [practiceCard] : [])];
-        if (retry.length > 0) { setRetryWords(retry); setPhase("retry_intro"); }
-        else onDone();
-      }
-    }, 900);
+    setTimeout(() => advance(isCorrect), 900);
+  }
+
+  function toggleMulti(opt) {
+    if (multiConfirmed) return;
+    setMultiSelected(prev => prev.includes(opt) ? prev.filter(o => o !== opt) : [...prev, opt]);
+  }
+
+  function confirmMulti() {
+    if (multiConfirmed || multiSelected.length === 0) return;
+    setMultiConfirmed(true);
+    const correctAnswers = Array.isArray(practiceCard.ru) ? practiceCard.ru : [practiceCard.ru];
+    const isCorrect = correctAnswers.every(a => multiSelected.includes(a)) && multiSelected.every(a => correctAnswers.includes(a));
+    playSound(isCorrect ? "correct" : "wrong");
+    setTimeout(() => advance(isCorrect), 1200);
   }
 
   const progress = phase === "intro" ? introIdx / words.length / 2 : 0.5 + practiceIdx / practiceQueue.length / 2;
@@ -1640,18 +1673,43 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
           : <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 38, fontWeight: 700, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
         }
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {options.map((opt, i) => {
-          let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
-          let icon = null;
-          if (selected !== null) {
-            if (opt === correct) { bg = "rgba(16,185,129,0.25)"; border = "#10b981"; color = "#10b981"; icon = "✓"; }
-            else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
-            else color = "rgba(255,255,255,0.2)";
-          }
-          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt ? opt.charAt(0).toUpperCase() + opt.slice(1) : opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
-        })}
-      </div>
+      {practiceCard.fixedOptions ? (
+        <>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {options.map((opt, i) => {
+              const isChosen = multiSelected.includes(opt);
+              const correctAnswers = Array.isArray(practiceCard.ru) ? practiceCard.ru : [practiceCard.ru];
+              const isCorrectOpt = correctAnswers.includes(opt);
+              let bg = isChosen ? "rgba(124,92,252,0.2)" : "rgba(255,255,255,0.05)";
+              let border = isChosen ? "#7C5CFC" : "rgba(255,255,255,0.1)";
+              let color = "#fff";
+              let icon = isChosen ? "☑" : null;
+              if (multiConfirmed) {
+                if (isCorrectOpt) { bg = "rgba(16,185,129,0.25)"; border = "#10b981"; color = "#10b981"; icon = "✓"; }
+                else if (isChosen) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
+                else { color = "rgba(255,255,255,0.2)"; icon = null; }
+              }
+              return <button key={i} onClick={() => toggleMulti(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: multiConfirmed ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt ? opt.charAt(0).toUpperCase() + opt.slice(1) : opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
+            })}
+          </div>
+          {!multiConfirmed && multiSelected.length > 0 && (
+            <button onClick={confirmMulti} style={{ marginTop: 16, width: "100%", padding: "16px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Проверить →</button>
+          )}
+        </>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {options.map((opt, i) => {
+            let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
+            let icon = null;
+            if (selected !== null) {
+              if (opt === correct) { bg = "rgba(16,185,129,0.25)"; border = "#10b981"; color = "#10b981"; icon = "✓"; }
+              else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
+              else color = "rgba(255,255,255,0.2)";
+            }
+            return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt ? opt.charAt(0).toUpperCase() + opt.slice(1) : opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1676,7 +1734,7 @@ function buildExamQuestions(topic) {
   return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
 }
 
-function TopicExamScreen({ topic, onBack, onPass }) {
+function TopicExamScreen({ topic, topicId, onBack, onPass }) {
   const [questions] = useState(() => buildExamQuestions(topic));
   const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -1705,11 +1763,19 @@ function TopicExamScreen({ topic, onBack, onPass }) {
 
   if (finished) {
     const passed = score >= passMark;
+    const mission = topicId ? TOPIC_TOUR_MISSION[topicId] : null;
     return (
       <div style={{ paddingTop: 60, textAlign: "center" }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🎉" : "😅"}</div>
         <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{passed ? "Тема пройдена!" : "Попробуй ещё раз"}</div>
-        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 32 }}>{score} из {total} правильно · нужно {passMark}+</div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: passed && mission ? 20 : 32 }}>{score} из {total} правильно · нужно {passMark}+</div>
+        {passed && mission && (
+          <div style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.07))", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 16, padding: "16px 18px", marginBottom: 24, textAlign: "left" }}>
+            <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>🗺️ Открылась миссия в туре</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{mission.flag} {mission.land}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>Теперь можешь применить знания в игре</div>
+          </div>
+        )}
         {passed
           ? <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Продолжить →</button>
           : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -2665,6 +2731,26 @@ function ProfileScreen({ profile, session, onUpdate, onBack, onRetakeTest }) {
   );
 }
 
+// Связь тем курса с землями Германии — после прохождения темы открывается миссия
+const TOPIC_TOUR_MISSION = {
+  greetings:        { land: "Bayern",               flag: "🏔️" },
+  articles:         { land: "Berlin",               flag: "🐻" },
+  verbs_sein_haben: { land: "Hamburg",              flag: "⚓" },
+  numbers:          { land: "Hessen",               flag: "🏦" },
+  family:           { land: "Nordrhein-Westfalen",  flag: "🏭" },
+  word_order:       { land: "Sachsen",              flag: "🏰" },
+  colors:           { land: "Baden-Württemberg",    flag: "🌲" },
+  food:             { land: "Niedersachsen",        flag: "🐴" },
+  transport:        { land: "Brandenburg",          flag: "🌾" },
+  city:             { land: "Bremen",               flag: "🚢" },
+  weather:          { land: "Schleswig-Holstein",   flag: "🌊" },
+  shopping:         { land: "Thüringen",            flag: "🌲" },
+  health:           { land: "Sachsen-Anhalt",       flag: "⛪" },
+  work:             { land: "Rheinland-Pfalz",      flag: "🍷" },
+  hobbies:          { land: "Saarland",             flag: "⛏️" },
+  travel:           { land: "Mecklenburg-Vorpommern", flag: "🌅" },
+};
+
 // ── КАРТА ГЕРМАНИИ ───────────────────────────────────────────
 const STATE_ID_MAP = {
   "Schleswig-Holstein": "sh", "Hamburg": "hh", "Mecklenburg-Vorpommern": "mv",
@@ -3377,19 +3463,21 @@ function MapGameScreen({ onBack, session, profile }) {
         <button onClick={onBack} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Тур по Германии</div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>С кем сыграем?</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Выбери формат игры</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <button onClick={searchOpponent}
-            style={{ width: "100%", background: "linear-gradient(135deg,#10b981,#34d399)", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
-            🌐 Найти соперника онлайн
+            style={{ width: "100%", background: "linear-gradient(135deg,#10b981,#34d399)", border: "none", borderRadius: 16, padding: "18px", fontSize: 16, fontWeight: 700, color: "#fff", cursor: "pointer", textAlign: "left" }}>
+            <div>🌐 Парная миссия онлайн</div>
+            <div style={{ fontSize: 12, fontWeight: 400, opacity: 0.8, marginTop: 4 }}>Найти партнёра и пройти задания вместе</div>
           </button>
           <button onClick={() => { setOnlineSetup("creating"); createRoom(); }}
-            style={{ width: "100%", background: "rgba(124,92,252,0.15)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, color: "#a78bfa", cursor: "pointer" }}>
-            👥 Создать комнату для друга
+            style={{ width: "100%", background: "rgba(124,92,252,0.15)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, color: "#a78bfa", cursor: "pointer", textAlign: "left" }}>
+            <div>👥 Пригласить друга</div>
+            <div style={{ fontSize: 12, fontWeight: 400, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>Создать комнату и отправить код</div>
           </button>
           <button onClick={() => setOnlineSetup("joining")}
             style={{ width: "100%", background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 600, color: "#a78bfa", cursor: "pointer" }}>
-            🔑 Войти по коду
+            🔑 Войти по коду друга
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}>
             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
@@ -3398,7 +3486,7 @@ function MapGameScreen({ onBack, session, profile }) {
           </div>
           <button onClick={() => setPhase("playing")}
             style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}>
-            🤖 Играть с ботом
+            🤖 Соло с ботом
           </button>
         </div>
       </div>
@@ -3951,7 +4039,7 @@ export default function DuoPar() {
             <div style={{ marginBottom: 32 }}>
               <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · Deutsch</div>
               <h1 style={{ fontSize: 32, fontWeight: 800, color: "#fff", margin: 0, lineHeight: 1.2 }}>
-                Учи немецкий<br /><span style={{ color: "#7C5CFC" }}>вместе</span>
+                Учим немецкий<br /><span style={{ color: "#7C5CFC" }}>вместе</span>
               </h1>
               <div style={{ display: "flex", gap: 16, marginTop: 14 }}>
                 <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>
@@ -3968,13 +4056,17 @@ export default function DuoPar() {
             <button onClick={() => setScreen("curriculum")} style={{ width: "100%", background: "linear-gradient(135deg, rgba(124,92,252,0.2), rgba(124,92,252,0.08))", color: "#fff", border: "1px solid rgba(124,92,252,0.35)", borderRadius: 20, padding: "20px", fontSize: 16, fontWeight: 700, cursor: "pointer", textAlign: "left", marginBottom: 10 }}>
               <div style={{ fontSize: 24, marginBottom: 6 }}>🎓</div>
               <div>Программа обучения</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>{completedTopics.length} из {CURRICULUM.filter(t => !t.linkedBonus).length} тем пройдено</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>
+                {completedTopics.length > 0
+                  ? `${completedTopics.length} из ${CURRICULUM.filter(t => !t.linkedBonus).length} тем · продолжай учиться`
+                  : "Слова, фразы, грамматика — шаг за шагом"}
+              </div>
             </button>
 
             <button onClick={() => setScreen("mapgame")} style={{ width: "100%", background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.06))", color: "#fff", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>🗺️</div>
               <div>Тур по Германии</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>16 земель · соло или с другом онлайн</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>Игровой режим · путешествуй по 16 землям и применяй знания</div>
             </button>
           </div>
         )}
