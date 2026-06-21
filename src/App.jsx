@@ -263,7 +263,7 @@ function _speakTTS(text) {
 }
 
 function AudioButton({ text, audioUrl, size = 28, style: extraStyle }) {
-  const [playing, setPlaying] = React.useState(false);
+  const [playing, setPlaying] = useState(false);
 
   function handlePlay(e) {
     e.stopPropagation();
