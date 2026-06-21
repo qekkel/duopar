@@ -1339,20 +1339,36 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const [wrong, setWrong] = useState([]);
   const [retryWords, setRetryWords] = useState([]);
 
+  // All hooks must be at top level — before any conditional returns
+  const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
+  const optionPool = React.useMemo(() => {
+    const seen = new Set();
+    return [...words, ...allWords].filter(f => { if (seen.has(f.ru)) return false; seen.add(f.ru); return true; });
+  }, [words, allWords]);
+  const practiceCard = practiceQueue[practiceIdx];
+  const correct = practiceCard?.ru;
+  const options = React.useMemo(() => {
+    if (!practiceCard) return [];
+    const pool = (() => {
+      const sameType = optionPool.filter(f => f.ru !== correct && isSentence(f) === isSentence(practiceCard));
+      return sameType.length >= 3 ? sameType : optionPool.filter(f => f.ru !== correct);
+    })();
+    return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
+  }, [practiceIdx, practiceQueue]);
+
   function startPractice() { setPracticeQueue(shuffle(words)); setPracticeIdx(0); setSelected(null); setWrong([]); setPhase("practice"); }
 
   function pick(opt) {
     if (selected !== null) return;
-    const card = practiceQueue[practiceIdx];
     setSelected(opt);
-    const isCorrect = opt === card.ru;
+    const isCorrect = opt === practiceCard.ru;
     playSound(isCorrect ? "correct" : "wrong");
     setTimeout(() => {
-      if (!isCorrect) setWrong(w => [...w, card]);
+      if (!isCorrect) setWrong(w => [...w, practiceCard]);
       const next = practiceIdx + 1;
       if (next < practiceQueue.length) { setPracticeIdx(next); setSelected(null); }
       else {
-        const retry = [...wrong, ...(!isCorrect ? [card] : [])];
+        const retry = [...wrong, ...(!isCorrect ? [practiceCard] : [])];
         if (retry.length > 0) { setRetryWords(retry); setPhase("retry_intro"); }
         else onDone();
       }
@@ -1413,23 +1429,8 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
     );
   }
 
-  const card = practiceQueue[practiceIdx];
-  const correct = card?.ru;
-  const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
-  // Build a combined pool: current block words + allWords, deduplicated by ru
-  const optionPool = React.useMemo(() => {
-    const seen = new Set();
-    return [...words, ...allWords].filter(f => { if (seen.has(f.ru)) return false; seen.add(f.ru); return true; });
-  }, [words, allWords]);
-  const options = React.useMemo(() => {
-    if (!card) return [];
-    const pool = (() => {
-      const sameType = optionPool.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
-      return sameType.length >= 3 ? sameType : optionPool.filter(f => f.ru !== correct);
-    })();
-    return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
-  }, [practiceIdx, practiceQueue]);
-  if (!card) return null;
+  if (!practiceCard) return null;
+  const card = practiceCard;
   return (
     <div style={{ paddingTop: 40 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
