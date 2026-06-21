@@ -245,10 +245,11 @@ const CURRICULUM = [
   },
   {
     id: "greetings_dialect",
-    title: "Диалектные приветствия",
+    title: "Диалект",
     emoji: "🗺️",
     level: "A1",
     bonus: true,
+    linkedBonus: true,
     cards: [
       { title: "Бавария и Австрия", body: "Grüß Gott — Здравствуйте (Бавария, Австрия · официально)\nServus — Привет / Пока (Бавария, Австрия · неформально)\nGrüß di — Привет тебе (Бавария · неформально)\nPfiat di — Пока (Бавария · прощание)\n\n💡 Grüß Gott — стандартный эквивалент Guten Tag на юге Германии и в Австрии" },
       { title: "Швейцария и север", body: "Grüezi — Здравствуйте (Швейцария · официально)\nSali — Привет (Швейцария · неформально)\nAde — Пока (Швейцария, юг Германии)\nMoin — Привет (север Германии, Гамбург)\nTach — Привет (средняя Германия · сокращение от Guten Tag)\n\n💡 Moin говорят в любое время суток — не только утром" },
@@ -1088,10 +1089,10 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     <div style={{ paddingTop: 40 }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
       <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>Программа</h1>
-      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>{completedTopics.length} из {CURRICULUM.filter(t => !t.linkedBonus).length} тем пройдено</div>
 
       {["A1", "A2", "A3", "A4"].map(lvl => {
-        const topics = CURRICULUM.filter(t => t.level === lvl);
+        const topics = CURRICULUM.filter(t => t.level === lvl && !t.linkedBonus);
         const lvlColor = CURRICULUM_LEVELS[lvl].color;
         return (
           <div key={lvl} style={{ marginBottom: 32 }}>
@@ -3771,7 +3772,7 @@ export default function DuoPar() {
             <button onClick={() => setScreen("curriculum")} style={{ width: "100%", background: "linear-gradient(135deg, rgba(124,92,252,0.2), rgba(124,92,252,0.08))", color: "#fff", border: "1px solid rgba(124,92,252,0.35)", borderRadius: 20, padding: "20px", fontSize: 16, fontWeight: 700, cursor: "pointer", textAlign: "left", marginBottom: 10 }}>
               <div style={{ fontSize: 24, marginBottom: 6 }}>🎓</div>
               <div>Программа обучения</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>{completedTopics.length} из {CURRICULUM.length} тем пройдено</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400, marginTop: 4 }}>{completedTopics.length} из {CURRICULUM.filter(t => !t.linkedBonus).length} тем пройдено</div>
             </button>
 
             <button onClick={() => setScreen("mapgame")} style={{ width: "100%", background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.06))", color: "#fff", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
