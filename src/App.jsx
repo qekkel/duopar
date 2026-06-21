@@ -236,13 +236,89 @@ const CURRICULUM_LEVELS = {
 };
 
 // TTS helper — использует Web SpeechSynthesis как fallback для аудио
-function speakDE(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+// Tracks the currently playing Audio element for stop-before-play
+let _currentAudio = null;
+
+function speakDE(text, audioUrl) {
+  // Stop any currently playing audio
+  if (_currentAudio) { try { _currentAudio.pause(); _currentAudio.currentTime = 0; } catch(e) {} _currentAudio = null; }
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+  if (audioUrl) {
+    const a = new Audio(audioUrl);
+    _currentAudio = a;
+    a.play().catch(() => { _currentAudio = null; _speakTTS(text); });
+    a.onended = () => { _currentAudio = null; };
+  } else {
+    _speakTTS(text);
+  }
+}
+
+function _speakTTS(text) {
+  if (!window.speechSynthesis || !text) return;
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = "de-DE";
   utt.rate = 0.85;
   window.speechSynthesis.speak(utt);
+}
+
+function AudioButton({ text, audioUrl, size = 28, style: extraStyle }) {
+  const [playing, setPlaying] = React.useState(false);
+
+  function handlePlay(e) {
+    e.stopPropagation();
+    if (!text && !audioUrl) return;
+    setPlaying(true);
+
+    if (audioUrl) {
+      if (_currentAudio) { try { _currentAudio.pause(); } catch(err) {} _currentAudio = null; }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      const a = new Audio(audioUrl);
+      _currentAudio = a;
+      a.play().catch(() => { _currentAudio = null; _speakTTS(text); setPlaying(false); });
+      a.onended = () => { _currentAudio = null; setPlaying(false); };
+      setTimeout(() => setPlaying(false), 3000);
+    } else {
+      if (_currentAudio) { try { _currentAudio.pause(); } catch(err) {} _currentAudio = null; }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        utt.lang = "de-DE";
+        utt.rate = 0.85;
+        utt.onend = () => setPlaying(false);
+        utt.onerror = () => setPlaying(false);
+        window.speechSynthesis.speak(utt);
+        setTimeout(() => setPlaying(false), 4000);
+      } else {
+        setPlaying(false);
+      }
+    }
+  }
+
+  const canPlay = !!(text || audioUrl);
+  return (
+    <button
+      onClick={handlePlay}
+      disabled={!canPlay}
+      style={{
+        width: size, height: size,
+        borderRadius: "50%",
+        border: playing ? "1.5px solid #06b6d4" : "1.5px solid rgba(6,182,212,0.35)",
+        background: playing ? "rgba(6,182,212,0.18)" : "rgba(6,182,212,0.07)",
+        color: playing ? "#06b6d4" : "rgba(6,182,212,0.6)",
+        cursor: canPlay ? "pointer" : "default",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontSize: size * 0.45,
+        transition: "all 0.2s",
+        flexShrink: 0,
+        padding: 0,
+        ...(extraStyle || {}),
+      }}
+      title="Послушать произношение"
+    >
+      {playing ? "🔊" : "🔉"}
+    </button>
+  );
 }
 
 const CURRICULUM = [
@@ -1284,7 +1360,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const [activeBlockIdx, setActiveBlockIdx] = useState(null);
   const [levelExamLevel, setLevelExamLevel] = useState(null);
   const [completedBlocks, setCompletedBlocks] = useState(() => loadBlocks(STORAGE_KEY));
-  const [activeLevel, setActiveLevel] = useState("A1");
+  const [activeLevel, setActiveLevel] = useState("PH");
 
   useEffect(() => {
     if (userId) setCompletedBlocks(loadBlocks(`duopar_blocks_${userId}`));
@@ -1312,7 +1388,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           const parts = trimmed.split(" — ");
           if (parts.length >= 2) {
             const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
-            if (de && ru) ws.push({ de, ru, section: card.title, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
+            if (de && ru) ws.push({ de, ru, section: card.title, audioText: de, audioUrl: card.audioUrl || null, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
           }
         } else if (!isEmoji) {
           tipLines.push(trimmed);
@@ -1333,6 +1409,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       return <TopicBlockLearnScreen
         block={block}
         allWords={blocks.flatMap(b => b.words)}
+        audioEnabled={topic.audioEnabled === true || topic.level === "PH"}
         onBack={() => setMode("detail")}
         onDone={() => {
           setCompletedBlocks(prev => {
@@ -1470,20 +1547,20 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     <div style={{ paddingTop: 40 }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
 
-      {/* Level tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 28, overflowX: "auto", paddingBottom: 4 }}>
-        {LEVELS.map((l, idx) => {
+      {/* Level tabs — always clickable, scrollbar hidden via CSS class */}
+      <div className="scrollbar-hide" style={{ display: "flex", gap: 8, marginBottom: 28, overflowX: "auto", paddingBottom: 2 }}>
+        {LEVELS.map((l) => {
           const unlocked = isLevelUnlocked(l);
           const done = isLevelDone(l);
           const active = l === activeLevel;
           const color = CURRICULUM_LEVELS[l].color;
           return (
-            <button key={l} onClick={() => unlocked && setActiveLevel(l)} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 20, border: active ? `1.5px solid ${color}` : "1.5px solid rgba(255,255,255,0.1)", background: active ? `${color}22` : "rgba(255,255,255,0.04)", cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : 0.4 }}>
+            <button key={l} onClick={() => setActiveLevel(l)} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 20, border: active ? `1.5px solid ${color}` : "1.5px solid rgba(255,255,255,0.1)", background: active ? `${color}22` : "rgba(255,255,255,0.04)", cursor: "pointer" }}>
               {done
                 ? <span style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color, flexShrink: 0 }}>✓</span>
-                : <span style={{ fontSize: 13, color: active ? color : "rgba(255,255,255,0.5)", fontWeight: 700 }}>{CURRICULUM_LEVELS[l].short}</span>}
+                : <span style={{ fontSize: 13, color: active ? color : unlocked ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)", fontWeight: 700 }}>{CURRICULUM_LEVELS[l].short}</span>}
               {active && <span style={{ fontSize: 12, color, fontWeight: 700, whiteSpace: "nowrap" }}>{CURRICULUM_LEVELS[l].label.split(" · ")[1]}</span>}
-              {!unlocked && <span style={{ fontSize: 11 }}>🔒</span>}
+              {!unlocked && <span style={{ fontSize: 11, marginLeft: 2 }}>🔒</span>}
             </button>
           );
         })}
@@ -1491,8 +1568,20 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
       <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{CURRICULUM_LEVELS[lvl].label}</div>
 
+      {/* Locked level banner */}
+      {!isLevelUnlocked(lvl) && (
+        <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 22 }}>🔒</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>Блок ещё заблокирован</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>Завершите предыдущий блок, чтобы открыть уроки</div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {topics.map((topic, idx) => {
+          const levelUnlocked = isLevelUnlocked(lvl);
           const examDone = completedTopics.includes(topic.id);
           const blocks = getTopicBlocks(topic);
           const done = doneBlocks(topic.id);
@@ -1500,8 +1589,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           const blocksDone = done.size;
           const inProgress = blocksDone > 0 && !examDone;
           return (
-            <button key={topic.id} onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }}
-              style={{ background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus && !examDone ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(251,191,36,0.06))" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus && !examDone ? "rgba(245,158,11,0.45)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", boxShadow: topic.bonus && !examDone ? "0 0 12px rgba(245,158,11,0.15)" : "none" }}>
+            <button key={topic.id} onClick={() => { if (levelUnlocked) { setActiveTopicId(topic.id); setMode("detail"); } }}
+              style={{ opacity: levelUnlocked ? 1 : 0.45, cursor: levelUnlocked ? "pointer" : "default", background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus && !examDone ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(251,191,36,0.06))" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus && !examDone ? "rgba(245,158,11,0.45)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", width: "100%", boxShadow: topic.bonus && !examDone ? "0 0 12px rgba(245,158,11,0.15)" : "none" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: blocksTotal > 0 ? 10 : 0 }}>
                 <div style={{ fontSize: 26 }}>{examDone ? "✅" : topic.emoji}</div>
                 <div style={{ flex: 1 }}>
@@ -1723,10 +1812,20 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   );
 }
 
-function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
+function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }) {
   const words = block.words;
   const [phase, setPhase] = useState(block.tip ? "tip" : "intro");
   const [introIdx, setIntroIdx] = useState(0);
+
+  // Auto-play german word when card changes in audio-enabled mode
+  useEffect(() => {
+    if (audioEnabled && phase === "intro" && words[introIdx]) {
+      const w = words[introIdx];
+      const text = w.audioText || w.de;
+      const url = w.audioUrl || null;
+      if (text) setTimeout(() => speakDE(text, url), 250);
+    }
+  }, [introIdx, phase, audioEnabled]);
   const [practiceQueue, setPracticeQueue] = useState(() => shuffle(words));
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -1853,10 +1952,16 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
             <div style={{ height: "100%", borderRadius: 2, background: "#a78bfa", width: `${progress * 100}%`, transition: "width 0.3s" }} />
           </div>
         </div>
-        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>📚 {block.name}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>📚 {block.name}</div>
+          {audioEnabled && <AudioButton text={card.audioText || card.de} audioUrl={card.audioUrl} size={30} />}
+        </div>
+        {audioEnabled && introIdx === 0 && (
+          <div style={{ fontSize: 11, color: "rgba(6,182,212,0.6)", marginBottom: 8 }}>🔉 Нажми на значок звука, чтобы услышать произношение</div>
+        )}
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {words.length} · Запомни</div>
         {(() => { const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", gold: "#f59e0b", golden: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelgrau: "#374151", dunkelblau: "#1e3a8a", hellblau: "#93c5fd", hellbraun: "#c4956a", dunkelgrün: "#166534", olivgrün: "#6b7c3f" }; const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, ""); const colorHex = COLOR_MAP[deKey]; return (
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16, position: "relative" }}>
           {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
           <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
