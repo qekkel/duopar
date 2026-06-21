@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "./supabase";
 
 // ── ЗВУКИ (Web Audio API) ─────────────────────────────────────
@@ -970,6 +970,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
     if (mode === "block" && activeBlockIdx !== null) {
       const block = blocks[activeBlockIdx];
+      if (!block || !block.words || block.words.length === 0) { setMode("detail"); return null; }
       return <TopicBlockLearnScreen
         block={block}
         allWords={blocks.flatMap(b => b.words)}
@@ -1288,7 +1289,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   const correct = card?.ru;
   const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
   // useMemo so shuffle doesn't re-run on every render (e.g. when selected changes)
-  const options = React.useMemo(() => {
+  const options = useMemo(() => {
     if (!card) return [];
     const pool = (() => {
       const sameType = allCards.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
@@ -1342,13 +1343,13 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
 
   // All hooks must be at top level — before any conditional returns
   const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
-  const optionPool = React.useMemo(() => {
+  const optionPool = useMemo(() => {
     const seen = new Set();
     return [...words, ...allWords].filter(f => { if (seen.has(f.ru)) return false; seen.add(f.ru); return true; });
   }, [words, allWords]);
   const practiceCard = practiceQueue[practiceIdx];
   const correct = practiceCard?.ru;
-  const options = React.useMemo(() => {
+  const options = useMemo(() => {
     if (!practiceCard) return [];
     const pool = (() => {
       const sameType = optionPool.filter(f => f.ru !== correct && isSentence(f) === isSentence(practiceCard));
