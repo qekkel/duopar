@@ -1401,12 +1401,14 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
         <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>📚 {batch.name}</div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {batchWords.length} · Запомни</div>
 
+        {(() => { const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", beige: "#d4a574", gold: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelblau: "#1e3a8a", hellblau: "#93c5fd" }; const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, ""); const colorHex = COLOR_MAP[deKey]; return (
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
+          {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
           <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
           {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
-        </div>
+        </div>); })()}
 
         <div style={{ display: "flex", gap: 10 }}>
           {introIdx > 0 && <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>←</button>}
@@ -1583,12 +1585,14 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
         </div>
         <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>📚 {block.name}</div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {words.length} · Запомни</div>
+        {(() => { const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", beige: "#d4a574", gold: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelblau: "#1e3a8a", hellblau: "#93c5fd" }; const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, ""); const colorHex = COLOR_MAP[deKey]; return (
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
+          {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
           <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
           {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
-        </div>
+        </div>); })()}
         <div style={{ display: "flex", gap: 10 }}>
           {introIdx > 0 && <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>←</button>}
           {!isLast
