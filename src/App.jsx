@@ -307,18 +307,16 @@ function AudioButton({ text, audioUrl, size = 28, style: extraStyle }) {
     }
   }
 
-  const canPlay = !!(text || audioUrl);
   return (
     <button
       onClick={handlePlay}
-      disabled={!canPlay}
       style={{
         width: size, height: size,
         borderRadius: "50%",
         border: playing ? "1.5px solid #06b6d4" : "1.5px solid rgba(6,182,212,0.35)",
         background: playing ? "rgba(6,182,212,0.18)" : "rgba(6,182,212,0.07)",
         color: playing ? "#06b6d4" : "rgba(6,182,212,0.6)",
-        cursor: canPlay ? "pointer" : "default",
+        cursor: "pointer",
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         fontSize: size * 0.45,
         transition: "all 0.2s",
