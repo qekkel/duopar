@@ -231,7 +231,7 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "greetings_dialect",
     cards: [
-      { title: "Как поздороваться", body: "Hallo — Привет\nGuten Morgen — Доброе утро\nGuten Tag — Добрый день\nGuten Abend — Добрый вечер\nHi — Хай (неформально)" },
+      { title: "Как поздороваться", body: "Hallo — Привет\nGuten Morgen — Доброе утро\nGuten Tag — Добрый день\nGuten Abend — Добрый вечер\nHi — Привет (очень неформально)" },
       { title: "Как попрощаться", body: "Tschüss — Пока\nAuf Wiedersehen — До свидания\nBis bald — До скорого\nBis morgen — До завтра\nGute Nacht — Спокойной ночи" },
       { title: "Как спросить «как дела»", body: "Wie geht es Ihnen? — Как вы поживаете? (официально)\nWie geht's? — Как дела? (неформально)\n\nОтветы:\nGut, danke! — Хорошо, спасибо!\nSehr gut! — Очень хорошо!\nEs geht. — Нормально.\nNicht so gut. — Не очень." },
     ],
