@@ -1004,27 +1004,39 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       const done = doneBlocks(activeTopicId);
       const allDone = blocks.length > 0 && done.size >= blocks.length;
       const nextBlock = blocks.findIndex((_, i) => !done.has(i));
+      const isLinkedBonus = !!topic.linkedBonus;
+      const gold = "#f59e0b";
+      const backTarget = isLinkedBonus
+        ? CURRICULUM.find(t => t.bonusTopicId === activeTopicId)
+        : null;
+
       return (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
-          <button onClick={() => { setMode(null); setActiveTopicId(null); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 40, padding: 0, display: "block" }}>← Назад</button>
+          <button
+            onClick={() => { if (backTarget) setActiveTopicId(backTarget.id); else { setMode(null); setActiveTopicId(null); } }}
+            style={{ background: "none", border: "none", color: isLinkedBonus ? "rgba(245,158,11,0.5)" : "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 40, padding: 0, display: "block" }}
+          >← Назад</button>
+
+          {isLinkedBonus && (
+            <div style={{ fontSize: 11, fontWeight: 800, color: gold, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>⭐ Бонус</div>
+          )}
           <div style={{ fontSize: 56, marginBottom: 12 }}>{topic.emoji}</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 6 }}>{topic.title}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: isLinkedBonus ? "#fcd34d" : "#fff", marginBottom: 6 }}>{topic.title}</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 36 }}>{done.size} из {blocks.length} частей пройдено</div>
 
-          {/* Сегментированная полоска прогресса */}
           <div style={{ display: "flex", gap: 6, marginBottom: 48 }}>
             {blocks.map((_, i) => (
-              <div key={i} style={{ flex: 1, height: 8, borderRadius: 4, background: done.has(i) ? "#7C5CFC" : "rgba(255,255,255,0.1)", transition: "background 0.4s" }} />
+              <div key={i} style={{ flex: 1, height: 8, borderRadius: 4, background: done.has(i) ? (isLinkedBonus ? gold : "#7C5CFC") : "rgba(255,255,255,0.1)", transition: "background 0.4s" }} />
             ))}
           </div>
 
           {!allDone && (
-            <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "18px", borderRadius: 16, background: "#7C5CFC", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
+            <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "18px", borderRadius: 16, background: isLinkedBonus ? `linear-gradient(135deg, ${gold}, #fbbf24)` : "#7C5CFC", border: "none", color: isLinkedBonus ? "#1a1000" : "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
               {done.size === 0 ? "▶ Начать" : "▶ Продолжить"}
             </button>
           )}
 
-          {(() => {
+          {!isLinkedBonus && (() => {
             const bonusTopic = topic.bonusTopicId ? CURRICULUM.find(t => t.id === topic.bonusTopicId) : null;
             if (!bonusTopic) return null;
             return (
@@ -1038,18 +1050,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               </button>
             );
           })()}
-          {topic.bonus && (
-            <div style={{ marginTop: 16, marginBottom: 12 }}>
-              <div style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 14, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>⭐</span>
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fcd34d" }}>Бонусный материал</div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Необязательно · не входит в программу</div>
-                </div>
-              </div>
-            </div>
-          )}
-          {allDone ? (
+
+          {!isLinkedBonus && (allDone ? (
             <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
               ⚡ Сдать экзамен
             </button>
@@ -1057,7 +1059,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             <div style={{ width: "100%", padding: "16px", borderRadius: 16, background: "rgba(124,92,252,0.06)", border: "1px solid rgba(124,92,252,0.12)", color: "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 600, textAlign: "center", boxSizing: "border-box" }}>
               🔒 Экзамен — после всех частей
             </div>
-          )}
+          ))}
+
           {done.size > 0 && (
             <button onClick={() => { setActiveBlockIdx(0); setCompletedBlocks(p => ({ ...p, [activeTopicId]: new Set() })); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
               🔁 Начать сначала
