@@ -1402,7 +1402,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {batchWords.length} · Запомни</div>
 
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 44, fontWeight: 900, color: "#fff", marginBottom: 22 }}>{card.de}</div>
+          <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
           {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
@@ -1463,7 +1463,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
 
       <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: 40, fontWeight: 900, color: "#fff" }}>{card.de}</div>
+        <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 40, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1584,7 +1584,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
         <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>📚 {block.name}</div>
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {words.length} · Запомни</div>
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 44, fontWeight: 900, color: "#fff", marginBottom: 22 }}>{card.de}</div>
+          <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
           {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
@@ -1612,7 +1612,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
       <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🎯 {block.name}</div>
       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
       <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: 40, fontWeight: 900, color: "#fff" }}>{card.de}</div>
+        <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 40, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {options.map((opt, i) => {
