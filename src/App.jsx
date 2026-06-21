@@ -284,6 +284,7 @@ const CURRICULUM = [
   {
     id: "numbers",
     title: "Числа 1–20",
+    bonusTopicId: "numbers_big",
     emoji: "🔢",
     level: "A1",
     cards: [
@@ -305,6 +306,7 @@ const CURRICULUM = [
     emoji: "📅",
     level: "A1",
     bonus: true,
+    linkedBonus: true,
     cards: [
       { title: "Числа 100–1 000 000 000", body: "100 — hundert\n200 — zweihundert\n1.000 — tausend\n1.000.000 — eine Million\n1.000.000.000 — eine Milliarde\n\n💡 В немецком разряды разделяются точкой (не запятой):\n1.000 = тысяча · 1.000.000 = миллион\n\n101 — hunderteins\n💡 einhundert и hundert — оба правильны" },
       { title: "Порядковые числительные", body: "Для дат и перечислений:\n\nder erste — первый (1.)\nder zweite — второй (2.)\nder dritte — третий (3.)\nder vierte — четвёртый (4.)\nder fünfte — пятый (5.)\n\n⚠️ dritte — исключение, остальные просто +te\n💡 С 4-го: основа + -te (vierte, fünfte...)" },
