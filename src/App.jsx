@@ -1476,7 +1476,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
       <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
 
       <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 40, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
+        <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 38, fontWeight: 700, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1637,7 +1637,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
       <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
         {reversed
           ? <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
-          : <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 40, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
+          : <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 38, fontWeight: 700, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
         }
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
