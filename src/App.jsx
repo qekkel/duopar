@@ -234,6 +234,7 @@ const CURRICULUM_LEVELS = {
 };
 
 const CURRICULUM = [
+  // ── 1. ЗНАКОМСТВО ─────────────────────────────────────────────
   {
     id: "greetings",
     title: "Знакомство",
@@ -241,18 +242,19 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "greetings_dialect",
     cards: [
-      { title: "Как поздороваться", body: "Hallo — Привет\nGuten Morgen — Доброе утро\nGuten Tag — Добрый день\nGuten Abend — Добрый вечер\nHi — Привет (очень неформально)" },
+      { title: "Как поздороваться", body: "Hallo — Привет / Здравствуйте\nGuten Morgen — Доброе утро\nGuten Tag — Добрый день / Здравствуйте\nGuten Abend — Добрый вечер\nHi — Привет (очень неформально)" },
       { title: "Как попрощаться", body: "Tschüss — Пока\nAuf Wiedersehen — До свидания\nBis bald — До скорого\nBis morgen — До завтра\nGute Nacht — Спокойной ночи" },
-      { title: "Как спросить «как дела»", body: "Wie geht es Ihnen? — Как вы поживаете? (официально)\nWie geht's? — Как дела? (неформально)\n\nОтветы:\nGut, danke! — Хорошо, спасибо!\nSehr gut! — Очень хорошо!\nEs geht. — Нормально.\nNicht so gut. — Не очень." },
+      { title: "Как спросить «как дела»", body: "Wie geht es Ihnen? — Как у Вас дела? (официально)\nWie geht's? — Как дела? (неформально)\n\nОтветы:\nGut, danke! — Хорошо, спасибо!\nSehr gut! — Очень хорошо!\nEs geht. — Нормально / так себе.\nNicht so gut. — Не очень хорошо." },
     ],
     exam: [
       { q: "Как сказать «Добрый день» по-немецки?", options: ["Guten Tag", "Gute Nacht", "Auf Wiedersehen", "Tschüss"], answer: 0 },
       { q: "Что значит «Tschüss»?", options: ["Привет", "Пока", "Спасибо", "Пожалуйста"], answer: 1 },
-      { q: "Как неформально спросить «как дела»?", options: ["Wie heißen Sie?", "Woher kommen Sie?", "Wie geht's?", "Was machen Sie?"], answer: 2 },
+      { q: "Как неформально спросить «как дела»?", options: ["Guten Morgen", "Auf Wiedersehen", "Wie geht's?", "Gute Nacht"], answer: 2 },
       { q: "«Bis bald» означает:", options: ["До завтра", "До свидания", "До скорого", "Спокойной ночи"], answer: 2 },
       { q: "Как ответить «Очень хорошо»?", options: ["Es geht.", "Nicht so gut.", "Danke schön.", "Sehr gut!"], answer: 3 },
     ],
   },
+  // ── 2. ЖИВОЙ НЕМЕЦКИЙ (бонус) ─────────────────────────────────
   {
     id: "greetings_dialect",
     title: "Живой немецкий",
@@ -261,37 +263,19 @@ const CURRICULUM = [
     bonus: true,
     linkedBonus: true,
     cards: [
-      { title: "Бавария и Австрия", body: "Grüß Gott — Здравствуйте (Бавария, Австрия · официально)\nServus — Привет / Пока (Бавария, Австрия · неформально)\nGrüß di — Привет тебе (Бавария · неформально)\nPfiat di — Пока (Бавария · прощание)\n\n💡 Grüß Gott — стандартный эквивалент Guten Tag на юге Германии и в Австрии" },
-      { title: "Швейцария и север", body: "Grüezi — Здравствуйте (Швейцария · официально)\nSali — Привет (Швейцария · неформально)\nAde — Пока (Швейцария, юг Германии)\nMoin — Привет (север Германии, Гамбург)\nTach — Привет (средняя Германия · сокращение от Guten Tag)\n\n💡 Moin говорят в любое время суток — не только утром" },
-      { title: "Неформальные и молодёжные", body: "Na? — Ну как? / Как дела? (повсеместно · очень коротко)\nAlles klar? — Всё норм? (неформально)\nAlles gut? — Всё хорошо? (неформально)\nWas geht? — Как дела? (молодёжное)\nWas geht ab? — Что происходит? (молодёжное)\n\n💡 Na? можно использовать как приветствие, вопрос и ответ одновременно" },
+      { title: "Бавария и Австрия", body: "💡 Это бонус — не нужно сразу запоминать всё идеально. Главное — узнавать эти слова, если услышишь их в Германии, Австрии или Швейцарии.\n\nGrüß Gott — Здравствуйте (Бавария и Австрия · официально)\nServus — Привет / Пока (Бавария и Австрия · неформально)\nGrüß di — Привет тебе (юг Германии / Австрия · неформально)\nPfiat di — Пока (юг Германии / Австрия · неформально)" },
+      { title: "Швейцария и север", body: "Grüezi — Здравствуйте (Швейцария · официально)\nSali — Привет (Швейцария · неформально)\nAde — Пока (Швейцария / юг Германии)\nMoin — Привет (север Германии · часто в любое время суток)\nTach — Привет / Добрый день (разговорно · некоторые регионы)\n\n💡 Moin говорят в любое время суток — не только утром" },
+      { title: "Неформальные и молодёжные", body: "Na? — Ну как? / Как дела? (повсеместно · очень коротко)\nAlles klar? — Всё нормально? (неформально)\nAlles gut? — Всё хорошо? (неформально)\nWas geht? — Как дела? / Что нового? (молодёжное · неформально)\nWas geht ab? — Что происходит? / Что нового? (очень неформально · молодёжное)\n\n💡 Na? можно использовать как приветствие, вопрос и ответ одновременно" },
     ],
     exam: [
-      { q: "«Grüß Gott» — это приветствие характерное для:", options: ["Северной Германии", "Берлина", "Баварии и Австрии", "Швейцарии"], answer: 2 },
-      { q: "«Moin» говорят:", options: ["только утром", "в любое время суток", "только вечером", "только в Баварии"], answer: 1 },
+      { q: "«Grüß Gott» характерно для:", options: ["Северной Германии", "Берлина", "Баварии и Австрии", "Швейцарии"], answer: 2 },
+      { q: "«Moin» часто говорят:", options: ["только утром", "в любое время суток", "только вечером", "только в Баварии"], answer: 1 },
       { q: "«Servus» — это:", options: ["только приветствие", "только прощание", "и привет, и пока", "официальное обращение"], answer: 2 },
       { q: "«Grüezi» — типичное приветствие в:", options: ["Австрии", "Баварии", "Швейцарии", "Гамбурге"], answer: 2 },
       { q: "«Na?» как приветствие означает:", options: ["Нет", "Ну как дела?", "Спасибо", "Привет, давно не виделись"], answer: 1 },
     ],
   },
-  {
-    id: "articles",
-    title: "Артикли",
-    emoji: "📌",
-    level: "A1",
-    bonusTopicId: "articles_bonus",
-    cards: [
-      { title: "Три рода в немецком", tip: "В немецком у каждого слова есть род:\nder — мужской род\ndie — женский род\ndas — средний род\n\nЭто не логика — запоминай артикль вместе со словом.", fixedOptions: ["мужской род", "женский род", "средний род"], body: "der — мужской род\ndie — женский род\ndas — средний род\n\n💡 Род надо учить вместе со словом — правил мало!" },
-      { title: "Неопределённый артикль", tip: "ein/eine — как «a/an» в английском.\n\nОбозначает что-то неконкретное, впервые упомянутое.\n\nМужской и средний род → ein\nЖенский род → eine", body: "ein/eine — «один, одна» (как «a/an» в английском)\n\nein Mann — мужчина\neine Frau — женщина\nein Kind — ребёнок\n\n⚠️ Для мужского и среднего: ein\nДля женского: eine" },
-      { title: "Когда артикль не нужен", tip: "Артикль не ставится перед:\n• именами — Das ist Anna\n• профессиями — Ich bin Lehrerin\n• большинством стран — aus Deutschland\n\nЗапомни эти три случая — они встречаются постоянно.", body: "Артикль не ставится:\n\n• Перед именами: Das ist Anna.\n• Перед профессиями: Ich bin Lehrerin.\n• Перед странами: Ich komme aus Deutschland.\n\n💡 Исключение: die Schweiz, die Türkei — с артиклем!" },
-    ],
-    exam: [
-      { q: "Какой артикль у слова «Tisch» (стол)?", options: ["die", "das", "der", "ein"], answer: 2 },
-      { q: "Какой артикль у слова «Frau» (женщина)?", options: ["der", "die", "das", "einen"], answer: 1 },
-      { q: "Какой артикль у слова «Kind» (ребёнок)?", options: ["der", "die", "das", "eine"], answer: 2 },
-      { q: "Какой артикль используется в «eine Frau»?", options: ["der", "die", "das", "eine"], answer: 3 },
-      { q: "Перед профессией артикль:", options: ["der", "die", "das", "не ставится"], answer: 3 },
-    ],
-  },
+  // ── 3. SEIN И HABEN ───────────────────────────────────────────
   {
     id: "verbs_sein_haben",
     title: "Глаголы: sein и haben",
@@ -299,28 +283,69 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "verbs_bonus",
     cards: [
-      { title: "Глагол sein (быть)", tip: "sein = «быть»\n\nОписывает, кто ты или что ты из себя представляешь.\n\nСпрягается по-особому — форму нужно просто запомнить.", body: "ich bin — я есть\ndu bist — ты есть\ner/sie/es ist — он/она/оно есть\nwir sind — мы есть\nihr seid — вы есть\nsie/Sie sind — они/Вы есть\n\nПримеры:\nIch bin müde. — Я устал.\nDu bist nett. — Ты приятный.\nSie ist Lehrerin. — Она учительница." },
-      { title: "Глагол haben (иметь)", tip: "haben = «иметь»\n\nИспользуется для обозначения владения чем-либо.\n\nВместе с sein — один из двух важнейших глаголов немецкого языка.", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них/Вас есть\n\nПримеры:\nIch habe ein Buch. — У меня есть книга.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)" },
-      { title: "Sein vs Haben", tip: "sein — описывает состояние или кто ты есть.\n\nhaben — что у тебя есть.\n\nТам, где по-русски «мне холодно», по-немецки: Ich habe Kälte (у меня есть холод).", body: "sein — описывает состояние или личность:\nIch bin glücklich. — Я счастлив.\nSie ist Lehrerin. — Она учительница.\n\nhaben — обозначает владение:\nIch habe Zeit. — У меня есть время.\nWir haben Hunger. — Мы голодны.\n\n💡 Hunger/Durst haben = быть голодным/жаждущим" },
+      { title: "Глагол sein (быть)", tip: "sein = «быть»\n\nОписывает, кто ты или что ты из себя представляешь.\n\nСпрягается по-особому — форму нужно просто запомнить.", body: "ich bin — я\ndu bist — ты\ner/sie/es ist — он/она/оно\nwir sind — мы\nihr seid — вы\nsie/Sie sind — они / Вы\n\nМини-словарик:\nmüde — усталый/усталая\nnett — милый/милая\nglücklich — счастливый/счастливая\ndie Lehrerin — учительница\nder Arzt — врач\n\nПримеры:\nIch bin müde. — Я устал/устала.\nDu bist nett. — Ты милый/милая.\nSie ist Lehrerin. — Она учительница.\nEr ist Arzt. — Он врач.\nIch bin glücklich. — Я счастлив/счастлива." },
+      { title: "Глагол haben (иметь)", tip: "haben = «иметь»\n\nИспользуется для обозначения владения чем-либо.\n\nВместе с sein — один из двух важнейших глаголов немецкого языка.", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них / у Вас есть\n\nМини-словарик:\ndas Buch — книга\nder Hunger — голод\ndie Zeit — время\ndas Haus — дом\n\nПримеры:\nIch habe ein Buch. — У меня есть книга.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)\nWir haben Zeit. — У нас есть время.\nWir haben ein Haus. — У нас есть дом." },
+      { title: "Sein vs Haben", tip: "sein — описывает состояние или кто ты есть.\nhaben — что у тебя есть.", body: "sein — состояние или личность:\nIch bin glücklich. — Я счастлив/счастлива.\nSie ist Lehrerin. — Она учительница.\n\nhaben — владение:\nIch habe Zeit. — У меня есть время.\nWir haben Hunger. — Мы голодны.\n\n💡 Hunger/Durst haben = быть голодным/жаждущим\nГде по-русски «мне холодно» — по-немецки «Ich habe Kälte»" },
     ],
     exam: [
       { q: "«Du ___ müde.» — вставь правильную форму sein:", options: ["bin", "bist", "ist", "sind"], answer: 1 },
       { q: "«Wir ___ ein Haus.» — вставь haben:", options: ["habe", "hast", "hat", "haben"], answer: 3 },
       { q: "«Er ___ Arzt.» — вставь sein:", options: ["bin", "bist", "ist", "sind"], answer: 2 },
       { q: "Как сказать «У неё есть книга»?", options: ["Sie ist ein Buch.", "Sie hat ein Buch.", "Sie haben ein Buch.", "Sie hast ein Buch."], answer: 1 },
-      { q: "«Ich habe Hunger» буквально значит:", options: ["Я хочу есть", "У меня есть голод", "Мне нужна еда", "Я голодный человек"], answer: 1 },
+      { q: "«Ich habe Hunger» буквально означает:", options: ["Я хочу есть", "У меня есть голод", "Мне нужна еда", "Я голодный человек"], answer: 1 },
     ],
   },
+  // ── 4. АРТИКЛИ ────────────────────────────────────────────────
+  {
+    id: "articles",
+    title: "Артикли",
+    emoji: "📌",
+    level: "A1",
+    bonusTopicId: "articles_bonus",
+    cards: [
+      { title: "Три рода в немецком", tip: "В немецком у каждого слова есть род:\nder — мужской род\ndie — женский род\ndas — средний род\n\nЭто не логика — запоминай артикль вместе со словом.", fixedOptions: ["мужской род", "женский род", "средний род"], body: "der — мужской род\ndie — женский род\ndas — средний род\n\nПримеры:\nder Tisch — стол\ndie Frau — женщина\ndas Kind — ребёнок\n\n💡 Род надо учить вместе со словом — правил мало!" },
+      { title: "Неопределённый артикль", tip: "ein/eine — как «a/an» в английском.\n\nМужской и средний род → ein\nЖенский род → eine", body: "ein/eine — «один, одна» (как «a/an» в английском)\n\nein Tisch — стол (м.р.)\nein Mann — мужчина (м.р.)\neine Frau — женщина (ж.р.)\nein Kind — ребёнок (ср.р.)\nein Buch — книга (ср.р.)\n\n⚠️ Мужской и средний → ein\nЖенский → eine" },
+      { title: "Когда артикль не нужен", tip: "Артикль не ставится перед:\n• именами — Das ist Anna\n• профессиями — Ich bin Lehrerin\n• большинством стран — aus Deutschland\n\nЗапомни эти три случая — они встречаются постоянно.", body: "Артикль не ставится:\n\n• Перед именами: Das ist Anna.\n• После sein с профессией: Ich bin Lehrerin. / Er ist Arzt.\n• Перед большинством стран: Ich komme aus Deutschland.\n\n💡 Исключения со статьёй: die Schweiz, die Türkei, die USA\n\n⚠️ В других контекстах артикль может появляться:\nSie ist eine gute Lehrerin. — Она хорошая учительница." },
+    ],
+    exam: [
+      { q: "Какой артикль у слова «Tisch» (стол)?", options: ["die", "das", "der", "ein"], answer: 2 },
+      { q: "Какой артикль у слова «Frau» (женщина)?", options: ["der", "die", "das", "einen"], answer: 1 },
+      { q: "Какой артикль у слова «Kind» (ребёнок)?", options: ["der", "die", "das", "eine"], answer: 2 },
+      { q: "В «eine Frau» используется артикль:", options: ["der", "die", "das", "eine"], answer: 3 },
+      { q: "В простой фразе «Ich bin Lehrerin» перед профессией артикль:", options: ["der", "die", "das", "не ставится"], answer: 3 },
+    ],
+  },
+  // ── 5. СЕМЬЯ ──────────────────────────────────────────────────
+  {
+    id: "family",
+    title: "Семья",
+    emoji: "👨‍👩‍👧",
+    level: "A1",
+    bonusTopicId: "family_bonus",
+    cards: [
+      { title: "Члены семьи", body: "der Vater — отец\ndie Mutter — мать\nder Bruder — брат\ndie Schwester — сестра\nder Sohn — сын\ndie Tochter — дочь\ndie Eltern — родители (мн.ч.)\ndie Kinder — дети (мн.ч.)" },
+      { title: "Расширенная семья", body: "der Großvater / Opa — дедушка\ndie Großmutter / Oma — бабушка\nder Onkel — дядя\ndie Tante — тётя\nder Cousin — двоюродный брат\ndie Cousine — двоюродная сестра\nder Mann / Ehemann — муж\ndie Frau / Ehefrau — жена" },
+      { title: "Как рассказать о семье", body: "Ich habe einen Bruder. — У меня есть брат.\nIch habe eine Schwester. — У меня есть сестра.\nIch habe keine Geschwister. — У меня нет братьев и сестёр.\n\nMeine Familie ist groß. — Моя семья большая.\nMeine Familie ist klein. — Моя семья маленькая.\n\n⚠️ После «Ich habe» мужской артикль ein меняется на einen:\nein Bruder → Ich habe einen Bruder.\nПока просто запомни эту модель." },
+    ],
+    exam: [
+      { q: "Как по-немецки «дочь»?", options: ["der Sohn", "die Tochter", "die Schwester", "die Mutter"], answer: 1 },
+      { q: "«Die Eltern» — это:", options: ["дети", "родители", "бабушки и дедушки", "тёти и дяди"], answer: 1 },
+      { q: "Как сказать «У меня есть сестра»?", options: ["Ich bin eine Schwester.", "Ich habe eine Schwester.", "Ich habe einen Schwester.", "Mein Schwester."], answer: 1 },
+      { q: "«Opa» — разговорное слово для:", options: ["папы", "дяди", "дедушки", "брата"], answer: 2 },
+      { q: "«Geschwister» значит:", options: ["сестра", "брат", "братья и сёстры", "родители"], answer: 2 },
+    ],
+  },
+  // ── 6. ЧИСЛА 1–100 ────────────────────────────────────────────
   {
     id: "numbers",
-    title: "Числа 1–20",
+    title: "Числа 1–100",
     bonusTopicId: "numbers_big",
     emoji: "🔢",
     level: "A1",
     cards: [
       { title: "Числа 1–10", body: "1 — eins\n2 — zwei\n3 — drei\n4 — vier\n5 — fünf\n6 — sechs\n7 — sieben\n8 — acht\n9 — neun\n10 — zehn" },
-      { title: "Числа 11–20", body: "11 — elf\n12 — zwölf\n13 — dreizehn\n14 — vierzehn\n15 — fünfzehn\n16 — sechzehn\n17 — siebzehn\n18 — achtzehn\n19 — neunzehn\n20 — zwanzig\n\n💡 13-19: просто добавляй -zehn (= «-надцать»)" },
-      { title: "Числа 21–100", body: "21 — einundzwanzig\n30 — dreißig\n40 — vierzig\n50 — fünfzig\n100 — hundert\n\n💡 В немецком порядок обратный:\n25 = fünfundzwanzig (пять-и-двадцать)\nКак старорусское «пять да двадцать»!" },
+      { title: "Числа 11–20", body: "11 — elf\n12 — zwölf\n13 — dreizehn\n14 — vierzehn\n15 — fünfzehn\n16 — sechzehn\n17 — siebzehn\n18 — achtzehn\n19 — neunzehn\n20 — zwanzig\n\n💡 13–19: просто добавляй -zehn (= «-надцать»)" },
+      { title: "Числа 21–100", body: "21 — einundzwanzig\n30 — dreißig\n40 — vierzig\n50 — fünfzig\n100 — hundert\n\n💡 В числах от 21 до 99 единицы называются перед десятками:\n25 = fünfundzwanzig (пять-и-двадцать)\nКак старорусское «пять да двадцать»!" },
     ],
     exam: [
       { q: "Как по-немецки «семь»?", options: ["sechs", "acht", "sieben", "neun"], answer: 2 },
@@ -355,44 +380,7 @@ const CURRICULUM = [
       { q: "Порядковое от числа 4 (vierte) образуется:", options: ["исключение — dritte", "добавлением -te", "добавлением -ste", "добавлением -e"], answer: 1 },
     ],
   },
-  {
-    id: "family",
-    title: "Семья",
-    emoji: "👨‍👩‍👧",
-    level: "A1",
-    bonusTopicId: "family_bonus",
-    cards: [
-      { title: "Члены семьи", body: "der Vater — папа\ndie Mutter — мама\nder Bruder — брат\ndie Schwester — сестра\nder Sohn — сын\ndie Tochter — дочь\ndie Eltern — родители (мн.ч.)\ndie Kinder — дети (мн.ч.)" },
-      { title: "Расширенная семья", body: "der Großvater / Opa — дедушка\ndie Großmutter / Oma — бабушка\nder Onkel — дядя\ndie Tante — тётя\nder Cousin — двоюродный брат\ndie Cousine — двоюродная сестра\nder Mann — муж\ndie Frau — жена" },
-      { title: "Как рассказать о семье", body: "Ich habe... — У меня есть...\nIch habe einen Bruder. — У меня есть брат.\nIch habe keine Geschwister. — У меня нет братьев и сестёр.\n\nMeine Familie ist groß/klein.\nМоя семья большая/маленькая.\n\nGeschwister = братья и сёстры вместе" },
-    ],
-    exam: [
-      { q: "Как по-немецки «дочь»?", options: ["der Sohn", "die Tochter", "die Schwester", "die Mutter"], answer: 1 },
-      { q: "«Die Eltern» — это:", options: ["дети", "родители", "бабушки и дедушки", "тёти и дяди"], answer: 1 },
-      { q: "Как сказать «У меня есть сестра»?", options: ["Ich bin eine Schwester.", "Ich habe eine Schwester.", "Ich habe einen Schwester.", "Mein Schwester."], answer: 1 },
-      { q: "«Opa» — это разговорное слово для:", options: ["папы", "дяди", "дедушки", "брата"], answer: 2 },
-      { q: "«Geschwister» значит:", options: ["сестра", "брат", "братья и сёстры", "родители"], answer: 2 },
-    ],
-  },
-  {
-    id: "word_order",
-    title: "Порядок слов",
-    emoji: "📐",
-    level: "A1",
-    bonusTopicId: "word_order_bonus",
-    cards: [
-      { title: "Основной порядок слов", tip: "Главное правило немецкого:\nглагол всегда стоит на ВТОРОМ месте.\n\nНе на первом, не в конце — всегда второй.\n\nДаже если предложение начинается не с подлежащего.", body: "В немецком предложении глагол ВСЕГДА стоит на 2-м месте:\n\nIch [1] bin [2] müde.\nHeute [1] bin [2] ich müde.\nMüde [1] bin [2] ich.\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
-      { title: "Вопросительные предложения", tip: "С вопросительным словом (wo, was, wer...):\nглагол на втором месте — как обычно.\n\nБез вопросительного слова:\nглагол на ПЕРВОМ месте, подлежащее — на втором.", body: "Вопрос с вопросительным словом:\nWer bist du? — Кто ты?\nWas ist das? — Что это?\nWo ist die Mutter? — Где мама?\n\nВопрос без вопр. слова (глагол на 1-м):\nBist du müde? — Ты устал?\nHast du Zeit? — У тебя есть время?" },
-      { title: "Отрицание", tip: "nicht — отрицает глагол или прилагательное.\n\nkein/keine — отрицает существительное\n(там, где в утверждении стоит ein/eine).\n\nВыбор зависит от того, что именно ты отрицаешь.", body: "nicht — отрицает глагол или прилагательное:\nIch bin nicht müde. — Я не устал.\nDas ist nicht gut. — Это нехорошо.\n\nkein/keine — отрицает существительное:\nIch habe kein Buch. — У меня нет книги.\nIch habe keine Zeit. — У меня нет времени.\n\n💡 kein = ein + не; keine = eine + не" },
-    ],
-    exam: [
-      { q: "Где в немецком предложении стоит глагол?", options: ["Всегда первый", "Всегда второй", "Всегда последний", "Где угодно"], answer: 1 },
-      { q: "Выбери правильный порядок слов:", options: ["Ich heute bin müde.", "Heute ich bin müde.", "Heute bin ich müde.", "Bin heute ich müde."], answer: 2 },
-      { q: "Как задать вопрос «У тебя есть время?»", options: ["Du hast Zeit?", "Hast du Zeit?", "Zeit du hast?", "Hast Zeit du?"], answer: 1 },
-      { q: "«Ich habe ___ Buch» (у меня нет книги):", options: ["nicht", "keine", "kein", "nein"], answer: 2 },
-      { q: "«Ich bin ___ müde» (я не устал):", options: ["kein", "keine", "nicht", "nein"], answer: 2 },
-    ],
-  },
+  // ── 7. ЦВЕТА ──────────────────────────────────────────────────
   {
     id: "colors",
     title: "Цвета",
@@ -401,8 +389,8 @@ const CURRICULUM = [
     bonusTopicId: "colors_bonus",
     cards: [
       { title: "Основные цвета", body: "schwarz — чёрный\nweiß — белый\ngrau — серый\nrot — красный\nblau — синий\ngrün — зелёный\ngelb — жёлтый\nbraun — коричневый" },
-      { title: "Как использовать цвета", body: "Das ist rot. — Это красное.\nDas ist blau. — Это синее.\nDas ist grün. — Это зелёное.\nDas ist gelb. — Это жёлтое.\nDas ist schwarz. — Это чёрное.\nDas ist weiß. — Это белое.\n\n💡 Цвет ставится после «ist» и не меняется:\nDas ist rot. Das ist blau. Das ist grün. ✓" },
-      { title: "Цвета в предложениях", body: "Das Hemd ist blau. — Рубашка синяя.\nDie Jacke ist rot. — Куртка красная.\nDer Hut ist gelb. — Шляпа жёлтая.\nDas Kleid ist grün. — Платье зелёное.\nDie Hose ist grau. — Брюки серые.\nDer Schuh ist braun. — Туфля коричневая.\n\n💡 Цвет стоит после «ist» и не изменяется." },
+      { title: "Простые фразы с цветами", body: "Das ist rot. — Это красное / Это красного цвета.\nDas ist blau. — Это синее / Это синего цвета.\nDas ist grün. — Это зелёное / Это зелёного цвета.\nDas ist gelb. — Это жёлтое / Это жёлтого цвета.\nDas ist schwarz. — Это чёрное / Это чёрного цвета.\nDas ist weiß. — Это белое / Это белого цвета.\n\n💡 Цвет ставится после «ist» и не меняется." },
+      { title: "Цвета и одежда", body: "Мини-словарик одежды:\ndas Hemd — рубашка\ndie Jacke — куртка\nder Hut — шляпа\ndas Kleid — платье\ndie Hose — брюки\nder Schuh — ботинок\n\nПредложения:\nDas Hemd ist blau. — Рубашка синяя.\nDie Jacke ist rot. — Куртка красная.\nDer Hut ist gelb. — Шляпа жёлтая.\nDas Kleid ist grün. — Платье зелёное.\nDie Hose ist grau. — Брюки серые.\nDer Schuh ist braun. — Ботинок коричневый.\n\n💡 Цвет стоит после «ist» и не изменяется." },
     ],
     exam: [
       { q: "Как по-немецки «красный»?", options: ["blau", "grün", "rot", "gelb"], answer: 2 },
@@ -412,6 +400,46 @@ const CURRICULUM = [
       { q: "«Braun» означает:", options: ["синий", "серый", "зелёный", "коричневый"], answer: 3 },
     ],
   },
+  // ── 8. ПОРЯДОК СЛОВ И ВОПРОСЫ ─────────────────────────────────
+  {
+    id: "word_order",
+    title: "Порядок слов и вопросы",
+    emoji: "📐",
+    level: "A1",
+    bonusTopicId: "word_order_bonus",
+    cards: [
+      { title: "Глагол на втором месте", tip: "Главное правило немецкого:\nглагол всегда стоит на ВТОРОМ месте.\n\n«Второе место» — не всегда второе слово.\nПервое место может занимать группа слов.\n\nДаже если предложение начинается не с подлежащего.", body: "В немецком утверждении глагол стоит на 2-м месте:\n\nIch [1] bin [2] müde.\nHeute [1] bin [2] ich müde.\nAnna [1] hat [2] Zeit.\n\nМини-словарик:\nheute — сегодня\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
+      { title: "Вопросы с вопросительным словом", tip: "С вопросительным словом (wer, was, wo...):\nглагол на втором месте — как обычно.", body: "Мини-словарик:\nwer — кто\nwas — что\nwo — где\n\nПримеры:\nWer bist du? — Кто ты?\nWas ist das? — Что это?\nWo ist die Mutter? — Где мама?" },
+      { title: "Вопросы без вопросительного слова", tip: "Без вопросительного слова:\nглагол на ПЕРВОМ месте, подлежащее — на втором.", body: "Глагол на первом месте:\n\nBist du müde? — Ты устал/устала?\nHast du Zeit? — У тебя есть время?\n\n💡 В таких вопросах ответ: Ja (да) или Nein (нет)." },
+    ],
+    exam: [
+      { q: "В обычном немецком утверждении глагол стоит:", options: ["всегда первый", "на втором месте", "всегда последний", "где угодно"], answer: 1 },
+      { q: "Выбери правильный порядок слов:", options: ["Ich heute bin müde.", "Heute ich bin müde.", "Heute bin ich müde.", "Bin heute ich müde."], answer: 2 },
+      { q: "Как задать вопрос «У тебя есть время?»", options: ["Du hast Zeit?", "Hast du Zeit?", "Zeit du hast?", "Hast Zeit du?"], answer: 1 },
+      { q: "«Что это?» по-немецки:", options: ["Wer bist du?", "Was ist das?", "Wo ist die Mutter?", "Bist du müde?"], answer: 1 },
+      { q: "«Где мама?» по-немецки:", options: ["Was ist das?", "Wo ist die Mutter?", "Hast du Zeit?", "Wer bist du?"], answer: 1 },
+    ],
+  },
+  // ── 9. ОТРИЦАНИЕ ──────────────────────────────────────────────
+  {
+    id: "negation",
+    title: "Отрицание: nicht / kein",
+    emoji: "🚫",
+    level: "A1",
+    cards: [
+      { title: "nicht — отрицание глагола", tip: "nicht отрицает глагол, прилагательное или всё предложение.", body: "nicht — не\n\nIch bin nicht müde. — Я не устал/не устала.\nDas ist nicht gut. — Это нехорошо.\n\n💡 nicht обычно стоит после глагола или в конце предложения." },
+      { title: "kein/keine — отрицание существительного", tip: "kein/keine отрицает существительное с неопределённым артиклем или без артикля.\n\nkein — мужской и средний род\nkeine — женский род и множественное число", body: "Ich habe kein Buch. — У меня нет книги.\nIch habe keine Zeit. — У меня нет времени.\nIch habe keine Geschwister. — У меня нет братьев и сестёр.\n\nkein = ein + не (м.р. и ср.р.)\nkeine = eine + не (ж.р. и мн.ч.)\n\n⚠️ Падежи подробнее будут позже — пока просто запомни модели." },
+      { title: "nicht vs kein", tip: "Главный вопрос: что именно отрицаешь?\n\nГлагол или прилагательное → nicht\nСуществительное → kein/keine", body: "nicht — отрицает глагол или прилагательное:\nIch bin nicht müde. ✓\nDas ist nicht gut. ✓\n\nkein/keine — отрицает существительное:\nIch habe kein Buch. ✓\nIch habe keine Zeit. ✓\n\n❌ Не смешивай:\nIch habe nicht Buch. ✗\nIch bin kein müde. ✗" },
+    ],
+    exam: [
+      { q: "«Ich bin ___ müde» (я не устал):", options: ["kein", "keine", "nicht", "nein"], answer: 2 },
+      { q: "«Ich habe ___ Buch» (у меня нет книги):", options: ["nicht", "keine", "kein", "nein"], answer: 2 },
+      { q: "«Ich habe ___ Zeit» (у меня нет времени):", options: ["nicht", "keine", "kein", "nein"], answer: 1 },
+      { q: "Что обычно отрицает существительное?", options: ["nicht", "kein или keine", "guten", "bist"], answer: 1 },
+      { q: "Что правильно?", options: ["Ich bin kein müde.", "Ich bin nicht müde.", "Ich habe nicht Buch.", "Ich habe nein Zeit."], answer: 1 },
+    ],
+  },
+  // ── 10. ВНЕШНОСТЬ (бонус) ─────────────────────────────────────
   {
     id: "appearance",
     title: "Описание внешности",
