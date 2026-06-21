@@ -357,8 +357,8 @@ const CURRICULUM = [
     emoji: "🗣️",
     level: "PH",
     cards: [
-      { title: "Пять гласных и примеры", body: "A a — Apfel (яблоко)\nE e — Essen (еда)\nI i — ich (я)\nO o — Oma (бабушка)\nU u — Uhr (часы)\n\n💡 Каждая гласная может звучать коротко или долго.\nДолгая — при удвоении или перед h:\nSee (озеро), Uhr (часы), Zoo (зоопарк)." },
-      { title: "Долгие и краткие гласные", body: "Краткие (быстрые, зажатые):\nEssen — еда [э краткое]\nHund — собака [у краткое]\nkalt — холодный [а краткое]\n\nДолгие (тянутые):\nSee — озеро [э долгое]\nUhr — часы [у долгое]\nSaal — зал [а долгое]\n\n💡 На этом уровне достаточно слышать разницу,\nправила запомнишь постепенно." },
+      { title: "Пять гласных и примеры", body: "A a — Apfel\nE e — Essen\nI i — ich\nO o — Oma\nU u — Uhr\n\n💡 Каждая гласная может звучать коротко или долго." },
+      { title: "Долгие и краткие гласные", body: "💡 Краткая гласная: слог звучит быстро — Essen, Hund, kalt.\n💡 Долгая гласная: слог тянется — See, Uhr, Saal.\n\nEssen — еда\nHund — собака\nkalt — холодный\nSee — озеро\nUhr — часы\nSaal — зал" },
     ],
     exam: [
       { q: "Какое слово начинается с гласной А?", options: ["Brot", "Apfel", "Zeit", "Hund"], answer: 1 },
@@ -374,8 +374,8 @@ const CURRICULUM = [
     emoji: "🔔",
     level: "PH",
     cards: [
-      { title: "Что такое умлаут", body: "Умлаут — это точки над буквой, которые меняют её звук.\n\nä — ближе к «е»:\nMädchen — девочка\nspät — поздно\n\nö — как «о» с вытянутыми губами:\nschön — красивый\nöffnen — открывать\n\nü — как «ю» без й:\nmüde — усталый\nfünf — пять\n\n💡 Умлауты — отдельные буквы, не просто украшение!" },
-      { title: "Умлаут в парах слов", body: "a / ä:\nalt — старый / älter — старше\nkalt — холодный / Kälte — холод\n\no / ö:\ngroß — большой / größer — больше\nWort — слово / Wörter — слова\n\nu / ü:\nMutter — мать / Mütter — матери\nfünf — пять / fünfzig — пятьдесят\n\n💡 Умлаут часто появляется во множественном числе\nи в степенях сравнения." },
+      { title: "Что такое умлаут", body: "💡 Умлаут — это точки над буквой, которые меняют её звук.\n\nä — Mädchen\nö — schön\nü — müde\nspät — поздно\nöffnen — открывать\nfünf — пять" },
+      { title: "Умлаут в парах слов", body: "💡 Умлаут часто появляется во множественном числе и в степенях сравнения.\n\nalt — старый\nälter — старше\nkalt — холодный\nKälte — холод\ngroß — большой\ngrößer — больше\nWort — слово\nWörter — слова\nMutter — мать\nMütter — матери" },
     ],
     exam: [
       { q: "Какой умлаут в слове «schön»?", options: ["ä", "ö", "ü", "ß"], answer: 1 },
@@ -391,8 +391,8 @@ const CURRICULUM = [
     emoji: "✍️",
     level: "PH",
     cards: [
-      { title: "ß — Eszett", body: "ß называется Eszett или Scharfes S.\nЧитается как «с».\n\nПримеры:\nStraße — улица [штрасэ]\ngroß — большой [грос]\nheißen — называться [хайсэн]\nweiß — белый [вайс]\n\n💡 ß бывает только строчной!\nЗаглавная пишется SS: STRASSE.\nВ Швейцарии ß не используют — пишут ss везде." },
-      { title: "ss и ß: разница", body: "ss — после краткой гласной:\nwissen — знать [виссэн]\nEssen — еда [эссэн]\ndass — что [дас]\n\nß — после долгой гласной или дифтонга:\nStraße — улица\ngroß — большой\nheißen — называться\n\n💡 На уровне A1-1 достаточно запомнить:\nвидишь ß — читай «с»!" },
+      { title: "ß — Eszett", body: "💡 ß (Eszett) читается как «с». Бывает только строчной.\n💡 В Швейцарии не используют — пишут ss везде.\n\nStraße — улица\ngroß — большой\nheißen — называться\nweiß — белый" },
+      { title: "ss и ß: разница", body: "💡 ss — после краткой гласной: wissen, Essen, dass.\n💡 ß — после долгой гласной: Straße, groß, heißen.\n\nwissen — знать\nEssen — еда\ndass — что\nStraße — улица\ngroß — большой\nheißen — называться" },
     ],
     exam: [
       { q: "Как читается ß?", options: ["как «ш»", "как «з»", "как «с»", "как «щ»"], answer: 2 },
@@ -425,8 +425,8 @@ const CURRICULUM = [
     emoji: "🔤",
     level: "PH",
     cards: [
-      { title: "w, v и z", body: "w — читается как «в»:\nWasser — вода [васэр]\nWein — вино [вайн]\nWort — слово [ворт]\n\nv — чаще как «ф»:\nVater — отец [фатэр]\nvier — четыре [фир]\nVolk — народ [фольк]\n\nz — читается как «ц»:\nZeit — время [цайт]\nZug — поезд [цуг]\nzwei — два [цвай]" },
-      { title: "j и h", body: "j — читается как «й»:\nja — да [йа]\nJahr — год [йар]\njetzt — сейчас [йецт]\n\nh — произносится в начале слова:\nHallo — привет [хало]\nHaus — дом [хаус]\nheute — сегодня [хойтэ]\n\n💡 В середине и конце слова h часто молчит:\ngehen — идти [гэ-эн]\nsehen — видеть [зэ-эн]" },
+      { title: "w, v и z", body: "💡 w = «в»: Wasser, Wein. v = «ф»: Vater, vier. z = «ц»: Zeit, Zug.\n\nWasser — вода\nWein — вино\nWort — слово\nVater — отец\nvier — четыре\nVolk — народ\nZeit — время\nZug — поезд\nzwei — два" },
+      { title: "j и h", body: "💡 j = «й»: ja, Jahr, jetzt.\n💡 h произносится в начале слога: Hallo, Haus, heute.\n💡 В середине слова h часто молчит: gehen, sehen.\n\nja — да\nJahr — год\njetzt — сейчас\nHallo — привет\nHaus — дом\nheute — сегодня\ngehen — идти\nsehen — видеть" },
     ],
     exam: [
       { q: "Как читается «w» в слове Wasser?", options: ["как «ш»", "как «в»", "как «б»", "как «ф»"], answer: 1 },
@@ -442,8 +442,8 @@ const CURRICULUM = [
     emoji: "🔊",
     level: "PH",
     cards: [
-      { title: "sch и ch", body: "sch читается как «ш»:\nSchule — школа [шулэ]\nschön — красивый [шён]\nSchwester — сестра [швестэр]\n\nch — два варианта:\n1. После i, e, ä, ö, ü, ei, eu → мягкое [хь] (как в ich):\nich — я\nrecht — правильно\n\n2. После a, o, u, au → глубокое [х] (как в Buch):\nBuch — книга [бух]\nauch — тоже [аух]\nnoch — ещё [нох]" },
-      { title: "sp и st в начале слова", body: "В начале слова (и корня) sp и st читаются как «шп» и «шт»:\n\nsp → «шп»:\nSport — спорт [шпорт]\nSprache — язык [шпрахэ]\nspielen — играть [шпилен]\n\nst → «шт»:\nStraße — улица [штрасэ]\nStudent — студент [штудент]\nStadt — город [штат]\n\n💡 В середине слова sp/st читаются обычно:\nEspresso [эспрессо]" },
+      { title: "sch и ch", body: "💡 sch = «ш»: Schule, schön, Schwester.\n💡 ch мягкое (ich, recht) или глубокое (Buch, auch, noch).\n\nSchule — школа\nschön — красивый\nSchwester — сестра\nich — я\nrecht — правильно\nBuch — книга\nauch — тоже\nnoch — ещё" },
+      { title: "sp и st в начале слова", body: "💡 sp в начале слова = «шп»: Sport, Sprache, spielen.\n💡 st в начале слова = «шт»: Straße, Student, Stadt.\n\nSport — спорт\nSprache — язык\nspielen — играть\nStraße — улица\nStudent — студент\nStadt — город" },
     ],
     exam: [
       { q: "«Schule» начинается со звука:", options: ["«с»", "«ц»", "«ш»", "«з»"], answer: 2 },
@@ -459,8 +459,8 @@ const CURRICULUM = [
     emoji: "🎵",
     level: "PH",
     cards: [
-      { title: "Ударение в словах", body: "В немецком ударение чаще всего на первом слоге:\n\nHAllo — привет\nKAffee — кофе\nARbeit — работа\nWASser — вода\n\nИностранные слова — ударение часто сдвигается:\nStudENT — студент\nInforMATION — информация\nRestauRANT — ресторан\n\n💡 Пока не нужно учить все правила.\nСлушай и повторяй за носителями!" },
-      { title: "Интонация вопросов и утверждений", body: "Утверждение → интонация ВНИЗ ↘:\nIch bin Anna. ↘\nDas ist gut. ↘\n\nВопрос с вопросительным словом → тоже ВНИЗ ↘:\nWie heißt du? ↘\nWo wohnst du? ↘\n\nВопрос без вопросительного слова → ВВЕРХ ↗:\nKommst du? ↗\nSprechen Sie Deutsch? ↗\n\n💡 Это как в русском — интонация показывает тип фразы." },
+      { title: "Ударение в словах", body: "💡 В немецком ударение чаще всего на первом слоге.\n💡 Иностранные слова могут иметь другое ударение: Student, Restaurant.\n\nHallo — привет\nKaffee — кофе\nArbeit — работа\nWasser — вода\nStudent — студент\nInformation — информация\nRestaurant — ресторан" },
+      { title: "Интонация вопросов и утверждений", body: "💡 Утверждение: интонация вниз ↘. Вопрос без вопросительного слова: вверх ↗.\n\nIch bin Anna. — Я Анна.\nDas ist gut. — Это хорошо.\nWie heißt du? — Как тебя зовут?\nKommst du? — Ты идёшь?\nGuten Morgen! — Доброе утро!\nSprechen Sie Deutsch? — Вы говорите по-немецки?" },
     ],
     exam: [
       { q: "В слове «Kaffee» ударение на:", options: ["первом слоге (КА-ффее)", "втором слоге (ка-ФФЕ-е)", "оба слога равны", "ударения нет"], answer: 0 },
@@ -476,8 +476,8 @@ const CURRICULUM = [
     emoji: "📖",
     level: "PH",
     cards: [
-      { title: "Слова из пройденных тем", body: "Прочитай вслух и сверься:\nApfel — яблоко [апфэл]\nEssen — еда [эссэн]\nich — я [их]\nOma — бабушка [ома]\nUhr — часы [ур]\nMädchen — девочка [мэдхэн]\nschön — красивый [шён]\nmüde — усталый [мюдэ]\nStraße — улица [штрасэ]\ngroß — большой [грос]" },
-      { title: "Слова с трудными сочетаниями", body: "ein — один / «а» [айн]\nzwei — два [цвай]\nSie — она / Вы [зи]\nDeutsch — немецкий [дойч]\nheute — сегодня [хойтэ]\nWasser — вода [васэр]\nVater — отец [фатэр]\nZeit — время [цайт]\nSchule — школа [шулэ]\nSport — спорт [шпорт]" },
+      { title: "Слова из пройденных тем", body: "Apfel — яблоко\nEssen — еда\nich — я\nOma — бабушка\nUhr — часы\nMädchen — девочка\nschön — красивый\nmüde — усталый\nStraße — улица\ngroß — большой" },
+      { title: "Слова с трудными сочетаниями", body: "ein — один\nzwei — два\nSie — она / Вы\nDeutsch — немецкий\nheute — сегодня\nWasser — вода\nVater — отец\nZeit — время\nSchule — школа\nSport — спорт" },
     ],
     exam: [
       { q: "Как читается слово «Schule»?", options: ["«скуле»", "«шуле»", "«цуле»", "«кхуле»"], answer: 1 },
@@ -493,7 +493,7 @@ const CURRICULUM = [
     emoji: "📝",
     level: "PH",
     cards: [
-      { title: "Повторение всего пройденного", body: "Проверь себя:\n\n• A–Z + Ä Ö Ü ß — знаешь все буквы?\n• ei = «ай», ie = долгое «и», eu/äu = «ой»\n• sch = «ш», sp/st в начале = «шп»/«шт»\n• w = «в», v = «ф», z = «ц», j = «й»\n• ch: мягкое «хь» (ich) или глубокое «х» (Buch)\n• Ударение чаще на первом слоге\n• Вопрос без вопросительного слова — интонация вверх ↗\n\n💡 Ты готов к мини-экзамену!" },
+      { title: "Повторение всего пройденного", body: "💡 Проверь себя: как читаются все буквы, дифтонги и сочетания.\n\nApfel — яблоко\nStraße — улица\nschön — красивый\nDeutsch — немецкий\nMädchen — девочка\nWasser — вода\nZeit — время\nheute — сегодня\nSchule — школа\nzwei — два\ngroß — большой\nVater — отец" },
     ],
     exam: [
       { q: "Как читается «ei»?", options: ["как «ай»", "как «и»", "как «у»", "как «э»"], answer: 0 },
@@ -1398,7 +1398,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           const parts = trimmed.split(" — ");
           if (parts.length >= 2) {
             const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
-            if (de && ru) ws.push({ de, ru, section: card.title, audioText: isGermanText(de) ? de : null, audioUrl: card.audioUrl || null, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
+            if (de && ru && isGermanText(de)) ws.push({ de, ru, section: card.title, audioText: de.trim().split(/\s+/)[0], audioUrl: card.audioUrl || null, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
           }
         } else if (!isEmoji) {
           tipLines.push(trimmed);
@@ -1827,15 +1827,6 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
   const [phase, setPhase] = useState(block.tip ? "tip" : "intro");
   const [introIdx, setIntroIdx] = useState(0);
 
-  // Auto-play german word when card changes in audio-enabled mode
-  useEffect(() => {
-    if (audioEnabled && phase === "intro" && words[introIdx]) {
-      const w = words[introIdx];
-      const text = w.audioText || null;
-      const url = w.audioUrl || null;
-      if (text) setTimeout(() => speakDE(text, url), 250);
-    }
-  }, [introIdx, phase, audioEnabled]);
   const [practiceQueue, setPracticeQueue] = useState(() => shuffle(words));
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -1964,16 +1955,15 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
           <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>📚 {block.name}</div>
-          {audioEnabled && <AudioButton text={card.audioText} audioUrl={card.audioUrl} size={30} />}
         </div>
-        {audioEnabled && introIdx === 0 && (
-          <div style={{ fontSize: 11, color: "rgba(6,182,212,0.6)", marginBottom: 8 }}>🔉 Нажми 🔊 чтобы услышать букву, нажми на пример — услышишь слово</div>
-        )}
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Буква {introIdx + 1} из {words.length} · Запомни</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Карточка {introIdx + 1} из {words.length}</div>
         {(() => { const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", gold: "#f59e0b", golden: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelgrau: "#374151", dunkelblau: "#1e3a8a", hellblau: "#93c5fd", hellbraun: "#c4956a", dunkelgrün: "#166534", olivgrün: "#6b7c3f" }; const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, ""); const colorHex = COLOR_MAP[deKey]; return (
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "36px 28px 28px", textAlign: "center", marginBottom: 16, position: "relative" }}>
           {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
-          <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 22 }}>
+            <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
+            {audioEnabled && <AudioButton text={card.audioText} audioUrl={card.audioUrl} size={32} />}
+          </div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           {audioEnabled && card.ru && !/[а-яёА-ЯЁ]/.test(card.ru) ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
