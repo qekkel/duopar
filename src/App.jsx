@@ -329,9 +329,9 @@ const CURRICULUM = [
     emoji: "🔤",
     level: "PH",
     cards: [
-      { title: "Буквы A–M", body: "A a — [а], как в слове «мама»\nB b — [б], как в «Brot»\nC c — [ц] или [к], в «Cent» и «Café»\nD d — [д], как в «Danke»\nE e — [э], как в «Essen»\nF f — [ф], как в «fein»\nG g — [г], как в «gut»\nH h — [х], как в «Hallo»\nI i — [и], как в «ich»\nJ j — [й], как в «ja»\nK k — [к], как в «Kaffee»\nL l — [л], как в «lesen»\nM m — [м], как в «Mutter»" },
-      { title: "Буквы N–Z", body: "N n — [н], как в «nein»\nO o — [о], как в «Oma»\nP p — [п], как в «Park»\nQ q — [кв], как в «Qualität»\nR r — мягкое горловое [р]\nS s — [з] или [с], в «sie» и «das»\nT t — [т], как в «Tee»\nU u — [у], как в «Uhr»\nV v — [ф], как в «Vater»\nW w — [в], как в «Wasser»\nX x — [кс], как в «Text»\nY y — редко, [ю/и]\nZ z — [ц], как в «Zeit»" },
-      { title: "Особые буквы: Ä Ö Ü ß", body: "Ä ä — ближе к [э/е], как в «Mädchen»\nÖ ö — как [о] с вытянутыми губами, как в «schön»\nÜ ü — как [ю] без й, как в «müde»\nß (Eszett) — читается как [с], как в «Straße»\n\n💡 Ä, Ö, Ü называются умлауты.\nEszett пишется только строчной, заглавная — SS." },
+      { title: "Буквы A–M", body: "A a — Apfel\nB b — Brot\nC c — Cent\nD d — Danke\nE e — Essen\nF f — Familie\nG g — gut\nH h — Hallo\nI i — ich\nJ j — ja\nK k — Kaffee\nL l — lesen\nM m — Mutter" },
+      { title: "Буквы N–Z", body: "N n — nein\nO o — Oma\nP p — Park\nQ q — Qualität\nR r — rot\nS s — Sonne\nT t — Tee\nU u — Uhr\nV v — Vater\nW w — Wasser\nX x — Text\nY y — Yoga\nZ z — Zeit" },
+      { title: "Особые буквы: Ä Ö Ü ß", body: "Ä ä — Mädchen\nÖ ö — schön\nÜ ü — müde\nß — Straße\n\n💡 Ä, Ö, Ü называются умлауты.\nEszett пишется только строчной, заглавная — SS." },
     ],
     exam: [
       { q: "Как читается буква Z?", options: ["как «з»", "как «ц»", "как «с»", "как «й»"], answer: 1 },
@@ -1957,15 +1957,23 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
           {audioEnabled && <AudioButton text={card.audioText || card.de} audioUrl={card.audioUrl} size={30} />}
         </div>
         {audioEnabled && introIdx === 0 && (
-          <div style={{ fontSize: 11, color: "rgba(6,182,212,0.6)", marginBottom: 8 }}>🔉 Нажми на значок звука, чтобы услышать произношение</div>
+          <div style={{ fontSize: 11, color: "rgba(6,182,212,0.6)", marginBottom: 8 }}>🔉 Нажми 🔊 чтобы услышать букву, нажми на пример — услышишь слово</div>
         )}
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {words.length} · Запомни</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Буква {introIdx + 1} из {words.length} · Запомни</div>
         {(() => { const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", gold: "#f59e0b", golden: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelgrau: "#374151", dunkelblau: "#1e3a8a", hellblau: "#93c5fd", hellbraun: "#c4956a", dunkelgrün: "#166534", olivgrün: "#6b7c3f" }; const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, ""); const colorHex = COLOR_MAP[deKey]; return (
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "44px 28px", textAlign: "center", marginBottom: 16, position: "relative" }}>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "36px 28px 28px", textAlign: "center", marginBottom: 16, position: "relative" }}>
           {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
           <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
-          <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
+          {audioEnabled ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Пример:</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
+              <AudioButton text={card.ru} size={26} />
+            </div>
+          ) : (
+            <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
+          )}
           {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
         </div>); })()}
         <div style={{ display: "flex", gap: 10 }}>
