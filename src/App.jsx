@@ -660,7 +660,7 @@ const CURRICULUM = [
     bonus: true,
     cards: [
       { title: "Sie и du", body: "du — неформальное обращение (друзья, семья, дети)\nSie — формальное обращение (незнакомые, начальник, пожилые)\n\nWie heißt du? — Как тебя зовут?\nWie heißen Sie? — Как вас зовут?\n\nKannst du mir helfen? — Ты можешь мне помочь?\nKönnen Sie mir helfen? — Вы можете мне помочь?\n\n⚠️ Sie (формальное) всегда пишется с большой буквы!" },
-      { title: "Вежливые фразы", body: "Entschuldigung! — Извините!\nEs tut mir leid. — Мне очень жаль.\nDarf ich...? — Разрешите...?\nWürden Sie bitte... — Не могли бы вы...\nKönnten Sie bitte... — Могли бы вы...\n\n💡 Дarf ich...? — самый вежливый способ спросить разрешение\nKönnten / Würden — сослагательное наклонение для вежливости" },
+      { title: "Вежливые фразы", body: "Entschuldigung! — Извините!\nEs tut mir leid. — Мне очень жаль.\nDarf ich...? — Разрешите...?\nEinen Moment bitte. — Одну минуту, пожалуйста.\nNatürlich! — Конечно!\nSelbstverständlich! — Разумеется!\n\n💡 Darf ich...? — самый вежливый способ спросить разрешение\nEntschuldigung используют и как «извините», и чтобы привлечь внимание" },
       { title: "Bitte и Danke", body: "Bitte! — Пожалуйста!\nDanke! — Спасибо!\nDanke schön! — Большое спасибо!\nBitte schön! — Пожалуйста!\nGern geschehen! — С удовольствием!\nKeine Ursache! — Не за что!\nBitte sehr! — Пожалуйста (ответ на спасибо)\n\n💡 В Германии говорят «bitte» и когда просят, и когда отвечают на «danke»!" },
     ],
     exam: [
