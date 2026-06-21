@@ -239,15 +239,23 @@ const CURRICULUM_LEVELS = {
 // Tracks the currently playing Audio element for stop-before-play
 let _currentAudio = null;
 
+function isGermanText(text) {
+  return !!text && !/[а-яА-ЯёЁ]/.test(text);
+}
+
 function speakDE(text, audioUrl) {
-  // Stop any currently playing audio
+  // Guard: never speak Russian/Cyrillic text
+  if (!audioUrl && !isGermanText(text)) {
+    if (text) console.warn("Audio skipped: Russian text should not be spoken", text);
+    return;
+  }
   if (_currentAudio) { try { _currentAudio.pause(); _currentAudio.currentTime = 0; } catch(e) {} _currentAudio = null; }
   if (window.speechSynthesis) window.speechSynthesis.cancel();
 
   if (audioUrl) {
     const a = new Audio(audioUrl);
     _currentAudio = a;
-    a.play().catch(() => { _currentAudio = null; _speakTTS(text); });
+    a.play().catch(() => { _currentAudio = null; if (isGermanText(text)) _speakTTS(text); });
     a.onended = () => { _currentAudio = null; };
   } else {
     _speakTTS(text);
@@ -265,9 +273,13 @@ function _speakTTS(text) {
 function AudioButton({ text, audioUrl, size = 28, style: extraStyle }) {
   const [playing, setPlaying] = useState(false);
 
+  // Don't render button at all if there's nothing German to speak
+  const canPlay = !!audioUrl || isGermanText(text);
+  if (!canPlay) return null;
+
   function handlePlay(e) {
     e.stopPropagation();
-    if (!text && !audioUrl) return;
+    if (!canPlay) return;
     setPlaying(true);
 
     if (audioUrl) {
@@ -1388,7 +1400,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           const parts = trimmed.split(" — ");
           if (parts.length >= 2) {
             const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
-            if (de && ru) ws.push({ de, ru, section: card.title, audioText: de, audioUrl: card.audioUrl || null, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
+            if (de && ru) ws.push({ de, ru, section: card.title, audioText: isGermanText(de) ? de : null, audioUrl: card.audioUrl || null, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
           }
         } else if (!isEmoji) {
           tipLines.push(trimmed);
@@ -1821,7 +1833,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
   useEffect(() => {
     if (audioEnabled && phase === "intro" && words[introIdx]) {
       const w = words[introIdx];
-      const text = w.audioText || w.de;
+      const text = w.audioText || null;
       const url = w.audioUrl || null;
       if (text) setTimeout(() => speakDE(text, url), 250);
     }
@@ -1954,7 +1966,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
           <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>📚 {block.name}</div>
-          {audioEnabled && <AudioButton text={card.audioText || card.de} audioUrl={card.audioUrl} size={30} />}
+          {audioEnabled && <AudioButton text={card.audioText} audioUrl={card.audioUrl} size={30} />}
         </div>
         {audioEnabled && introIdx === 0 && (
           <div style={{ fontSize: 11, color: "rgba(6,182,212,0.6)", marginBottom: 8 }}>🔉 Нажми 🔊 чтобы услышать букву, нажми на пример — услышишь слово</div>
