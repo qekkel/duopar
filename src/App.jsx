@@ -1506,8 +1506,11 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const options = useMemo(() => {
     if (!practiceCard) return [];
     if (reversed) {
-      const pool = optionPool.filter(f => f.de !== practiceCard.de);
-      return shuffle([practiceCard.de, ...shuffle(pool).slice(0, 3).map(f => f.de)]);
+      const wordCount = practiceCard.de.trim().split(/\s+/).length;
+      const pool = optionPool.filter(f => f.de !== practiceCard.de && f.de.trim().split(/\s+/).length === wordCount);
+      const fallbackPool = optionPool.filter(f => f.de !== practiceCard.de);
+      const distractors = pool.length >= 3 ? pool : fallbackPool;
+      return shuffle([practiceCard.de, ...shuffle(distractors).slice(0, 3).map(f => f.de)]);
     }
     const pool = (() => {
       const sameType = optionPool.filter(f => f.ru !== correct && isSentence(f) === isSentence(practiceCard));
