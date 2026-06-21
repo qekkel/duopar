@@ -268,6 +268,7 @@ const CURRICULUM = [
     title: "Артикли",
     emoji: "📌",
     level: "A1",
+    bonusTopicId: "articles_bonus",
     cards: [
       { title: "Три рода в немецком", body: "В немецком у каждого существительного есть род:\n\nder — мужской (der Mann, der Tisch)\ndie — женский (die Frau, die Tür)\ndas — средний (das Kind, das Buch)\n\n💡 Род надо учить вместе со словом — правил мало!" },
       { title: "Неопределённый артикль", body: "ein/eine — «один, одна» (как «a/an» в английском)\n\nein Mann — мужчина\neine Frau — женщина\nein Kind — ребёнок\n\n⚠️ Для мужского и среднего: ein\nДля женского: eine" },
@@ -330,6 +331,7 @@ const CURRICULUM = [
     title: "Семья",
     emoji: "👨‍👩‍👧",
     level: "A1",
+    bonusTopicId: "family_bonus",
     cards: [
       { title: "Члены семьи", body: "der Vater — папа\ndie Mutter — мама\nder Bruder — брат\ndie Schwester — сестра\nder Sohn — сын\ndie Tochter — дочь\ndie Eltern — родители (мн.ч.)\ndie Kinder — дети (мн.ч.)" },
       { title: "Расширенная семья", body: "der Großvater / Opa — дедушка\ndie Großmutter / Oma — бабушка\nder Onkel — дядя\ndie Tante — тётя\nder Cousin — двоюродный брат\ndie Cousine — двоюродная сестра\nder Mann — муж\ndie Frau — жена" },
@@ -348,10 +350,11 @@ const CURRICULUM = [
     title: "Цвета",
     emoji: "🎨",
     level: "A1",
+    bonusTopicId: "colors_bonus",
     cards: [
       { title: "Основные цвета", body: "rot — красный\nblau — синий\ngelb — жёлтый\ngrün — зелёный\nschwarz — чёрный\nweiß — белый\ngrau — серый\nbraun — коричневый\norange — оранжевый\nlila — фиолетовый\nrosa — розовый" },
       { title: "Как использовать цвета", body: "Das Auto ist rot. — Машина красная.\nIch mag Blau. — Мне нравится синий.\n\n💡 После глагола «sein» цвет не склоняется:\nDas Haus ist grün. ✓\n\nПеред существительным — склоняется:\nein rotes Haus (красный дом)\neine blaue Tür (синяя дверь)" },
-      { title: "Цвета в предложениях", body: "Mein Lieblingsfarbe ist Blau. — Мой любимый цвет синий.\nIch trage ein grünes T-Shirt. — Я ношу зелёную футболку.\nDas rote Auto gehört mir. — Красная машина моя.\n\nСочетания цветов:\nhellblau — светло-синий\ndunkelrot — тёмно-красный\nschwarz-weiß — чёрно-белый\n\n⚠️ hell / dunkel добавляются слитно:\nhellgrün (не «hell grün»)" },
+      { title: "Цвета в предложениях", body: "Meine Lieblingsfarbe ist Blau. — Мой любимый цвет синий.\nIch trage ein grünes T-Shirt. — Я ношу зелёную футболку.\nDas rote Auto gehört mir. — Красная машина моя.\n\nСочетания цветов:\nhellblau — светло-синий\ndunkelrot — тёмно-красный\nschwarz-weiß — чёрно-белый\n\n⚠️ hell / dunkel добавляются слитно:\nhellgrün (не «hell grün»)" },
     ],
     exam: [
       { q: "Как по-немецки «красный»?", options: ["blau", "grün", "rot", "gelb"], answer: 2 },
@@ -385,6 +388,7 @@ const CURRICULUM = [
     title: "Глаголы: sein и haben",
     emoji: "⚡",
     level: "A1",
+    bonusTopicId: "verbs_bonus",
     cards: [
       { title: "Глагол sein (быть)", body: "ich bin — я есть\ndu bist — ты есть\ner/sie/es ist — он/она/оно есть\nwir sind — мы есть\nihr seid — вы есть\nsie/Sie sind — они/Вы есть\n\nПримеры:\nIch bin müde. — Я устал.\nDu bist nett. — Ты приятный.\nSie ist Lehrerin. — Она учительница." },
       { title: "Глагол haben (иметь)", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них/Вас есть\n\nПримеры:\nIch habe ein Auto. — У меня есть машина.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)" },
@@ -403,6 +407,7 @@ const CURRICULUM = [
     title: "Порядок слов",
     emoji: "📐",
     level: "A1",
+    bonusTopicId: "word_order_bonus",
     cards: [
       { title: "Основной порядок слов", body: "В немецком предложении глагол ВСЕГДА стоит на 2-м месте:\n\nIch [1] trinke [2] Kaffee.\nHeute [1] trinke [2] ich Kaffee.\nKaffee [1] trinke [2] ich heute.\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
       { title: "Вопросительные предложения", body: "Вопрос с вопросительным словом:\nWo wohnst du? — Где ты живёшь?\nWas machst du? — Что ты делаешь?\nWer bist du? — Кто ты?\n\nВопрос без вопр. слова (глагол на 1-м):\nKommst du? — Ты придёшь?\nHast du Zeit? — У тебя есть время?" },
@@ -460,6 +465,7 @@ const CURRICULUM = [
     title: "Профессии",
     emoji: "💼",
     level: "A1",
+    bonusTopicId: "professions_bonus",
     cards: [
       { title: "Профессии", body: "der Arzt / die Ärztin — врач\nder Lehrer / die Lehrerin — учитель\nder Ingenieur — инженер\nder Koch / die Köchin — повар\nder Polizist — полицейский\ndie Krankenschwester — медсестра\nder Verkäufer — продавец\nder Student — студент" },
       { title: "Как говорить о профессии", body: "Ich bin Lehrerin. — Я учительница.\nEr ist Arzt. — Он врач.\nSie arbeitet als Köchin. — Она работает поваром.\n\n💡 Перед профессией НЕТ артикля:\nIch bin Arzt. ✓ (не «ein Arzt»)\n\nWas bist du von Beruf? — Кем ты работаешь?" },
@@ -478,6 +484,7 @@ const CURRICULUM = [
     title: "Дни недели",
     emoji: "📅",
     level: "A1",
+    bonusTopicId: "weekdays_bonus",
     cards: [
       { title: "Дни недели", body: "der Montag — понедельник\nder Dienstag — вторник\nder Mittwoch — среда\nder Donnerstag — четверг\nder Freitag — пятница\nder Samstag — суббота\nder Sonntag — воскресенье" },
       { title: "Как использовать дни", body: "Am Montag — в понедельник\nAm Wochenende — на выходных\nMontagmorgen — утро понедельника\n\n💡 Все дни мужского рода: der\nСокращения: Mo Di Mi Do Fr Sa So\n\nHeute ist Mittwoch. — Сегодня среда." },
@@ -496,6 +503,7 @@ const CURRICULUM = [
     title: "Месяцы и сезоны",
     emoji: "🗓️",
     level: "A1",
+    bonusTopicId: "months_bonus",
     cards: [
       { title: "Месяцы", body: "Januar — январь\nFebruar — февраль\nMärz — март\nApril — апрель\nMai — май\nJuni — июнь\nJuli — июль\nAugust — август\nSeptember — сентябрь\nOktober — октябрь\nNovember — ноябрь\nDezember — декабрь" },
       { title: "Времена года", body: "der Frühling — весна\nder Sommer — лето\nder Herbst — осень\nder Winter — зима\n\nim Sommer — летом\nim Winter — зимой\n\n💡 Im Januar = в январе\n(im = in dem, предлог + артикль)" },
@@ -514,6 +522,7 @@ const CURRICULUM = [
     title: "Который час",
     emoji: "🕐",
     level: "A1",
+    bonusTopicId: "time_bonus",
     cards: [
       { title: "Как спросить время", body: "Wie viel Uhr ist es? — Который час?\nWie spät ist es? — Сколько времени?\n\nEs ist... — Сейчас...\nein Uhr — час\nzwei Uhr — два часа\ndrei Uhr — три часа\nzwölf Uhr — двенадцать часов" },
       { title: "Минуты и части дня", body: "Es ist halb drei. — Половина третьего (2:30)\nEs ist Viertel nach vier. — Четверть пятого (4:15)\nEs ist Viertel vor fünf. — Без четверти пять (4:45)\n\n💡 halb drei = половина ДО трёх = 2:30\nОтличается от русского!" },
@@ -532,6 +541,7 @@ const CURRICULUM = [
     title: "Одежда",
     emoji: "👕",
     level: "A1",
+    bonusTopicId: "clothes_bonus",
     cards: [
       { title: "Предметы одежды", body: "das T-Shirt — футболка\ndie Hose — брюки\ndas Kleid — платье\nder Rock — юбка\ndie Jacke — куртка\nder Mantel — пальто\ndie Schuhe — туфли / обувь\ndie Socken — носки\nder Hut — шляпа\ndie Mütze — шапка" },
       { title: "Покупка одежды", body: "Ich suche... — Я ищу...\nWelche Größe? — Какой размер?\nKann ich das anprobieren? — Можно примерить?\nDas passt gut! — Хорошо подходит!\nDas ist zu groß/klein. — Это слишком большое/маленькое.\nIch nehme es. — Я это возьму." },
@@ -550,6 +560,7 @@ const CURRICULUM = [
     title: "Тело и здоровье",
     emoji: "🏥",
     level: "A1",
+    bonusTopicId: "health_bonus",
     cards: [
       { title: "Части тела", body: "der Kopf — голова\ndas Auge — глаз\ndie Nase — нос\nder Mund — рот\ndas Ohr — ухо\nder Arm — рука (рука до плеча)\ndie Hand — рука (кисть)\ndas Bein — нога\nder Fuß — стопа\nder Bauch — живот\nder Rücken — спина" },
       { title: "У врача", body: "Ich bin krank. — Я болен.\nMir ist schlecht. — Мне плохо.\nIch habe Kopfschmerzen. — У меня болит голова.\nIch habe Fieber. — У меня температура.\nRufen Sie einen Arzt! — Вызовите врача!\n\n💡 _schmerzen = боль в...\nBauchschmerzen — боль в животе\nHalsschmerzen — боль в горле" },
@@ -568,6 +579,7 @@ const CURRICULUM = [
     title: "В магазине",
     emoji: "🛒",
     level: "A1",
+    bonusTopicId: "shopping_bonus",
     cards: [
       { title: "Покупки", body: "Was kostet das? — Сколько это стоит?\nWie viel kostet...? — Сколько стоит...?\nDas ist zu teuer. — Это слишком дорого.\nIch nehme das. — Я это возьму.\nHaben Sie...? — У вас есть...?\nWo ist die Kasse? — Где касса?\nEin Pfund — полкило (500г)" },
       { title: "Деньги и цены", body: "der Euro — евро\nder Cent — цент\nEs kostet 5 Euro. — Это стоит 5 евро.\nBezahlen Sie bar oder mit Karte?\nВы платите наличными или картой?\n\nbar — наличными\nmit Karte — картой\nDas Wechselgeld — сдача" },
@@ -586,6 +598,7 @@ const CURRICULUM = [
     title: "Транспорт",
     emoji: "🚌",
     level: "A1",
+    bonusTopicId: "transport_bonus",
     cards: [
       { title: "Виды транспорта", body: "der Bus — автобус\ndie U-Bahn — метро\ndie S-Bahn — электричка\nder Zug — поезд\ndas Auto — машина\ndas Fahrrad — велосипед\ndas Taxi — такси\ndas Flugzeug — самолёт\nzu Fuß — пешком" },
       { title: "На вокзале и остановке", body: "Wo fährt der Bus ab? — Откуда отходит автобус?\nEinen Fahrschein, bitte. — Один билет, пожалуйста.\nWann kommt der Zug an? — Когда прибывает поезд?\nEin Ticket nach Berlin. — Билет до Берлина.\nGleis 3 — третий путь (платформа)\numsteigen — делать пересадку" },
@@ -604,6 +617,7 @@ const CURRICULUM = [
     title: "Хобби и свободное время",
     emoji: "🎮",
     level: "A1",
+    bonusTopicId: "hobbies_bonus",
     cards: [
       { title: "Хобби", body: "lesen — читать\nmusik hören — слушать музыку\nfernsehen — смотреть телевизор\nsport treiben — заниматься спортом\nkochen — готовить\nreisen — путешествовать\nzeichnen — рисовать\ntanzen — танцевать\nsingen — петь\nspielen — играть" },
       { title: "Как говорить о хобби", body: "Ich lese gern. — Я люблю читать.\nIch spiele gern Fußball. — Я люблю играть в футбол.\nIch mag Musik. — Мне нравится музыка.\n\n💡 gern = охотно, с удовольствием\nIch ... gern = Я люблю...\n\nWas machst du in der Freizeit?\nЧто ты делаешь в свободное время?" },
@@ -622,10 +636,11 @@ const CURRICULUM = [
     title: "Модальные глаголы",
     emoji: "🔑",
     level: "A1",
+    bonusTopicId: "modal_verbs_bonus",
     cards: [
       { title: "können, müssen, wollen", body: "können — мочь, уметь\nIch kann schwimmen. — Я умею плавать.\n\nmüssen — должен, нужно\nIch muss arbeiten. — Мне нужно работать.\n\nwollen — хотеть\nIch will nach Berlin. — Я хочу в Берлин.\n\ndürfen — иметь право, разрешено\nDarf ich rauchen? — Можно курить?" },
       { title: "Формы модальных глаголов", body: "können: ich kann, du kannst, er/sie kann\nmüssen: ich muss, du musst, er/sie muss\nwollen: ich will, du willst, er/sie will\ndürfen: ich darf, du darfst, er/sie darf\n\n💡 Инфинитив идёт В КОНЕЦ предложения:\nIch kann heute nicht kommen.\nМне не удастся прийти сегодня." },
-      { title: "möchten и sollen", body: "möchten — хотел бы (вежливое желание)\nIch möchte einen Kaffee. — Я бы хотел кофе.\n\nмöchte — я бы хотел\nmöchtest — ты бы хотел\nmöchte — он/она бы хотел\n\nsollen — должен (по чужому требованию)\nIch soll um 8 da sein. — Мне велели быть там в 8.\n\nsoll — я должен\nsollst — ты должен\nsoll — он/она должен\n\n💡 möchten = вежливее чем wollen!" },
+      { title: "möchten и sollen", body: "möchten — хотел бы (вежливое желание)\nIch möchte einen Kaffee. — Я бы хотел кофе.\n\nmöchte — я бы хотел\nmöchtest — ты бы хотел\nmöchte — он/она бы хотел\n\nsollen — должен (по чужому требованию)\nIch soll um 8 da sein. — Мне велели быть там в 8.\n\nsoll — я должен\nsollst — ты должен\nsoll — он/она должен\n\n💡 möchten = вежливее чем wollen!" },
     ],
     exam: [
       { q: "«Ich kann Deutsch sprechen» значит:", options: ["Я хочу говорить по-немецки", "Я могу говорить по-немецки", "Я должен говорить по-немецки", "Я не говорю по-немецки"], answer: 1 },
@@ -652,6 +667,113 @@ const CURRICULUM = [
       { q: "«Gern geschehen» — это ответ на:", options: ["Извините", "Спасибо", "Здравствуйте", "До свидания"], answer: 1 },
       { q: "«Darf ich...?» используют для:", options: ["приветствия", "просьбы о разрешении", "прощания", "описания"], answer: 1 },
       { q: "Формальное «Sie» в немецком пишется:", options: ["с маленькой буквы", "с большой буквы", "заглавными", "курсивом"], answer: 1 },
+    ],
+  },
+
+  // ── A1 БОНУСЫ ─────────────────────────────────────────────────
+  { id: "articles_bonus", title: "Хитрости рода", emoji: "🔍", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Мужской род: типичные окончания", body: "-er → der Fahrer (водитель), der Fehler (ошибка)\n-ig → der König (король), der Honig (мёд)\n-ling → der Frühling (весна), der Lehrling (ученик)\n-or → der Motor (мотор), der Doktor (доктор)\n\n💡 Большинство глаголов-существительных мужского рода:\ndas Laufen → исключение, но der Lauf — забег" },
+      { title: "Женский род: типичные окончания", body: "-ung → die Zeitung (газета), die Wohnung (квартира)\n-heit/-keit → die Gesundheit (здоровье), die Freiheit (свобода)\n-schaft → die Freundschaft (дружба), die Mannschaft (команда)\n-ion → die Nation, die Information\n-erin → die Lehrerin, die Ärztin\n\n⚠️ Слова на -ung всегда die!" },
+      { title: "Средний род: типичные окончания", body: "-chen/-lein → das Mädchen (девочка), das Fräulein (девушка)\n-ment → das Dokument, das Instrument\n-um → das Museum, das Datum\n-nis → das Ergebnis (результат)\n\n💡 -chen и -lein всегда das, даже если обозначают человека:\ndas Mädchen (der → das из-за -chen)\n\nГеографические: das Land, das Meer — как правило das" },
+    ],
+  },
+  { id: "family_bonus", title: "Родня и обращения", emoji: "👨‍👩‍👧‍👦", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Свойственники", body: "der Schwiegervater — тесть / свёкор\ndie Schwiegermutter — тёща / свекровь\nder Schwager — шурин / зять / деверь\ndie Schwägerin — золовка / свояченица\nder Neffe — племянник\ndie Nichte — племянница\nder Enkelsohn — внук\ndie Enkeltochter — внучка\n\n💡 Schwieger- = родственники мужа/жены" },
+      { title: "Семейное положение", body: "ledig — холост / не замужем\nverheiratet — женат / замужем\ngeschieden — разведён / разведена\nverwitwet — вдовец / вдова\nverlobt — помолвлен/а\n\nMein Mann / meine Frau — мой муж / моя жена\nMein Partner / meine Partnerin — мой партнёр\nIch bin ein Einzelkind. — Я единственный ребёнок.\n\n💡 В Германии часто говорят «Partner» независимо от статуса отношений" },
+      { title: "Обращения в семье", body: "Oma — бабушка (разговорное)\nOpa — дедушка (разговорное)\nMutti / Mama — мамочка\nVati / Papa — папочка\n\nWie viele Geschwister hast du? — Сколько у тебя братьев/сестёр?\nIch habe zwei Brüder und eine Schwester.\n\nUnsere Familie ist... groß / klein / typisch deutsch!\n\n💡 Немецкие семьи в среднем: 1-2 ребёнка. Großfamilie (большая семья) — редкость." },
+    ],
+  },
+  { id: "colors_bonus", title: "Цвета в языке", emoji: "🌈", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Оттенки и сочетания", body: "hellblau — светло-голубой\ndunkelblau — тёмно-синий\ntürkis — бирюзовый\nbeige — бежевый\nsilber — серебристый\ngolden — золотистый\nrosa — розовый\nlila — лиловый / фиолетовый\nolivgrün — оливковый\n\n💡 hell- (светло-) и dunkel- (тёмно-) пишутся слитно:\nhellgrün, dunkelrot, hellgrau" },
+      { title: "Идиомы с цветами", body: "blau sein — быть пьяным (буквально «быть синим»)\nRot sehen — видеть красное = злиться\ngrünes Licht geben — дать зелёный свет (одобрить)\nschwarz sehen — смотреть пессимистично\nRosa brille tragen — смотреть сквозь розовые очки\n\n💡 Синий в Германии = цвет опьянения!\nBist du blau? — Ты пьяный?" },
+      { title: "Склонение цветов", body: "После sein — без окончания:\nDas Auto ist rot. Die Tür ist grün.\n\nПеред существительным — с окончанием:\nein rotes Auto (ср.р., Nom.)\neine rote Tür (ж.р., Nom.)\nein roter Mantel (м.р., Nom.)\n\n💡 Окончание зависит от рода и падежа существительного\nДля A1 достаточно запомнить форму после «sein»!" },
+    ],
+  },
+  { id: "verbs_bonus", title: "Важные глаголы", emoji: "🔧", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Глагол werden (становиться)", body: "werden — становиться / будущее время\n\nych werde — я становлюсь\ndu wirst — ты становишься\ner/sie wird — он/она становится\nwir werden — мы становимся\n\nIch werde Arzt. — Я стану врачом.\nEs wird kalt. — Становится холодно.\n\n💡 werden + Infinitiv = будущее:\nIch werde kommen. — Я приду." },
+      { title: "wissen vs kennen", body: "wissen — знать факт\nIch weiß die Antwort. — Я знаю ответ.\nIch weiß, wo er ist. — Я знаю, где он.\n\nkennen — быть знакомым с\nIch kenne Berlin. — Я знаю Берлин (бывал).\nIch kenne ihn. — Я его знаю (знаком).\n\n⚠️ Распространённая ошибка:\n✗ Ich weiß Berlin.\n✓ Ich kenne Berlin.\n\nwissen: ich weiß, du weißt, er weiß — неправильный!" },
+      { title: "gehen, fahren, kommen", body: "gehen — идти (пешком)\nIch gehe zur Schule. — Я иду в школу.\n\nfahren — ехать (транспорт или на велосипеде)\nIch fahre mit dem Bus. — Я еду на автобусе.\n\nkommen — приходить / приезжать\nIch komme aus Russland. — Я из России.\nKomm her! — Иди сюда!\n\n💡 Ich gehe einkaufen. — Я иду за покупками. (пешком)\nIch fahre einkaufen. — Я еду за покупками. (на машине)" },
+    ],
+  },
+  { id: "word_order_bonus", title: "Рамка и скобки", emoji: "🪟", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Satzklammer — рамочная конструкция", body: "В немецком предложении глагол образует «рамку»:\nспрягаемая часть на 2-м месте + остаток в конце\n\nIch habe gestern Brot gekauft.\n[habe...gekauft] — рамка\n\nSie will heute ins Kino gehen.\n[will...gehen] — рамка\n\n💡 Всё важное — содержание — внутри рамки!\nДлинные предложения: рамка может быть очень широкой" },
+      { title: "Разделяемые глаголы в рамке", body: "Приставка разделяемого глагола — конец рамки:\n\nIch stehe um 7 Uhr auf.\nauf = конец рамки\n\nSie ruft ihren Freund an.\nан = конец рамки\n\nEr macht das Fenster zu.\nzu = конец рамки\n\n💡 В разговоре немцы часто слышат начало предложения\nи ждут конца — там главная информация!" },
+      { title: "Порядок в середине рамки", body: "Внутри рамки: Время → Причина → Манера → Место\n(TeKaMoLo = Temporal, Kausal, Modal, Lokal)\n\nIch fahre morgen (T) mit dem Auto (M) nach Berlin (L).\n\nIch gehe heute (T) schnell (M) zum Supermarkt (L).\n\n💡 Не обязательно всё запоминать — просто поставь\nвремя перед местом и будет правильно!\nmorgen nach Berlin ✓ (не: nach Berlin morgen)" },
+    ],
+  },
+  { id: "professions_bonus", title: "Женские формы", emoji: "👩‍⚕️", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Суффикс -in", body: "В немецком у каждой профессии есть женская форма:\n\nder Arzt → die Ärztin (врач)\nder Lehrer → die Lehrerin (учитель)\nder Koch → die Köchin (повар)\nder Bäcker → die Bäckerin (пекарь)\nder Ingenieur → die Ingenieurin\nder Verkäufer → die Verkäuferin\n\n💡 Обычно просто + -in\nИногда добавляется умлаут: Arzt → Ärztin, Koch → Köchin" },
+      { title: "Исключения и особые формы", body: "der Kaufmann → die Kauffrau (бизнесмен/женщина)\nder Mann → die Frau (в составных словах)\nder Student → die Studentin (+in, без умлаута)\nder Polizist → die Polizistin\nder Journalist → die Journalistin\n\n⚠️ Alle — alle = все:\nLiebe Schülerinnen und Schüler! (обращение к классу)\nLiebe Kolleginnen und Kollegen!\n\n💡 В объявлениях пишут: Arzt (m/w/d)\nm=мужчина, w=женщина, d=другой" },
+      { title: "В разговоре", body: "Ich bin Ärztin. — Я врач (женщина говорит).\nIch bin Arzt. — Я врач (мужчина говорит).\n\n⚠️ Артикль НЕ используется с профессией:\n✗ Ich bin eine Ärztin.\n✓ Ich bin Ärztin.\n\nНо с прилагательным — артикль нужен:\nSie ist eine gute Ärztin. (она хороший врач)\n\nWas bist du von Beruf? — Кем ты работаешь?" },
+    ],
+  },
+  { id: "weekdays_bonus", title: "Происхождение дней", emoji: "🗿", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Этимология дней недели", body: "Montag — Mondtag (день Луны)\nDienstag — Thingstag (день Thing — германское собрание)\nMittwoch — Mitte der Woche (середина недели)\nDonnerstag — Donnerstag (день Грома / Тора)\nFreitag — Freyatag (день Фреи — богини любви)\nSamstag — от «Sabbat» (день субботний)\nSonntag — Sonnentag (день Солнца)\n\n💡 Mittwoch — единственный день НЕ по планете или богу!" },
+      { title: "Выражения с днями недели", body: "unter der Woche — в будние дни\nwerktags — в рабочие дни\nam Wochenende — на выходных\njeden Montag — каждый понедельник\nmontagmorgens — по утрам в понедельник\n\nLetzten Freitag... — В прошлую пятницу...\nNächsten Dienstag... — В следующий вторник...\nDiesen Donnerstag... — В этот четверг...\n\n💡 letzt-, nächst-, dies- + день недели без предлога!" },
+      { title: "Типичная немецкая неделя", body: "Montag — Arbeit / Schule beginnt\nMittwoch — середина, часто спорт\nFreitag — Feierabend! встречи с друзьями\nSamstag — Wochenmarkt (рынок), Einkaufen\nSonntag — Familie, Ausflug, Ruhe\n\n⚠️ Sonntag — воскресенье в Германии:\nМагазины закрыты! Закон о тишине (Ruhezeit)\n13-15 и 22-7 — нельзя шуметь\n\n💡 Samstag называют также «Sonnabend» на севере Германии" },
+    ],
+  },
+  { id: "months_bonus", title: "Праздники Германии", emoji: "🎉", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Рождество и Новый год", body: "der Advent — адвент (4 воскресенья до Рождества)\nder Adventskalender — адвент-календарь (с подарками!)\nder Weihnachtsmarkt — рождественская ярмарка\nder Weihnachtsbaum — ёлка (рождественское дерево)\nder Heilige Abend — сочельник (24 декабря)\nWeihnachten — Рождество (25-26 декабря)\nSilvester — канун Нового года (31 декабря)\nFeuerwerk — фейерверк\n\n💡 В Германии главный праздник — Heilige Abend (24-е), не 25-е!" },
+      { title: "Весенние праздники", body: "der Karneval / Fasching — карнавал (январь-февраль)\nder Rosenmontag — «розовый понедельник» (главный день карнавала)\ndie Maske — маска\ndas Kostüm — костюм\nOstern — Пасха (март/апрель)\ndas Osterei — пасхальное яйцо\nder Osterhase — пасхальный заяц\n\n💡 Karneval особенно в Кёльне, Дюссельдорфе, Майнце!\nВ Баварии говорят Fasching, в остальных местах — Karneval" },
+      { title: "Национальные праздники", body: "Tag der Deutschen Einheit — День единства Германии\n3. Oktober — годовщина воссоединения 1990 года\n\nOktoberfest — Октоберфест (Мюнхен)\nEnde September — Mitte Oktober\ndas Bierzelt — пивная палатка\ndie Dirndl / das Lederhosen — баварские костюмы\n\nTag der Arbeit — 1. Mai (День труда)\nWalpurgisnacht — 30. April (ночь ведьм)\n\n💡 Oktoberfest начинается В СЕНТЯБРЕ! Только последние 3 дня — в октябре." },
+    ],
+  },
+  { id: "time_bonus", title: "Время в разговоре", emoji: "⏱️", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Наречия времени", body: "jetzt — сейчас\ngerade — прямо сейчас / как раз\nbald — скоро\ngleich — сразу / через минуту\nspäter — позже\nmorgen — завтра\ngestern — вчера\nvorgestern — позавчера\nübermorgen — послезавтра\n\n💡 gleich vs bald:\nIch komme gleich! — Иду! (буквально сейчас)\nIch komme bald. — Скоро приду. (через время)" },
+      { title: "Как давно и на сколько", body: "seit einer Stunde — уже час (началось час назад)\nvor einer Stunde — час назад\nin einer Stunde — через час\neine Stunde lang — в течение часа\n\nseit gestern — со вчерашнего дня\nvor einer Woche — неделю назад\nin zwei Tagen — через два дня\n\n💡 seit + Präsens = действие началось в прошлом и продолжается:\nIch lerne seit drei Jahren Deutsch.\nЯ учу немецкий уже три года." },
+      { title: "Частота и регулярность", body: "immer — всегда\nmeistens — большей частью / обычно\noft — часто\nmanchmal — иногда\nselten — редко\nnie / niemals — никогда\n\ntäglich — ежедневно\nwöchentlich — еженедельно\nmonatlich — ежемесячно\njährlich — ежегодно\n\n💡 В порядке частоты:\nimmer → meistens → oft → manchmal → selten → nie" },
+    ],
+  },
+  { id: "clothes_bonus", title: "Мода и стиль", emoji: "👗", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Сезонная одежда", body: "die Regenjacke — дождевик (нужна всегда!)\nder Wintermantel — зимнее пальто\ndie Sommerjacke — лёгкая куртка\ndie Winterstiefel — зимние ботинки\nder Schal — шарф\ndie Handschuhe — перчатки\ndie Sonnenbrille — солнечные очки\nder Regenschirm — зонт\n\n💡 В Германии говорят: «Es gibt kein schlechtes Wetter,\nnur falsche Kleidung!» — Нет плохой погоды, есть плохая одежда!" },
+      { title: "Немецкие бренды", body: "Adidas — основан в Херцогенаурахе (Бавария) в 1949\nPUMA — основан там же, братом основателя Adidas!\nHUGO BOSS — из Метцингена (Баден-Вюртемберг)\nBirkenstock — сандалии из Германии с 1774 года!\nLEICA — немецкие фотоаппараты (Wetzlar)\n\n💡 Adidas = Adi Dassler (имя основателя)\nPUMA = Rudolf Dassler (брат Ади)\nОба брата поссорились и основали конкурирующие фирмы!" },
+      { title: "В магазине одежды", body: "Haben Sie das in Größe 40? — Есть размер 40?\nGibt es das in einer anderen Farbe? — Есть другой цвет?\nDas steht Ihnen gut! — Вам идёт!\nDas passt nicht. — Не подходит.\nIch schaue mich nur um. — Я только смотрю.\n\nГерманские размеры:\n36=XS, 38=S, 40=M, 42=L, 44=XL\n\n💡 В Германии можно вернуть товар в течение 14 дней\nбез объяснения причин (Widerrufsrecht)" },
+    ],
+  },
+  { id: "health_bonus", title: "Медицина в Германии", emoji: "🏨", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Система здравоохранения", body: "die Krankenkasse — медицинская страховка\ngesetzlich versichert — обязательная страховка (AOK, TK...)\nprivat versichert — частная страховка\n\n⚠️ В Германии страховка ОБЯЗАТЕЛЬНА для всех!\n\nDer Hausarzt — терапевт (первый врач)\nDer Facharzt — узкий специалист\nDie Notaufnahme — скорая помощь / приёмный покой\n\n💡 Сначала к Hausarzt, он направляет к Facharzt!\nК специалисту без направления — только платно (часто)" },
+      { title: "У врача", body: "Ich brauche einen Termin. — Мне нужна запись.\nIch bin krank geschrieben. — Я на больничном.\ndie Krankmeldung / das Attest — больничный лист\n\nWo tut es weh? — Где болит?\nSeit wann haben Sie die Schmerzen? — Как давно болит?\nIch habe Schmerzen seit... — У меня болит с...\n\n💡 Krankmeldung нужна с 3-го дня болезни!\nПервые 2 дня можно оставаться дома без справки." },
+      { title: "Аптека и лекарства", body: "die Apotheke — аптека (только в аптеках!)\nrezeptpflichtig — по рецепту\nrezeptfrei — без рецепта\ndie Packung — упаковка\ndie Tablette — таблетка\ndas Zäpfchen — свечи\nder Saft — сироп\ndie Salbe — мазь\n\n⚠️ В Германии лекарства только в аптеках (не в супермаркетах)!\nАспирин, Paracetamol — без рецепта\nАнтибиотики, сильные обезболивающие — только по рецепту\n\n💡 Apotheke отличается от Drogerie (dm, Rossmann) — там только косметика!" },
+    ],
+  },
+  { id: "shopping_bonus", title: "Торговля в Германии", emoji: "🏪", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Виды магазинов", body: "der Supermarkt — супермаркет (REWE, EDEKA)\nder Discounter — дискаунтер (ALDI, LIDL, PENNY)\ndie Drogerie — дрогерия (dm, Rossmann) — косметика\ndas Kaufhaus — универмаг (Kaufhof)\ndas Einkaufszentrum — торговый центр\nder Wochenmarkt — еженедельный рынок\n\n💡 ALDI и LIDL — дешевле, меньше выбора\nREWE и EDEKA — дороже, больше выбора, органика" },
+      { title: "Система Pfand", body: "das Pfand — залог за тару\ndie Mehrwegflasche — многоразовая бутылка\ndie Einwegflasche — одноразовая бутылка\nder Pfandautomat — автомат для возврата\n\nPfand = 0,08€ (стекло), 0,25€ (пластик и жестянка)\n\n💡 В Германии обязательно сдавай бутылки!\nВ каждом супермаркете есть Pfandautomat\nПолучишь чек — скидка на следующую покупку\n\n⚠️ Не все бутылки с Pfand! Смотри значок на этикетке" },
+      { title: "Особенности торговли", body: "Geschäftszeiten — часы работы\nЧасы работы: Mo-Sa ~8:00-20:00\nSonntag — воскресенье — магазины ЗАКРЫТЫ!\n(Sonntagsöffnungsverbot — запрет работы в воскресенье)\n\nИсключения: заправки, аэропорты, вокзалы\nПо праздникам — тоже закрыто!\n\n💡 Планируй покупки заранее!\nSamstag — лучший день для большой закупки\n\neine Tüte — пакет (платный)\neine eigene Tasche mitbringen — приноси свой пакет!" },
+    ],
+  },
+  { id: "transport_bonus", title: "Deutsche Bahn", emoji: "🚄", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Типы поездов", body: "ICE — InterCityExpress (высокоскоростной, до 300 км/ч)\nIC / EC — InterCity / EuroCity (межгородской)\nRE — RegionalExpress (региональный скоростной)\nRB — RegionBahn (медленный региональный)\nS-Bahn — городская электричка\nU-Bahn — метро\nStraßenbahn — трамвай\n\n💡 ICE — самый быстрый: Берлин-Мюнхен за 4 часа!\nNetz = сеть. Das DB-Netz покрывает всю Германию" },
+      { title: "Билеты и цены", body: "das Deutschlandticket — 49€/месяц (все местные поезда!)\nder Sparpreis — дешёвый билет (заранее)\nder Flexpreis — гибкий билет (можно перенести)\ndie BahnCard 25/50 — скидочная карта (25%/50%)\n\nEinfache Fahrt — в одну сторону\nHin- und Rückfahrt — туда и обратно\n\n💡 Deutschlandticket (D-Ticket) — революция 2023 года!\nРаботает на всех RE, RB, S-Bahn, U-Bahn, автобусах\nНЕ работает на ICE и IC!" },
+      { title: "Практические фразы", body: "Die Verspätung — опоздание (часто!)\nDer Zug hat 15 Minuten Verspätung.\nПоезд опаздывает на 15 минут.\n\ndie Durchsage — объявление\nDer Anschluss — стыковочный поезд\nDie Erstattung — возврат денег\n\n⚠️ Deutsche Bahn часто опаздывает!\nПри опоздании >60 мин: 25% стоимости билета назад\nПри >120 мин: 50% назад — требуй Entschädigung!\n\n💡 App «DB Navigator» — лучшее приложение для поездок" },
+    ],
+  },
+  { id: "hobbies_bonus", title: "Клубы и ферайны", emoji: "🤝", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Verein — клуб", body: "der Verein — клуб / объединение / ферайн\nIch bin im Verein. — Я состою в клубе.\ndem Verein beitreten — вступить в клуб\nden Verein verlassen — выйти из клуба\n\nArten von Vereinen:\nder Sportverein — спортивный клуб (FC Bayern!)\nder Musikverein — музыкальный коллектив\nder Schachverein — шахматный клуб\nder Gartenverein — садоводческое общество\n\n💡 В Германии более 600 000 Vereine!\nПочти каждый немец состоит в одном." },
+      { title: "Популярные хобби", body: "das Wandern — пешеходный туризм (хобби #1!)\ndas Gärtnern / die Gartenarbeit — садоводство\ndas Lesen — чтение\ndas Kochen — кулинария\ndas Fotografieren — фотография\ndas Reisen — путешествия\ndas Ehrenamt — волонтёрство\n\n💡 Wandern — самое популярное хобби в Германии!\nder Wanderweg — туристическая тропа\ndie Wanderschuhe — треккинговые ботинки" },
+      { title: "Как говорить о хобби", body: "Was machst du in deiner Freizeit? — Что ты делаешь в свободное время?\nIch treibe gern Sport. — Я занимаюсь спортом.\nIch bin leidenschaftlicher Leser. — Я заядлый читатель.\n\nHast du ein Hobby? — У тебя есть хобби?\nIch interessiere mich für... — Я интересуюсь...\nIch beschäftige mich mit... — Я занимаюсь...\n\n💡 leidenschaftlich — страстный, заядлый\nein Hobby haben vs einem Hobby nachgehen — оба правильны!\nIch gehe meinem Hobby nach. (следую своему хобби)" },
+    ],
+  },
+  { id: "modal_verbs_bonus", title: "Konjunktiv II", emoji: "✨", level: "A1", bonus: true, linkedBonus: true,
+    cards: [
+      { title: "Вежливые формы", body: "könnte — мог бы (от können)\nwürde — сделал бы (от werden)\nsollte — должен был бы (от sollen)\nhätte — имел бы (от haben)\nwäre — был бы (от sein)\n\nKönnten Sie mir helfen? — Могли бы вы мне помочь?\nWürden Sie bitte... — Не могли бы вы...\n\n💡 Konjunktiv II вежливее чем обычная форма:\nKönnen Sie...? → Könnten Sie...? (ещё вежливее)" },
+      { title: "Форма könnte", body: "ich könnte — я мог бы\ndu könntest — ты мог бы\ner/sie könnte — он/она мог бы\nwir könnten — мы могли бы\nihr könntet — вы могли бы\nsie/Sie könnten — они/Вы могли бы\n\nIch könnte das machen. — Я мог бы это сделать.\nWir könnten morgen treffen. — Мы могли бы встретиться завтра.\n\n⚠️ Не путай: ich kann (могу сейчас) vs ich könnte (мог бы)" },
+      { title: "würde + Infinitiv", body: "Для большинства глаголов: würde + инфинитив\n\nIch würde das kaufen. — Я бы это купил.\nEr würde gern kommen. — Он бы охотно пришёл.\nWas würdest du machen? — Что бы ты сделал?\n\nНо hätte и wäre — отдельно (не würde haben/sein):\nIch wäre gern dort. — Я бы охотно там был.\nIch hätte gern... — Я бы хотел... (в кафе!)\n\n💡 «Ich hätte gern einen Kaffee.» — классическая фраза в кафе!\nВежливее чем «Ich möchte einen Kaffee.»" },
     ],
   },
 
@@ -682,6 +804,7 @@ const CURRICULUM = [
     cards: [
       { title: "Что такое Dativ", body: "Dativ = кому? чему?\n\nder → dem (м.р.)\ndie → der (ж.р.)\ndas → dem (ср.р.)\ndie (мн.ч.) → den + -n\n\nПримеры:\nIch helfe dem Mann. — Я помогаю мужчине.\nIch gebe der Frau das Buch. — Я даю женщине книгу.\nIch danke dem Kind. — Я благодарю ребёнка." },
       { title: "Предлоги с Dativ", body: "Предлоги которые ВСЕГДА требуют Dativ:\nmit — с (mit dem Bus)\nnach — после / в (nach der Schule)\nbei — у / при (bei meiner Mutter)\nvon — от / из (von dem Lehrer)\nzu — к / до (zu Hause)\naus — из (aus Deutschland)\nseit — с (с тех пор как)\naußer — кроме" },
+      { title: "Dativ в речи", body: "Глаголы которые требуют Dativ:\nhelfen — помогать (Ich helfe dir.)\ndanken — благодарить (Ich danke Ihnen.)\ngehören — принадлежать (Das gehört mir.)\ngefallen — нравиться (Das gefällt mir.)\n\nМестоимения в Dativ:\nmir — мне\ndir — тебе\nuns — нам\nihm — ему\nihr — ей\nihnen / Ihnen — им / Вам\n\n💡 Das gefällt mir. = Мне это нравится. (буквально: нравится мне)" },
     ],
     exam: [
       { q: "«Dem» — это Dativ от:", options: ["die", "der/das", "die (мн.ч.)", "ein"], answer: 1 },
@@ -699,6 +822,7 @@ const CURRICULUM = [
     cards: [
       { title: "Что такое Akkusativ", body: "Akkusativ = кого? что?\n\nМеняется только мужской род:\nder → den\n\ndie → die (не меняется)\ndas → das (не меняется)\n\nПримеры:\nIch sehe den Mann. — Я вижу мужчину.\nIch kaufe die Tasche. — Я покупаю сумку.\nIch lese das Buch. — Я читаю книгу.\nein → einen (м.р.)" },
       { title: "Предлоги с Akkusativ", body: "Предлоги которые ВСЕГДА требуют Akkusativ:\ndurch — через (durch den Park)\nfür — для (für mich)\ngegen — против (gegen den Wind)\nohne — без (ohne dich)\num — вокруг (um die Ecke)\n\n💡 Запомни: durch-für-gegen-ohne-um\n= все с Akkusativ!" },
+      { title: "Akkusativ в речи", body: "Akkusativ — прямое дополнение (кого? что?):\nIch sehe ihn. — Я его вижу.\nIch liebe dich. — Я тебя люблю.\nEr kauft es. — Он его покупает.\n\nМестоимения в Akkusativ:\nmich — меня\ndich — тебя\nuns — нас\nihn — его\nsie — её\nsie — их\n\n💡 Dativ vs Akkusativ:\nIch gebe dem Mann (Dat.) das Buch (Akk.).\nкому? = Dativ · что? = Akkusativ" },
     ],
     exam: [
       { q: "«Ich sehe ___ Mann» — вставь артикль в Akkusativ:", options: ["der", "dem", "den", "des"], answer: 2 },
@@ -801,7 +925,7 @@ const CURRICULUM = [
 
   // ── A3 СРЕДНИЙ ────────────────────────────────────────────────
   {
-    id: "health",
+    id: "health_advanced",
     title: "Здоровье и тело",
     emoji: "🏥",
     level: "A3",
@@ -819,7 +943,7 @@ const CURRICULUM = [
     ],
   },
   {
-    id: "shopping",
+    id: "shopping_advanced",
     title: "Покупки и деньги",
     emoji: "🛒",
     level: "A3",
@@ -837,7 +961,7 @@ const CURRICULUM = [
     ],
   },
   {
-    id: "transport",
+    id: "transport_advanced",
     title: "Транспорт и дорога",
     emoji: "🚆",
     level: "A3",
