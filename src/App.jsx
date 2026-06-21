@@ -264,25 +264,6 @@ const CURRICULUM = [
     ],
   },
   {
-    id: "alphabet",
-    title: "Алфавит и произношение",
-    emoji: "🔤",
-    level: "A1",
-    bonus: true,
-    cards: [
-      { title: "Немецкий алфавит", body: "A — А\nB — Б\nC — Ц/К\nD — Д\nE — Э\nF — Ф\nG — Г\nH — Х\nI — И\nJ — Й\nK — К\nL — Л\nM — М\nN — Н\nO — О\nP — П\nQ — К\nR — Р\nS — С/З\nT — Т\nU — У\nV — Ф\nW — В\nX — КС\nY — Ю\nZ — Ц\n\nУмлауты: Ä — Э, Ö — Ё, Ü — Ю\nß — эсцет (двойное С)" },
-      { title: "Произношение", body: "ch — после a/o/u: как Х (Bach)\nch — после e/i: мягкое Х (ich)\nsch — Ш (Schule)\nei — АЙ (ein)\nie — ИЕ (wie)\neu / äu — ОЙ (neu, Häuser)\nst / sp в начале слова — ШТ / ШП (Stadt, Sport)\n\n💡 Все буквы читаются — немецкий фонетический язык!" },
-      { title: "Часто путают", body: "w — читается как В: Wasser, Wort\nv — читается как Ф: Vater, von\nz — читается как Ц: Zeit, Zug\nj — читается как Й: ja, Jahr\ny — читается как Ю: Symbol, Typ\n\n⚠️ Nicht «double-u» как в английском — W это просто В!\n\nПримеры:\nwarm — варм (тёплый)\nvier — фир (четыре)\nzeit — цайт (время)\njetzt — йецт (сейчас)" },
-    ],
-    exam: [
-      { q: "Как читается буква W в немецком?", options: ["В (как в слове вода)", "У", "Дубль-В", "Ф"], answer: 0 },
-      { q: "Как читается буква V в немецком?", options: ["В", "Ф", "У", "Б"], answer: 1 },
-      { q: "Буква Z в немецком читается как:", options: ["З", "С", "Ц", "Ж"], answer: 2 },
-      { q: "Сочетание «sch» читается как:", options: ["СХ", "Ш", "СЧ", "Щ"], answer: 1 },
-      { q: "Сочетание «ei» в словах типа «ein» читается как:", options: ["ЕИ", "ИЕ", "АЙ", "ЭЙ"], answer: 2 },
-    ],
-  },
-  {
     id: "articles",
     title: "Артикли",
     emoji: "📌",
