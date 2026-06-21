@@ -1078,13 +1078,14 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       card.body.split("\n").forEach(l => {
         const trimmed = l.trim();
         if (!trimmed) return;
-        if (trimmed.includes(" — ") && !trimmed.startsWith("💡") && !trimmed.startsWith("⚠️") && !trimmed.startsWith("•")) {
+        const isEmoji = trimmed.startsWith("💡") || trimmed.startsWith("⚠️") || trimmed.startsWith("•");
+        if (!isEmoji && trimmed.includes(" — ")) {
           const parts = trimmed.split(" — ");
           if (parts.length >= 2) {
             const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
             if (de && ru) ws.push({ de, ru, section: card.title });
           }
-        } else {
+        } else if (!isEmoji) {
           tipLines.push(trimmed);
         }
       });
