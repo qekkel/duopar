@@ -1089,8 +1089,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           tipLines.push(trimmed);
         }
       });
-      const introText = tipLines.join(" ").trim();
-      return { name: card.title, words: ws, tip: introText.length > 40 ? introText : null };
+      return { name: card.title, words: ws, tip: null };
     }).filter(b => b.words.length > 0);
   }
 
