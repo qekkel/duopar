@@ -279,6 +279,30 @@ const CURRICULUM = [
     ],
   },
   {
+    id: "numbers_big",
+    title: "Большие числа и даты",
+    emoji: "📅",
+    level: "A1",
+    bonus: true,
+    cards: [
+      { title: "Числа 100–1 000 000", body: "100 — (ein)hundert\n101 — hunderteins\n200 — zweihundert\n1.000 — (ein)tausend\n1.000.000 — eine Million, -en\n1.000.000.000 — eine Milliarde, -en\n\n💡 В немецком разряды разделяются точкой (не запятой):\n1.000 = тысяча\n1.000.000 = миллион" },
+      { title: "Порядковые числительные", body: "Используются для дат и перечислений:\n\ndas/der/die erste — первый/-ая/-ое (1.)\nzweite — второй (2.)\ndritte — третий (3.) ⚠️ исключение!\nvierte — четвёртый (4.)\nfünfte — пятый (5.)\nusw. (und so weiter) — и так далее\n\n💡 С 4-го: просто + -te\ndritte — исключение, запомни!" },
+      { title: "Как называть год", body: "Годы читаются как два двузначных числа:\n\n1999 — neunzehnhundertneunundneunzig\n(девятнадцать-сто-девяносто-девять)\n\n2014 — zweitausendvierzehn\n(две тысячи четырнадцать)\n\n💡 С 2000 года говорят «zweitausend...»" },
+      { title: "Даты", body: "Дата пишется с точкой и порядковым числом:\n\nheute ist der 1. März\n= heute ist der erste März\n(Сегодня первое марта)\n\noder: der erste Dritte\n(первое третьего — разговорно)\n\nПример: Berlin, 12. April 2002\n= Berlin, zwölfter Vierter zweitausendzwei" },
+      { title: "Дроби", body: "1/2 = ein halb; halb…\n(см. время: halb drei = половина третьего)\n\n1/4 = ein Viertel; Viertel…\n(ein Viertel nach drei = четверть четвёртого)\n\n💡 halb и Viertel особенно важны для времени!" },
+    ],
+    exam: [
+      { q: "Как по-немецки «тысяча»?", options: ["hundert", "tausend", "Million", "Milliarde"], answer: 1 },
+      { q: "Как читается год «2014»?", options: ["zwanzigeins-vier", "zweitausendvierzehn", "zwei-null-eins-vier", "zweitausend-vierzehn"], answer: 1 },
+      { q: "«Der dritte» — это:", options: ["второй", "третий", "четвёртый", "первый"], answer: 1 },
+      { q: "«Heute ist der 1. März» значит:", options: ["Завтра первое марта", "Сегодня первое марта", "Вчера было первое марта", "Первое марта — праздник"], answer: 1 },
+      { q: "«Ein halb» — это:", options: ["четверть", "треть", "половина", "целое"], answer: 2 },
+      { q: "Как разделяются разряды чисел в немецком?", options: ["запятой (1,000)", "точкой (1.000)", "пробелом (1 000)", "апострофом (1'000)"], answer: 1 },
+      { q: "«Eine Milliarde» — это:", options: ["миллион", "десять миллионов", "миллиард", "триллион"], answer: 2 },
+      { q: "Порядковое от числа 4 (vierte) образуется:", options: ["исключение — dritte", "добавлением -te", "добавлением -ste", "добавлением -e"], answer: 1 },
+    ],
+  },
+  {
     id: "family",
     title: "Семья",
     emoji: "👨‍👩‍👧",
@@ -937,11 +961,14 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                 const inProgress = blocksDone > 0 && !examDone;
                 return (
                   <button key={topic.id} onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }}
-                    style={{ background: examDone ? "rgba(16,185,129,0.08)" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%" }}>
+                    style={{ background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus ? "rgba(245,158,11,0.06)" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus ? "rgba(245,158,11,0.25)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: blocksTotal > 0 ? 10 : 0 }}>
                       <div style={{ fontSize: 26 }}>{examDone ? "✅" : topic.emoji}</div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{i + 1}. {topic.title}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
+                          {i + 1}. {topic.title}
+                          {topic.bonus && !examDone && <span style={{ fontSize: 10, background: "rgba(245,158,11,0.2)", color: "#f59e0b", borderRadius: 6, padding: "2px 6px", fontWeight: 700 }}>БОНУС</span>}
+                        </div>
                         <div style={{ fontSize: 11, color: examDone ? "#10b981" : inProgress ? "#a78bfa" : "rgba(255,255,255,0.3)", marginTop: 2 }}>
                           {examDone ? "Экзамен сдан ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
                         </div>
