@@ -999,8 +999,6 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     if (mode === "detail") {
       const done = doneBlocks(activeTopicId);
       const allDone = blocks.length > 0 && done.size >= blocks.length;
-      const examThreshold = Math.min(3, blocks.length);
-      const examUnlocked = done.size >= examThreshold;
       const nextBlock = blocks.findIndex((_, i) => !done.has(i));
       return (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
@@ -1023,24 +1021,23 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           )}
 
           {topic.bonus && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 6px" }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
-              <div style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", letterSpacing: 1 }}>⭐ БОНУС</div>
-              <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
+            <div style={{ marginTop: 16, marginBottom: 12 }}>
+              <div style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 14, padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <span style={{ fontSize: 16 }}>⭐</span>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fcd34d" }}>Бонусный материал</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Необязательно · не входит в программу</div>
+                </div>
+              </div>
             </div>
           )}
-          {topic.bonus && (
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center", marginBottom: 12 }}>
-              Необязательно · не входит в обязательную программу
-            </div>
-          )}
-          {examUnlocked ? (
+          {allDone ? (
             <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
               ⚡ Сдать экзамен
             </button>
           ) : (
-            <div style={{ width: "100%", padding: "16px", borderRadius: 16, background: "rgba(124,92,252,0.06)", border: "1px solid rgba(124,92,252,0.15)", color: "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 600, textAlign: "center", boxSizing: "border-box" }}>
-              🔒 Экзамен — после {examThreshold} частей
+            <div style={{ width: "100%", padding: "16px", borderRadius: 16, background: "rgba(124,92,252,0.06)", border: "1px solid rgba(124,92,252,0.12)", color: "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 600, textAlign: "center", boxSizing: "border-box" }}>
+              🔒 Экзамен — после всех частей
             </div>
           )}
           {done.size > 0 && !allDone && (
