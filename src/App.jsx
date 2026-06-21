@@ -1053,15 +1053,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             );
           })()}
 
-          {isLinkedBonus && !topic.exam && allDone && (
+          {topic.bonus && allDone && (
             <div style={{ marginTop: 8, padding: "16px", borderRadius: 16, background: "linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1))", border: "1px solid rgba(245,158,11,0.4)", textAlign: "center" }}>
               <div style={{ fontSize: 28, marginBottom: 6 }}>⭐</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#fcd34d" }}>Бонус пройден!</div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Отличная работа</div>
             </div>
           )}
-          {(!isLinkedBonus || topic.exam) && (allDone ? (
-            <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: isLinkedBonus ? `linear-gradient(135deg, ${gold}, #fbbf24)` : "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: isLinkedBonus ? "#1a1000" : "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+          {!topic.bonus && (allDone ? (
+            <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
               ⚡ Сдать экзамен
             </button>
           ) : (
