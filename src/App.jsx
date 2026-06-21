@@ -1965,10 +1965,10 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
           {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
           <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", marginBottom: 22, wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
-          {audioEnabled ? (
+          {audioEnabled && card.ru && !/[а-яёА-ЯЁ]/.test(card.ru) ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Пример:</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: "#a78bfa" }}>{card.ru.charAt(0).toUpperCase() + card.ru.slice(1)}</div>
               <AudioButton text={card.ru} size={26} />
             </div>
           ) : (
