@@ -270,9 +270,9 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "articles_bonus",
     cards: [
-      { title: "Три рода в немецком", body: "В немецком у каждого существительного есть род:\n\nder — мужской (der Mann, der Tisch)\ndie — женский (die Frau, die Tür)\ndas — средний (das Kind, das Buch)\n\n💡 Род надо учить вместе со словом — правил мало!" },
-      { title: "Неопределённый артикль", body: "ein/eine — «один, одна» (как «a/an» в английском)\n\nein Mann — мужчина\neine Frau — женщина\nein Kind — ребёнок\n\n⚠️ Для мужского и среднего: ein\nДля женского: eine" },
-      { title: "Когда артикль не нужен", body: "Артикль не ставится:\n\n• Перед именами: Das ist Anna.\n• Перед профессиями: Ich bin Lehrerin.\n• Перед странами: Ich komme aus Deutschland.\n\n💡 Исключение: die Schweiz, die Türkei — с артиклем!" },
+      { title: "Три рода в немецком", tip: "В немецком у каждого слова есть род: мужской (der), женский (die) или средний (das). Это не логика — это нужно запоминать вместе со словом.", body: "В немецком у каждого существительного есть род:\n\nder — мужской (der Mann, der Tisch)\ndie — женский (die Frau, die Tür)\ndas — средний (das Kind, das Buch)\n\n💡 Род надо учить вместе со словом — правил мало!" },
+      { title: "Неопределённый артикль", tip: "ein/eine — как «a/an» в английском. Обозначает что-то неконкретное. Для мужского и среднего рода — ein, для женского — eine.", body: "ein/eine — «один, одна» (как «a/an» в английском)\n\nein Mann — мужчина\neine Frau — женщина\nein Kind — ребёнок\n\n⚠️ Для мужского и среднего: ein\nДля женского: eine" },
+      { title: "Когда артикль не нужен", tip: "Перед именами, профессиями и большинством стран артикль не ставится. Это исключение из правила — запомни эти три случая.", body: "Артикль не ставится:\n\n• Перед именами: Das ist Anna.\n• Перед профессиями: Ich bin Lehrerin.\n• Перед странами: Ich komme aus Deutschland.\n\n💡 Исключение: die Schweiz, die Türkei — с артиклем!" },
     ],
     exam: [
       { q: "Какой артикль у слова «Tisch» (стол)?", options: ["die", "das", "der", "ein"], answer: 2 },
@@ -390,9 +390,9 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "verbs_bonus",
     cards: [
-      { title: "Глагол sein (быть)", body: "ich bin — я есть\ndu bist — ты есть\ner/sie/es ist — он/она/оно есть\nwir sind — мы есть\nihr seid — вы есть\nsie/Sie sind — они/Вы есть\n\nПримеры:\nIch bin müde. — Я устал.\nDu bist nett. — Ты приятный.\nSie ist Lehrerin. — Она учительница." },
-      { title: "Глагол haben (иметь)", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них/Вас есть\n\nПримеры:\nIch habe ein Auto. — У меня есть машина.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)" },
-      { title: "Sein vs Haben", body: "sein — описывает состояние или личность:\nIch bin glücklich. — Я счастлив.\nSie ist Ärztin. — Она врач.\n\nhaben — обозначает владение:\nIch habe Zeit. — У меня есть время.\nWir haben Hunger. — Мы голодны.\n\n💡 Hunger/Durst haben = быть голодным/жаждущим" },
+      { title: "Глагол sein (быть)", tip: "sein = «быть». Описывает, кто ты или что ты из себя представляешь. Спрягается по-особому — форму нужно просто запомнить.", body: "ich bin — я есть\ndu bist — ты есть\ner/sie/es ist — он/она/оно есть\nwir sind — мы есть\nihr seid — вы есть\nsie/Sie sind — они/Вы есть\n\nПримеры:\nIch bin müde. — Я устал.\nDu bist nett. — Ты приятный.\nSie ist Lehrerin. — Она учительница." },
+      { title: "Глагол haben (иметь)", tip: "haben = «иметь». Используется для обозначения владения чем-либо. Это один из двух важнейших глаголов немецкого языка.", body: "ich habe — у меня есть\ndu hast — у тебя есть\ner/sie/es hat — у него/неё есть\nwir haben — у нас есть\nihr habt — у вас есть\nsie/Sie haben — у них/Вас есть\n\nПримеры:\nIch habe ein Auto. — У меня есть машина.\nEr hat Hunger. — Он голоден. (букв: у него есть голод)" },
+      { title: "Sein vs Haben", tip: "sein описывает состояние или кто ты есть. haben — что у тебя есть. Часто там, где по-русски «мне холодно», по-немецки скажут «ich habe Kälte» (у меня есть холод).", body: "sein — описывает состояние или личность:\nIch bin glücklich. — Я счастлив.\nSie ist Ärztin. — Она врач.\n\nhaben — обозначает владение:\nIch habe Zeit. — У меня есть время.\nWir haben Hunger. — Мы голодны.\n\n💡 Hunger/Durst haben = быть голодным/жаждущим" },
     ],
     exam: [
       { q: "«Du ___ müde.» — вставь правильную форму sein:", options: ["bin", "bist", "ist", "sind"], answer: 1 },
@@ -409,9 +409,9 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "word_order_bonus",
     cards: [
-      { title: "Основной порядок слов", body: "В немецком предложении глагол ВСЕГДА стоит на 2-м месте:\n\nIch [1] trinke [2] Kaffee.\nHeute [1] trinke [2] ich Kaffee.\nKaffee [1] trinke [2] ich heute.\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
-      { title: "Вопросительные предложения", body: "Вопрос с вопросительным словом:\nWo wohnst du? — Где ты живёшь?\nWas machst du? — Что ты делаешь?\nWer bist du? — Кто ты?\n\nВопрос без вопр. слова (глагол на 1-м):\nKommst du? — Ты придёшь?\nHast du Zeit? — У тебя есть время?" },
-      { title: "Отрицание", body: "nicht — отрицает глагол или прилагательное:\nIch schlafe nicht. — Я не сплю.\nDas ist nicht gut. — Это нехорошо.\n\nkein/keine — отрицает существительное:\nIch habe kein Auto. — У меня нет машины.\nIch habe keine Zeit. — У меня нет времени.\n\n💡 kein = ein + не; keine = eine + не" },
+      { title: "Основной порядок слов", tip: "Главное правило немецкого: глагол всегда стоит на ВТОРОМ месте. Не на первом, не в конце — всегда второй. Даже если предложение начинается с другого слова.", body: "В немецком предложении глагол ВСЕГДА стоит на 2-м месте:\n\nIch [1] trinke [2] Kaffee.\nHeute [1] trinke [2] ich Kaffee.\nKaffee [1] trinke [2] ich heute.\n\n💡 Что бы ни стояло на первом месте — глагол всегда второй!" },
+      { title: "Вопросительные предложения", tip: "В вопросах с вопросительным словом (wo, was, wer...) — глагол на втором месте. Без вопросительного слова — глагол на ПЕРВОМ месте, подлежащее сдвигается на второе.", body: "Вопрос с вопросительным словом:\nWo wohnst du? — Где ты живёшь?\nWas machst du? — Что ты делаешь?\nWer bist du? — Кто ты?\n\nВопрос без вопр. слова (глагол на 1-м):\nKommst du? — Ты придёшь?\nHast du Zeit? — У тебя есть время?" },
+      { title: "Отрицание", tip: "nicht отрицает глагол или прилагательное. kein/keine отрицает существительное — там, где в утверждении стоит ein/eine. Выбор между ними зависит от того, что именно ты отрицаешь.", body: "nicht — отрицает глагол или прилагательное:\nIch schlafe nicht. — Я не сплю.\nDas ist nicht gut. — Это нехорошо.\n\nkein/keine — отрицает существительное:\nIch habe kein Auto. — У меня нет машины.\nIch habe keine Zeit. — У меня нет времени.\n\n💡 kein = ein + не; keine = eine + не" },
     ],
     exam: [
       { q: "Где в немецком предложении стоит глагол?", options: ["Всегда первый", "Всегда второй", "Всегда последний", "Где угодно"], answer: 1 },
@@ -640,9 +640,9 @@ const CURRICULUM = [
     level: "A1",
     bonusTopicId: "modal_verbs_bonus",
     cards: [
-      { title: "können, müssen, wollen", body: "können — мочь, уметь\nIch kann schwimmen. — Я умею плавать.\n\nmüssen — должен, нужно\nIch muss arbeiten. — Мне нужно работать.\n\nwollen — хотеть\nIch will nach Berlin. — Я хочу в Берлин.\n\ndürfen — иметь право, разрешено\nDarf ich rauchen? — Можно курить?" },
-      { title: "Формы модальных глаголов", body: "können: ich kann, du kannst, er/sie kann\nmüssen: ich muss, du musst, er/sie muss\nwollen: ich will, du willst, er/sie will\ndürfen: ich darf, du darfst, er/sie darf\n\n💡 Инфинитив идёт В КОНЕЦ предложения:\nIch kann heute nicht kommen.\nМне не удастся прийти сегодня." },
-      { title: "möchten и sollen", body: "möchten — хотел бы (вежливое желание)\nIch möchte einen Kaffee. — Я бы хотел кофе.\n\nmöchte — я бы хотел\nmöchtest — ты бы хотел\nmöchte — он/она бы хотел\n\nsollen — должен (по чужому требованию)\nIch soll um 8 da sein. — Мне велели быть там в 8.\n\nsoll — я должен\nsollst — ты должен\nsoll — он/она должен\n\n💡 möchten = вежливее чем wollen!" },
+      { title: "können, müssen, wollen", tip: "Модальные глаголы выражают отношение к действию: можно, нужно, хочу. Сам глагол действия уходит в конец предложения в форме инфинитива. Это один из ключевых паттернов немецкого.", body: "können — мочь, уметь\nIch kann schwimmen. — Я умею плавать.\n\nmüssen — должен, нужно\nIch muss arbeiten. — Мне нужно работать.\n\nwollen — хотеть\nIch will nach Berlin. — Я хочу в Берлин.\n\ndürfen — иметь право, разрешено\nDarf ich rauchen? — Можно курить?" },
+      { title: "Формы модальных глаголов", tip: "Все модальные глаголы спрягаются похоже: ich/er/sie имеют одинаковую форму (без -e на конце). Инфинитив основного глагола идёт в самый конец предложения.", body: "können: ich kann, du kannst, er/sie kann\nmüssen: ich muss, du musst, er/sie muss\nwollen: ich will, du willst, er/sie will\ndürfen: ich darf, du darfst, er/sie darf\n\n💡 Инфинитив идёт В КОНЕЦ предложения:\nIch kann heute nicht kommen.\nМне не удастся прийти сегодня." },
+      { title: "möchten и sollen", tip: "möchten — вежливое «хотел бы» (мягче, чем wollen). sollen — «должен по чужому приказу» (кто-то другой это требует). Это тонкое различие важно в немецкой культуре.", body: "möchten — хотел бы (вежливое желание)\nIch möchte einen Kaffee. — Я бы хотел кофе.\n\nmöchte — я бы хотел\nmöchtest — ты бы хотел\nmöchte — он/она бы хотел\n\nsollen — должен (по чужому требованию)\nIch soll um 8 da sein. — Мне велели быть там в 8.\n\nsoll — я должен\nsollst — ты должен\nsoll — он/она должен\n\n💡 möchten = вежливее чем wollen!" },
     ],
     exam: [
       { q: "«Ich kann Deutsch sprechen» значит:", options: ["Я хочу говорить по-немецки", "Я могу говорить по-немецки", "Я должен говорить по-немецки", "Я не говорю по-немецки"], answer: 1 },
@@ -1089,7 +1089,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           tipLines.push(trimmed);
         }
       });
-      return { name: card.title, words: ws, tip: null };
+      return { name: card.title, words: ws, tip: card.tip || null };
     }).filter(b => b.words.length > 0);
   }
 
