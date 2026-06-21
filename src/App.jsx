@@ -285,11 +285,11 @@ const CURRICULUM = [
     level: "A1",
     bonus: true,
     cards: [
-      { title: "Числа 100–1 000 000", body: "100 — (ein)hundert\n101 — hunderteins\n200 — zweihundert\n1.000 — (ein)tausend\n1.000.000 — eine Million, -en\n1.000.000.000 — eine Milliarde, -en\n\n💡 В немецком разряды разделяются точкой (не запятой):\n1.000 = тысяча\n1.000.000 = миллион" },
-      { title: "Порядковые числительные", body: "Используются для дат и перечислений:\n\ndas/der/die erste — первый/-ая/-ое (1.)\nzweite — второй (2.)\ndritte — третий (3.) ⚠️ исключение!\nvierte — четвёртый (4.)\nfünfte — пятый (5.)\nusw. (und so weiter) — и так далее\n\n💡 С 4-го: просто + -te\ndritte — исключение, запомни!" },
-      { title: "Как называть год", body: "Годы читаются как два двузначных числа:\n\n1999 — neunzehnhundertneunundneunzig\n(девятнадцать-сто-девяносто-девять)\n\n2014 — zweitausendvierzehn\n(две тысячи четырнадцать)\n\n💡 С 2000 года говорят «zweitausend...»" },
-      { title: "Даты", body: "Дата пишется с точкой и порядковым числом:\n\nheute ist der 1. März\n= heute ist der erste März\n(Сегодня первое марта)\n\noder: der erste Dritte\n(первое третьего — разговорно)\n\nПример: Berlin, 12. April 2002\n= Berlin, zwölfter Vierter zweitausendzwei" },
-      { title: "Дроби", body: "1/2 = ein halb; halb…\n(см. время: halb drei = половина третьего)\n\n1/4 = ein Viertel; Viertel…\n(ein Viertel nach drei = четверть четвёртого)\n\n💡 halb и Viertel особенно важны для времени!" },
+      { title: "Числа 100–1 000 000 000", body: "100 — hundert\n200 — zweihundert\n1.000 — tausend\n1.000.000 — eine Million\n1.000.000.000 — eine Milliarde\n\n💡 В немецком разряды разделяются точкой (не запятой):\n1.000 = тысяча · 1.000.000 = миллион\n\n101 — hunderteins\n(ein)hundert — тоже правильно" },
+      { title: "Порядковые числительные", body: "Для дат и перечислений:\n\nder erste — первый (1.)\nder zweite — второй (2.)\nder dritte — третий (3.) ⚠️ исключение!\nder vierte — четвёртый (4.)\nder fünfte — пятый (5.)\n\n💡 С 4-го: основа + -te\ndritte — исключение, учи отдельно!" },
+      { title: "Как называть год", body: "Годы читаются как два двузначных числа:\n\n1999 — neunzehnhundertneunundneunzig\n2014 — zweitausendvierzehn\n2000 — zweitausend\n\n💡 С 2000 года говорят «zweitausend + число»\nС 1100–1999 — «сотни + остаток»" },
+      { title: "Даты", body: "der erste März — первое марта\nder zwölfte April — двенадцатое апреля\nder erste Dritte — первое третьего\n\n💡 Дата = порядковое числительное + месяц\nПишется с точкой: 1. März = der erste März\n\nBerlin, 12. April 2002\n= zwölfter April zweitausendzwei" },
+      { title: "Дроби и время", body: "ein halb — половина\nein Viertel — четверть\ndrei Viertel — три четверти\n\n💡 Особенно важны для времени:\nhalb drei — половина третьего\nein Viertel nach drei — четверть четвёртого\ndrei Viertel vier — без четверти четыре" },
     ],
     exam: [
       { q: "Как по-немецки «тысяча»?", options: ["hundert", "tausend", "Million", "Milliarde"], answer: 1 },
