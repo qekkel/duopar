@@ -1839,6 +1839,163 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   );
 }
 
+function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, onAdvance }) {
+  const [mode, setMode] = useState("check"); // "check" | "self"
+  const [status, setStatus] = useState("idle"); // "idle"|"listening"|"success"|"retry"|"not_heard"|"no_mic"
+  const [retryCount, setRetryCount] = useState(0);
+  const recRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (recRef.current) { try { recRef.current.abort(); } catch(e) {} } };
+  }, []);
+
+  useEffect(() => {
+    setMode("check"); setStatus("idle"); setRetryCount(0);
+    if (recRef.current) { try { recRef.current.abort(); } catch(e) {} recRef.current = null; }
+  }, [card.de]);
+
+  const recTarget = useMemo(() => {
+    if (card.ru && isGermanText(card.ru))
+      return card.ru.replace(/^(der|die|das|ein|eine)\s+/i, "").trim().toLowerCase();
+    return (card.audioText || card.de).toLowerCase().trim();
+  }, [card]);
+
+  function fuzzyMatch(heard, expected) {
+    const h = heard.toLowerCase().trim();
+    const e = expected.toLowerCase().trim();
+    if (h === e || h.includes(e)) return true;
+    if (e.length >= 3 && h.startsWith(e.slice(0, 3))) return true;
+    if (Math.abs(h.length - e.length) <= 2) {
+      let diffs = 0;
+      for (let i = 0; i < Math.min(h.length, e.length); i++) { if (h[i] !== e[i]) diffs++; }
+      if (diffs <= 2) return true;
+    }
+    return false;
+  }
+
+  function startListening() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setMode("self"); return; }
+    setStatus("listening");
+    const rec = new SR();
+    recRef.current = rec;
+    rec.lang = "de-DE";
+    rec.interimResults = false;
+    rec.maxAlternatives = 5;
+    rec.onresult = (e) => {
+      recRef.current = null;
+      const transcripts = Array.from(e.results[0]).map(r => r.transcript);
+      if (transcripts.some(t => fuzzyMatch(t, recTarget))) {
+        setStatus("success");
+        setTimeout(() => onAdvance(true), 1400);
+      } else {
+        setRetryCount(c => c + 1);
+        setStatus("retry");
+      }
+    };
+    rec.onerror = (e) => {
+      recRef.current = null;
+      if (e.error === "not-allowed" || e.error === "permission-denied") { setStatus("no_mic"); }
+      else if (e.error === "no-speech") { setStatus("not_heard"); }
+      else { setMode("self"); setStatus("idle"); }
+    };
+    rec.onend = () => {
+      if (recRef.current) recRef.current = null;
+      setStatus(s => s === "listening" ? "not_heard" : s);
+    };
+    rec.start();
+  }
+
+  function stopListening() {
+    if (recRef.current) { try { recRef.current.stop(); } catch(e) {} recRef.current = null; }
+    setStatus("idle");
+  }
+
+  const exampleWord = card.ru && isGermanText(card.ru) ? card.ru : null;
+
+  return (
+    <div style={{ paddingTop: 40 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
+        <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+          <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${progress * 100}%`, transition: "width 0.4s" }} />
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🎯 {block.name}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>
+        {mode === "self" ? "Повтори про себя" : "Произнеси вслух"} · {practiceIdx + 1} из {queueLen}
+      </div>
+
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
+        <div style={{ fontSize: 76, fontWeight: 800, color: "#fff", letterSpacing: 6, marginBottom: 18 }}>{card.de}</div>
+        <AudioButton text={card.audioText || card.de} audioUrl={card.audioUrl} size={36} />
+        {exampleWord && (
+          <div style={{ marginTop: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>Пример:</span>
+            <span style={{ fontSize: 22, color: "#a78bfa", fontWeight: 700 }}>{exampleWord}</span>
+            <AudioButton text={exampleWord} size={22} />
+          </div>
+        )}
+        {card.exampleTranslation && (
+          <div style={{ marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{card.exampleTranslation}</div>
+        )}
+        {status === "listening" && (
+          <div style={{ marginTop: 20, color: "#a78bfa", fontWeight: 600, fontSize: 15 }}>🎙️ Слушаю...</div>
+        )}
+        {status === "success" && (
+          <div style={{ marginTop: 20, color: "#10b981", fontWeight: 700, fontSize: 16 }}>✓ Отлично! Похоже, получилось.</div>
+        )}
+        {status === "retry" && retryCount < 3 && (
+          <div style={{ marginTop: 20, color: "#f59e0b", fontSize: 14 }}>Почти. Послушай ещё раз и попробуй повторить.</div>
+        )}
+        {status === "retry" && retryCount >= 3 && (
+          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Произношение тренируется постепенно. Можешь попробовать ещё раз или продолжить.</div>
+        )}
+        {status === "not_heard" && (
+          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Я не расслышал. Попробуй ещё раз.</div>
+        )}
+        {status === "no_mic" && (
+          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Без микрофона я не смогу проверить произношение. Можешь повторить сам/сама и продолжить.</div>
+        )}
+        {mode === "self" && status === "idle" && (
+          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Хорошо. Тогда просто послушай и повтори про себя или шёпотом.</div>
+        )}
+      </div>
+
+      {mode === "check" && status !== "success" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {status === "listening" ? (
+            <button onClick={stopListening} style={{ padding: "16px", borderRadius: 14, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.35)", color: "#ef4444", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+              ⏹ Остановить
+            </button>
+          ) : (
+            <>
+              <button onClick={startListening} style={{ padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
+                🎙️ {retryCount > 0 ? "Попробовать ещё раз" : "Произнести"}
+              </button>
+              {(retryCount >= 1 || status === "not_heard" || status === "no_mic") && (
+                <button onClick={() => onAdvance(true)} style={{ padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.65)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                  Я произнёс/произнесла ✓
+                </button>
+              )}
+              {status !== "no_mic" && (
+                <button onClick={() => { setMode("self"); setStatus("idle"); }} style={{ padding: "10px", background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer" }}>
+                  Сейчас не могу говорить
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+      {mode === "self" && status !== "success" && (
+        <button onClick={() => onAdvance(true)} style={{ width: "100%", padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
+          Я произнёс/произнесла ✓
+        </button>
+      )}
+    </div>
+  );
+}
+
 function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }) {
   const words = block.words;
   const [phase, setPhase] = useState(block.tip ? "tip" : "intro");
@@ -2013,34 +2170,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
 
   // Letter / sound card → pronounce exercise (no guess-translation for "A a", "ä", etc.)
   if (audioEnabled && isPronounceCard(card.de)) {
-    return (
-      <div style={{ paddingTop: 40 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
-          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-            <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${progress * 100}%`, transition: "width 0.4s" }} />
-          </div>
-        </div>
-        <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🎯 {block.name}</div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Произнеси вслух · {practiceIdx + 1} из {practiceQueue.length}</div>
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "40px 24px", textAlign: "center", marginBottom: 24 }}>
-          <div style={{ fontSize: 80, fontWeight: 800, color: "#fff", letterSpacing: 6, marginBottom: 20 }}>{card.de}</div>
-          <AudioButton text={card.audioText || card.de} audioUrl={card.audioUrl} size={40} />
-          {card.ru && isGermanText(card.ru) && (
-            <div style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
-              Пример: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{card.ru}</span>
-              {" "}<AudioButton text={card.ru} size={22} />
-            </div>
-          )}
-          {card.exampleTranslation && (
-            <div style={{ marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{card.exampleTranslation}</div>
-          )}
-        </div>
-        <button onClick={() => advance(true)} style={{ width: "100%", padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
-          Я произнёс ✓
-        </button>
-      </div>
-    );
+    return <PronounceCard card={card} block={block} progress={progress} practiceIdx={practiceIdx} queueLen={practiceQueue.length} onBack={onBack} onAdvance={advance} />;
   }
 
   return (
