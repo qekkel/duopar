@@ -426,6 +426,7 @@ const CURRICULUM = [
     title: "Еда и напитки",
     emoji: "🍽️",
     level: "A1",
+    bonusTopicId: "german_cuisine",
     cards: [
       { title: "Основные продукты", body: "das Brot — хлеб\ndie Milch — молоко\ndas Wasser — вода\nder Kaffee — кофе\nder Tee — чай\ndas Fleisch — мясо\nder Käse — сыр\ndas Ei — яйцо\ndas Gemüse — овощи\ndas Obst — фрукты" },
       { title: "В кафе и ресторане", body: "Ich möchte... — Я бы хотел...\nEin Kaffee, bitte! — Кофе, пожалуйста!\nDie Speisekarte, bitte. — Меню, пожалуйста.\nWas kostet das? — Сколько это стоит?\nDie Rechnung, bitte! — Счёт, пожалуйста!\nEs war sehr lecker! — Было очень вкусно!" },
@@ -445,6 +446,7 @@ const CURRICULUM = [
     emoji: "🥨",
     level: "A1",
     bonus: true,
+    linkedBonus: true,
     cards: [
       { title: "Типичные блюда", body: "die Brezel — крендель\ndie Bratwurst — жареная колбаса\ndas Schnitzel — шницель\nder Döner — донер-кебаб\ndas Sauerkraut — квашеная капуста\nder Kartoffelsalat — картофельный салат\ndie Currywurst — колбаса карри\ndas Eisbein — рулька\n\n💡 Currywurst — берлинский фастфуд, изобретён в 1949 году!" },
       { title: "В пекарне", body: "das Brötchen — булочка\ndas Schwarzbrot — чёрный хлеб\nder Kuchen — торт / пирог\ndie Torte — торт (слоёный)\ndie Semmel — булочка (Бавария)\ndas Croissant — круассан\nder Bäcker — пекарь\ndie Bäckerei — пекарня\n\n💡 Немцы едят много хлеба! Более 300 сортов хлеба в Германии." },
