@@ -250,9 +250,9 @@ const CURRICULUM = [
     level: "A1",
     bonus: true,
     cards: [
-      { title: "Бавария и Австрия", body: "Grüß Gott — Здравствуйте (букв. «Приветствует Бог»)\nServus — Привет / Пока (очень неформально)\nGrüß di — Привет тебе (неформально)\nPfiat di — Пока (баварское)\n\n💡 Grüß Gott — стандартное приветствие в Баварии и Австрии\nЭквивалент Guten Tag на юге" },
-      { title: "Швейцария и север", body: "Grüezi — Здравствуйте (швейцарское)\nSali / Hoi — Привет (швейцарское неформальное)\nAde — Пока (швейцарское / южнонемецкое)\n\nMoin — Привет (северная Германия, Гамбург)\nMoin Moin — тоже Привет (не «добрый день»!)\nTach — Привет (средненемецкое, сокращение от Guten Tag)\n\n💡 Moin говорят в любое время суток" },
-      { title: "Неформальные и молодёжные", body: "Na? — Ну как? / Как дела? (очень неформально)\nAlles klar? — Всё норм?\nAlles gut? — Всё хорошо?\nWas geht? — Что происходит? / Как дела?\nWas geht ab? — Что случилось? / Как ты?\n\n💡 Na? — самое короткое приветствие\nОдно слово = «как дела / привет / ну что»" },
+      { title: "Бавария и Австрия", body: "Grüß Gott — Здравствуйте (Бавария, Австрия · официально)\nServus — Привет / Пока (Бавария, Австрия · неформально)\nGrüß di — Привет тебе (Бавария · неформально)\nPfiat di — Пока (Бавария · прощание)\n\n💡 Grüß Gott — стандартный эквивалент Guten Tag на юге Германии и в Австрии" },
+      { title: "Швейцария и север", body: "Grüezi — Здравствуйте (Швейцария · официально)\nSali — Привет (Швейцария · неформально)\nAde — Пока (Швейцария, юг Германии)\nMoin — Привет (север Германии, Гамбург)\nTach — Привет (средняя Германия · сокращение от Guten Tag)\n\n💡 Moin говорят в любое время суток — не только утром" },
+      { title: "Неформальные и молодёжные", body: "Na? — Ну как? / Как дела? (повсеместно · очень коротко)\nAlles klar? — Всё норм? (неформально)\nAlles gut? — Всё хорошо? (неформально)\nWas geht? — Как дела? (молодёжное)\nWas geht ab? — Что происходит? (молодёжное)\n\n💡 Na? можно использовать как приветствие, вопрос и ответ одновременно" },
     ],
     exam: [
       { q: "«Grüß Gott» — это приветствие характерное для:", options: ["Северной Германии", "Берлина", "Баварии и Австрии", "Швейцарии"], answer: 2 },
@@ -1165,8 +1165,11 @@ function parseFlashcards(topic) {
     lines.forEach(line => {
       const parts = line.split(" — ");
       if (parts.length >= 2) {
-        const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
-        if (de && ru) cards.push({ de, ru, section: card.title });
+        const raw = parts[1].trim();
+        const noteMatch = raw.match(/\(([^)]+)\)/);
+        const ru = raw.replace(/\s*\(.*?\)/g, "").trim();
+        const note = noteMatch ? noteMatch[1] : null;
+        if (de && ru) cards.push({ de, ru, note, section: card.title });
       }
     });
   });
@@ -1255,6 +1258,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
           <div style={{ fontSize: 44, fontWeight: 900, color: "#fff", marginBottom: 22 }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
+          {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
@@ -1403,6 +1407,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
           <div style={{ fontSize: 44, fontWeight: 900, color: "#fff", marginBottom: 22 }}>{card.de}</div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
+          {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           {introIdx > 0 && <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>←</button>}
