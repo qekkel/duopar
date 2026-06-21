@@ -1088,9 +1088,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           tipLines.push(trimmed);
         }
       });
-      const tip = tipLines.filter(l => !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•")).join(" ").trim() ||
-                  tipLines.find(l => l.startsWith("💡") || l.startsWith("⚠️"))?.replace(/^[💡⚠️]\s*/, "") || null;
-      return { name: card.title, words: ws, tip: tip || null };
+      const introText = tipLines.filter(l => !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•")).join(" ").trim();
+      return { name: card.title, words: ws, tip: introText || null };
     }).filter(b => b.words.length > 0);
   }
 
