@@ -1532,15 +1532,15 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
 
   if (phase === "tip") {
     return (
-      <div style={{ paddingTop: 40 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0 }}>← Назад</button>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", padding: "20px 0 32px" }}>
+        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, textAlign: "left", marginBottom: 32 }}>← Назад</button>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", gap: 0 }}>
+          <div style={{ fontSize: 48, marginBottom: 20 }}>💡</div>
+          <div style={{ fontSize: 13, color: "#a78bfa", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>{block.name}</div>
+          <div style={{ fontSize: 18, color: "#fff", fontWeight: 700, lineHeight: 1.5, marginBottom: 10 }}>Правило</div>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", lineHeight: 1.75, maxWidth: 320 }}>{block.tip}</div>
         </div>
-        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>📖 {block.name}</div>
-        <div style={{ background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 20, padding: "28px 24px", marginBottom: 24 }}>
-          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{block.tip}</div>
-        </div>
-        <button onClick={() => setPhase("intro")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+        <button onClick={() => setPhase("intro")} style={{ width: "100%", padding: "17px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
           Понятно, начинаем →
         </button>
       </div>
