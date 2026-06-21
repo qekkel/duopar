@@ -571,7 +571,8 @@ const CURRICULUM = [
     level: "A2",
     cards: [
       { title: "Как образуется Perfekt", body: "haben/sein + Partizip II\n\nIch habe gegessen. — Я поел.\nIch bin gegangen. — Я ушёл.\n\nПравило haben:\nIch habe gemacht — я сделал\nIch habe gekauft — я купил\n\nПравило sein (движение/изменение):\nIch bin gefahren — я поехал\nIch bin aufgestanden — я встал" },
-      { title: "Partizip II — как образовать", body: "Слабые глаголы:\nge- + основа + -(e)t\nmachen → gemacht\nkaufen → gekauft\narbeiten → gearbeitet\n\nСильные глаголы (меняют корень):\ngehen → gegangen\nessen → gegessen\nschreiben → geschrieben\nsehen → gesehen\n\n💡 Сильные глаголы надо учить наизусть!" },
+      { title: "Partizip II: слабые глаголы", body: "Слабые глаголы — это «правильные» глаголы.\n\n📌 Схема: ge- + основа + -(e)t\n\nmachen → ge·mach·t\nkaufen → ge·kauf·t\narbeiten → ge·arbeit·et\n\n⚠️ -et добавляется если основа кончается на -t или -d:\narbeiten → gearbeitet (не gearbeit!)\n\n✅ Запомни схему: ge- + основа + -(e)t" },
+      { title: "Partizip II: сильные глаголы", body: "Сильные глаголы меняют корень — их надо учить наизусть!\n\n📌 Схема: ge- + изменённый корень + -en\n\ngehen → ge·gang·en\nessen → ge·gess·en\nschreiben → ge·schrieb·en\nsehen → ge·seh·en\nkommen → ge·komm·en\n\n💡 Как неправильные глаголы в английском:\ngo → went, eat → ate" },
     ],
     exam: [
       { q: "«Ich habe gegessen» — это:", options: ["Я ем", "Я поел", "Я буду есть", "Я хочу есть"], answer: 1 },
