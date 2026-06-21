@@ -304,8 +304,8 @@ const CURRICULUM = [
     level: "A1",
     bonus: true,
     cards: [
-      { title: "Числа 100–1 000 000 000", body: "100 — hundert\n200 — zweihundert\n1.000 — tausend\n1.000.000 — eine Million\n1.000.000.000 — eine Milliarde\n\n💡 В немецком разряды разделяются точкой (не запятой):\n1.000 = тысяча · 1.000.000 = миллион\n\n101 — hunderteins\n(ein)hundert — тоже правильно" },
-      { title: "Порядковые числительные", body: "Для дат и перечислений:\n\nder erste — первый (1.)\nder zweite — второй (2.)\nder dritte — третий (3.) ⚠️ исключение!\nder vierte — четвёртый (4.)\nder fünfte — пятый (5.)\n\n💡 С 4-го: основа + -te\ndritte — исключение, учи отдельно!" },
+      { title: "Числа 100–1 000 000 000", body: "100 — hundert\n200 — zweihundert\n1.000 — tausend\n1.000.000 — eine Million\n1.000.000.000 — eine Milliarde\n\n💡 В немецком разряды разделяются точкой (не запятой):\n1.000 = тысяча · 1.000.000 = миллион\n\n101 — hunderteins\n💡 einhundert и hundert — оба правильны" },
+      { title: "Порядковые числительные", body: "Для дат и перечислений:\n\nder erste — первый (1.)\nder zweite — второй (2.)\nder dritte — третий (3.)\nder vierte — четвёртый (4.)\nder fünfte — пятый (5.)\n\n⚠️ dritte — исключение, остальные просто +te\n💡 С 4-го: основа + -te (vierte, fünfte...)" },
       { title: "Как называть год", body: "Годы читаются как два двузначных числа:\n\n1999 — neunzehnhundertneunundneunzig\n2014 — zweitausendvierzehn\n2000 — zweitausend\n\n💡 С 2000 года говорят «zweitausend + число»\nС 1100–1999 — «сотни + остаток»" },
       { title: "Даты", body: "der erste März — первое марта\nder zwölfte April — двенадцатое апреля\nder erste Dritte — первое третьего\n\n💡 Дата = порядковое числительное + месяц\nПишется с точкой: 1. März = der erste März\n\nBerlin, 12. April 2002\n= zwölfter April zweitausendzwei" },
       { title: "Дроби и время", body: "ein halb — половина\nein Viertel — четверть\ndrei Viertel — три четверти\n\n💡 Особенно важны для времени:\nhalb drei — половина третьего\nein Viertel nach drei — четверть четвёртого\ndrei Viertel vier — без четверти четыре" },
