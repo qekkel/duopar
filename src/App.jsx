@@ -353,7 +353,7 @@ const CURRICULUM = [
     bonusTopicId: "colors_bonus",
     cards: [
       { title: "Основные цвета", body: "rot — красный\nblau — синий\ngelb — жёлтый\ngrün — зелёный\nschwarz — чёрный\nweiß — белый\ngrau — серый\nbraun — коричневый\norange — оранжевый\nlila — фиолетовый\nrosa — розовый" },
-      { title: "Как использовать цвета", body: "Das Auto ist rot. — Машина красная.\nIch mag Blau. — Мне нравится синий.\n\n💡 После глагола «sein» цвет не склоняется:\nDas Haus ist grün. ✓\n\nПеред существительным — склоняется:\nein rotes Haus (красный дом)\neine blaue Tür (синяя дверь)" },
+      { title: "Как использовать цвета", body: "Das Auto ist rot. — Машина красная.\nIch mag Blau. — Мне нравится синий.\n\n💡 После глагола «sein» цвет не склоняется:\nDas Haus ist grün. ✓\n\n⚠️ Перед существительным цвет склоняется:\nein rotes Haus (красный дом)\neine blaue Tür (синяя дверь)" },
       { title: "Цвета в предложениях", body: "Meine Lieblingsfarbe ist Blau. — Мой любимый цвет синий.\nIch trage ein grünes T-Shirt. — Я ношу зелёную футболку.\nDas rote Auto gehört mir. — Красная машина моя.\n\nСочетания цветов:\nhellblau — светло-синий\ndunkelrot — тёмно-красный\nschwarz-weiß — чёрно-белый\n\n⚠️ hell / dunkel добавляются слитно:\nhellgrün (не «hell grün»)" },
     ],
     exam: [
@@ -692,7 +692,7 @@ const CURRICULUM = [
     cards: [
       { title: "Оттенки и сочетания", body: "hellblau — светло-голубой\ndunkelblau — тёмно-синий\nhellgrün — светло-зелёный\ndunkelgrün — тёмно-зелёный\ndunkelrot — тёмно-красный\nhellgrau — светло-серый\ndunkelgrau — тёмно-серый\nhellbraun — светло-коричневый\nschwarzweiß — чёрно-белый\n\n💡 hell- (светло-) и dunkel- (тёмно-) пишутся слитно:\nhellgrün, dunkelrot, hellgrau" },
       { title: "Идиомы с цветами", body: "blau sein — быть пьяным (буквально «быть синим»)\nRot sehen — видеть красное = злиться\ngrünes Licht geben — дать зелёный свет (одобрить)\nschwarz sehen — смотреть пессимистично\nRosa brille tragen — смотреть сквозь розовые очки\n\n💡 Синий в Германии = цвет опьянения!\nBist du blau? — Ты пьяный?" },
-      { title: "Склонение цветов", body: "После sein — без окончания:\nDas Auto ist rot. Die Tür ist grün.\n\nПеред существительным — с окончанием:\nein rotes Auto (ср.р., Nom.)\neine rote Tür (ж.р., Nom.)\nein roter Mantel (м.р., Nom.)\n\n💡 Окончание зависит от рода и падежа существительного\nДля A1 достаточно запомнить форму после «sein»!" },
+      { title: "Склонение цветов", body: "После sein — без окончания:\nDas Auto ist rot. Die Tür ist grün.\n\n⚠️ Перед существительным — с окончанием:\nein rotes Auto (ср.р., Nom.)\neine rote Tür (ж.р., Nom.)\nein roter Mantel (м.р., Nom.)\n\n💡 Окончание зависит от рода и падежа существительного\nДля A1 достаточно запомнить форму после «sein»!" },
     ],
   },
   { id: "verbs_bonus", title: "Важные глаголы", emoji: "🔧", level: "A1", bonus: true, linkedBonus: true,
