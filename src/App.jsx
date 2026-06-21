@@ -928,10 +928,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           )}
 
           {topic.bonus && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
-              <div style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", letterSpacing: 1 }}>⭐ БОНУС</div>
-              <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
+            <div style={{ margin: "16px 0 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", letterSpacing: 1 }}>⭐ БОНУС</div>
+                <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center" }}>
+                Необязательно · не входит в обязательную программу
+              </div>
             </div>
           )}
 
