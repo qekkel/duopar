@@ -926,6 +926,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               {done.size === 0 ? "▶ Начать" : "▶ Продолжить"}
             </button>
           )}
+
+          {topic.bonus && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "14px 0" }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", letterSpacing: 1 }}>⭐ БОНУС</div>
+              <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
+            </div>
+          )}
+
           <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: allDone ? "linear-gradient(135deg, #7C5CFC, #a78bfa)" : "rgba(124,92,252,0.12)", border: allDone ? "none" : "1px solid rgba(124,92,252,0.3)", color: allDone ? "#fff" : "#a78bfa", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
             ⚡ {allDone ? "Сдать экзамен" : "Попробовать экзамен"}
           </button>
