@@ -1416,14 +1416,20 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const card = practiceQueue[practiceIdx];
   const correct = card?.ru;
   const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
+  // Build a combined pool: current block words + allWords, deduplicated by ru
+  const optionPool = React.useMemo(() => {
+    const seen = new Set();
+    return [...words, ...allWords].filter(f => { if (seen.has(f.ru)) return false; seen.add(f.ru); return true; });
+  }, [words, allWords]);
   const options = React.useMemo(() => {
     if (!card) return [];
     const pool = (() => {
-      const sameType = allWords.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
-      return sameType.length >= 3 ? sameType : allWords.filter(f => f.ru !== correct);
+      const sameType = optionPool.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
+      return sameType.length >= 3 ? sameType : optionPool.filter(f => f.ru !== correct);
     })();
     return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
   }, [practiceIdx, practiceQueue]);
+  if (!card) return null;
   return (
     <div style={{ paddingTop: 40 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
