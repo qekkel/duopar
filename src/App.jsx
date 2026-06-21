@@ -226,7 +226,7 @@ const CURRICULUM_LEVELS = {
 const CURRICULUM = [
   {
     id: "greetings",
-    title: "Приветствия",
+    title: "Знакомство",
     emoji: "👋",
     level: "A1",
     bonusTopicId: "greetings_dialect",
