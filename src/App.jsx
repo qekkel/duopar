@@ -217,10 +217,10 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 // ── ПРОГРАММА ОБУЧЕНИЯ ───────────────────────────────────────
 const CURRICULUM_LEVELS = {
-  A1: { color: "#7C5CFC", label: "A1 · Базовый" },
-  A2: { color: "#f59e0b", label: "A1 · Элементарный" },
-  A3: { color: "#ef4444", label: "A1 · Средний" },
-  A4: { color: "#8b5cf6", label: "A1 · Эксперт" },
+  A1: { color: "#7C5CFC", label: "A1 · Базовый", short: "A1" },
+  A2: { color: "#f59e0b", label: "A2 · Элементарный", short: "A2" },
+  A3: { color: "#10b981", label: "B1 · Средний", short: "B1" },
+  A4: { color: "#8b5cf6", label: "B2 · Эксперт", short: "B2" },
 };
 
 const CURRICULUM = [
@@ -929,6 +929,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const [activeBlockIdx, setActiveBlockIdx] = useState(null);
   const [levelExamLevel, setLevelExamLevel] = useState(null);
   const [completedBlocks, setCompletedBlocks] = useState(() => loadBlocks(STORAGE_KEY));
+  const [activeLevel, setActiveLevel] = useState("A1");
 
   useEffect(() => {
     if (userId) setCompletedBlocks(loadBlocks(`duopar_blocks_${userId}`));
@@ -1084,76 +1085,97 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     }
   }
 
+  const LEVELS = ["A1", "A2", "A3", "A4"];
+  // Level is unlocked if all previous level non-bonus topics are completed
+  function isLevelUnlocked(lvl) {
+    const idx = LEVELS.indexOf(lvl);
+    if (idx === 0) return true;
+    const prevLvl = LEVELS[idx - 1];
+    return CURRICULUM.filter(t => t.level === prevLvl && !t.linkedBonus && !t.bonus).every(t => completedTopics.includes(t.id));
+  }
+  function isLevelDone(lvl) {
+    return CURRICULUM.filter(t => t.level === lvl && !t.linkedBonus && !t.bonus).every(t => completedTopics.includes(t.id));
+  }
+
+  const lvl = activeLevel;
+  const topics = CURRICULUM.filter(t => t.level === lvl && !t.linkedBonus);
+  const lvlColor = CURRICULUM_LEVELS[lvl].color;
+  const allTopicsDone = topics.filter(t => !t.bonus).every(t => completedTopics.includes(t.id));
+
   return (
     <div style={{ paddingTop: 40 }}>
       <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
-      <h1 style={{ fontSize: 26, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>Программа</h1>
-      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>{completedTopics.length} из {CURRICULUM.filter(t => !t.linkedBonus).length} тем пройдено</div>
 
-      {["A1", "A2", "A3", "A4"].map(lvl => {
-        const topics = CURRICULUM.filter(t => t.level === lvl && !t.linkedBonus);
-        const lvlColor = CURRICULUM_LEVELS[lvl].color;
-        return (
-          <div key={lvl} style={{ marginBottom: 32 }}>
-            <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>{CURRICULUM_LEVELS[lvl].label}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {topics.map((topic) => {
-                const i = CURRICULUM.indexOf(topic);
-                const examDone = completedTopics.includes(topic.id);
-                const blocks = getTopicBlocks(topic);
-                const done = doneBlocks(topic.id);
-                const blocksTotal = blocks.length;
-                const blocksDone = done.size;
-                const inProgress = blocksDone > 0 && !examDone;
-                return (
-                  <button key={topic.id} onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }}
-                    style={{ background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus && !examDone ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(251,191,36,0.06))" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus && !examDone ? "rgba(245,158,11,0.45)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", boxShadow: topic.bonus && !examDone ? "0 0 12px rgba(245,158,11,0.15)" : "none" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: blocksTotal > 0 ? 10 : 0 }}>
-                      <div style={{ fontSize: 26 }}>{examDone ? "✅" : topic.emoji}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: topic.bonus && !examDone ? "#fcd34d" : "#fff" }}>
-                          {i + 1}. {topic.title}
-                        </div>
-                        <div style={{ fontSize: 11, color: examDone ? "#10b981" : inProgress ? "#a78bfa" : "rgba(255,255,255,0.3)", marginTop: 2 }}>
-                          {examDone ? "Экзамен сдан ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
-                        </div>
-                      </div>
-                      <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 14 }}>→</div>
-                    </div>
-                    {blocksTotal > 0 && (
-                      <div style={{ display: "flex", gap: 4 }}>
-                        {blocks.map((_, bi) => (
-                          <div key={bi} style={{ flex: 1, height: 4, borderRadius: 2, background: done.has(bi) ? (examDone ? "#10b981" : lvlColor) : "rgba(255,255,255,0.1)" }} />
-                        ))}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+      {/* Level tabs */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 28, overflowX: "auto", paddingBottom: 4 }}>
+        {LEVELS.map((l, idx) => {
+          const unlocked = isLevelUnlocked(l);
+          const done = isLevelDone(l);
+          const active = l === activeLevel;
+          const color = CURRICULUM_LEVELS[l].color;
+          return (
+            <button key={l} onClick={() => unlocked && setActiveLevel(l)} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 20, border: active ? `1.5px solid ${color}` : "1.5px solid rgba(255,255,255,0.1)", background: active ? `${color}22` : "rgba(255,255,255,0.04)", cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : 0.4 }}>
+              {done
+                ? <span style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color, flexShrink: 0 }}>✓</span>
+                : <span style={{ fontSize: 13, color: active ? color : "rgba(255,255,255,0.5)", fontWeight: 700 }}>{CURRICULUM_LEVELS[l].short}</span>}
+              {active && <span style={{ fontSize: 12, color, fontWeight: 700, whiteSpace: "nowrap" }}>{CURRICULUM_LEVELS[l].label.split(" · ")[1]}</span>}
+              {!unlocked && <span style={{ fontSize: 11 }}>🔒</span>}
+            </button>
+          );
+        })}
+      </div>
 
-              {/* Итоговый экзамен уровня */}
-              {(() => {
-                const allTopicsDone = topics.every(t => completedTopics.includes(t.id));
-                return (
-                  <button onClick={() => { setLevelExamLevel(lvl); setMode("level_exam"); }}
-                    style={{ background: allTopicsDone ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.03)", border: `2px dashed ${allTopicsDone ? "#10b981" : lvlColor}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", opacity: allTopicsDone ? 1 : 0.7 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{ fontSize: 26 }}>{allTopicsDone ? "🏆" : "📝"}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: allTopicsDone ? "#10b981" : "#fff" }}>Итоговый экзамен {CURRICULUM_LEVELS[lvl].label.split(" · ")[0]}</div>
-                        <div style={{ fontSize: 11, color: allTopicsDone ? "#10b981" : lvlColor, marginTop: 2 }}>
-                          {allTopicsDone ? "Все темы пройдены — сдавай!" : "Все темы уровня в одном экзамене"}
-                        </div>
-                      </div>
-                      <div style={{ color: allTopicsDone ? "#10b981" : lvlColor, fontSize: 14 }}>→</div>
-                    </div>
-                  </button>
-                );
-              })()}
+      <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{CURRICULUM_LEVELS[lvl].label}</div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {topics.map((topic, idx) => {
+          const examDone = completedTopics.includes(topic.id);
+          const blocks = getTopicBlocks(topic);
+          const done = doneBlocks(topic.id);
+          const blocksTotal = blocks.length;
+          const blocksDone = done.size;
+          const inProgress = blocksDone > 0 && !examDone;
+          return (
+            <button key={topic.id} onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }}
+              style={{ background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus && !examDone ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(251,191,36,0.06))" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus && !examDone ? "rgba(245,158,11,0.45)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", boxShadow: topic.bonus && !examDone ? "0 0 12px rgba(245,158,11,0.15)" : "none" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: blocksTotal > 0 ? 10 : 0 }}>
+                <div style={{ fontSize: 26 }}>{examDone ? "✅" : topic.emoji}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: topic.bonus && !examDone ? "#fcd34d" : "#fff" }}>
+                    {idx + 1}. {topic.title}
+                  </div>
+                  <div style={{ fontSize: 11, color: examDone ? "#10b981" : inProgress ? "#a78bfa" : "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                    {examDone ? "Экзамен сдан ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
+                  </div>
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 14 }}>→</div>
+              </div>
+              {blocksTotal > 0 && (
+                <div style={{ display: "flex", gap: 4 }}>
+                  {blocks.map((_, bi) => (
+                    <div key={bi} style={{ flex: 1, height: 4, borderRadius: 2, background: done.has(bi) ? (examDone ? "#10b981" : lvlColor) : "rgba(255,255,255,0.1)" }} />
+                  ))}
+                </div>
+              )}
+            </button>
+          );
+        })}
+
+        {/* Итоговый экзамен уровня */}
+        <button onClick={() => { setLevelExamLevel(lvl); setMode("level_exam"); }}
+          style={{ background: allTopicsDone ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.03)", border: `2px dashed ${allTopicsDone ? "#10b981" : lvlColor}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", opacity: allTopicsDone ? 1 : 0.7 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ fontSize: 26 }}>{allTopicsDone ? "🏆" : "📝"}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: allTopicsDone ? "#10b981" : "#fff" }}>Итоговый экзамен {CURRICULUM_LEVELS[lvl].short}</div>
+              <div style={{ fontSize: 11, color: allTopicsDone ? "#10b981" : lvlColor, marginTop: 2 }}>
+                {allTopicsDone ? "Все темы пройдены — сдавай!" : "Все темы уровня в одном экзамене"}
+              </div>
             </div>
+            <div style={{ color: allTopicsDone ? "#10b981" : lvlColor, fontSize: 14 }}>→</div>
           </div>
-        );
-      })}
+        </button>
+      </div>
     </div>
   );
 }
