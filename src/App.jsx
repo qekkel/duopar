@@ -1202,7 +1202,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           ))}
 
           {done.size > 0 && (
-            <button onClick={() => { setActiveBlockIdx(0); setCompletedBlocks(p => ({ ...p, [activeTopicId]: new Set() })); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
+            <button onClick={() => { const updated = { ...completedBlocks, [activeTopicId]: new Set() }; setCompletedBlocks(updated); saveBlocks(updated); setActiveBlockIdx(0); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
               🔁 Начать сначала
             </button>
           )}
