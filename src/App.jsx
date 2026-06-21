@@ -2001,7 +2001,14 @@ function AuthScreen() {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) setError(error.message);
       else {
-        if (username && data.user) await supabase.from("profiles").update({ username }).eq("id", data.user.id);
+        if (username && data.user) {
+          // retry a few times — profiles row is created by trigger asynchronously
+          for (let i = 0; i < 5; i++) {
+            await new Promise(r => setTimeout(r, 600));
+            const { error: ue } = await supabase.from("profiles").update({ username }).eq("id", data.user.id);
+            if (!ue) break;
+          }
+        }
         setDone(true);
       }
     }
@@ -3584,7 +3591,7 @@ export default function DuoPar() {
         {screen === "lobby" && !needsPlacement && (
           <div style={{ paddingTop: 60 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-              <XPBar xp={profile?.xp || 0} username={profile?.username} langLevel={profile?.lang_level} />
+              <XPBar xp={profile?.xp || 0} username={profile?.username || (session?.user?.email ? session.user.email.split("@")[0] : "Игрок")} langLevel={profile?.lang_level} />
               <button onClick={() => setScreen("profile")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, width: 40, height: 40, fontSize: 18, cursor: "pointer", marginLeft: 12, flexShrink: 0 }}>
                 🧑‍💻
               </button>
