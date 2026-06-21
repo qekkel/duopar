@@ -217,10 +217,10 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 // ── ПРОГРАММА ОБУЧЕНИЯ ───────────────────────────────────────
 const CURRICULUM_LEVELS = {
-  A1: { color: "#7C5CFC", label: "A1 · Базовый", short: "A1" },
-  A2: { color: "#f59e0b", label: "A2 · Элементарный", short: "A2" },
-  A3: { color: "#10b981", label: "B1 · Средний", short: "B1" },
-  A4: { color: "#8b5cf6", label: "B2 · Эксперт", short: "B2" },
+  A1: { color: "#7C5CFC", label: "A1 · Базовый", short: "A1·1" },
+  A2: { color: "#7C5CFC", label: "A1 · Часть 2", short: "A1·2" },
+  A3: { color: "#7C5CFC", label: "A1 · Часть 3", short: "A1·3" },
+  A4: { color: "#7C5CFC", label: "A1 · Часть 4", short: "A1·4" },
 };
 
 const CURRICULUM = [
