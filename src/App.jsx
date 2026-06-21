@@ -1155,11 +1155,15 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   const card = practiceQueue[practiceIdx];
   const correct = card?.ru;
   const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
-  const pool = card ? (() => {
-    const sameType = allCards.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
-    return sameType.length >= 3 ? sameType : allCards.filter(f => f.ru !== correct);
-  })() : [];
-  const options = card ? shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]) : [];
+  // useMemo so shuffle doesn't re-run on every render (e.g. when selected changes)
+  const options = React.useMemo(() => {
+    if (!card) return [];
+    const pool = (() => {
+      const sameType = allCards.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
+      return sameType.length >= 3 ? sameType : allCards.filter(f => f.ru !== correct);
+    })();
+    return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
+  }, [practiceIdx, practiceQueue]);
 
   return (
     <div style={{ paddingTop: 40 }}>
@@ -1280,11 +1284,14 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const card = practiceQueue[practiceIdx];
   const correct = card?.ru;
   const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
-  const pool2 = card ? (() => {
-    const sameType = allWords.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
-    return sameType.length >= 3 ? sameType : allWords.filter(f => f.ru !== correct);
-  })() : [];
-  const options = card ? shuffle([correct, ...shuffle(pool2).slice(0, 3).map(f => f.ru)]) : [];
+  const options = React.useMemo(() => {
+    if (!card) return [];
+    const pool = (() => {
+      const sameType = allWords.filter(f => f.ru !== correct && isSentence(f) === isSentence(card));
+      return sameType.length >= 3 ? sameType : allWords.filter(f => f.ru !== correct);
+    })();
+    return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
+  }, [practiceIdx, practiceQueue]);
   return (
     <div style={{ paddingTop: 40 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
