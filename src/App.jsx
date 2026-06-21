@@ -1056,9 +1056,9 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               🔒 Экзамен — после всех частей
             </div>
           )}
-          {done.size > 0 && !allDone && (
+          {done.size > 0 && (
             <button onClick={() => { setActiveBlockIdx(0); setCompletedBlocks(p => ({ ...p, [activeTopicId]: new Set() })); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
-              Начать сначала
+              🔁 Начать сначала
             </button>
           )}
         </div>
