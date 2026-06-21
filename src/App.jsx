@@ -962,13 +962,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                 const inProgress = blocksDone > 0 && !examDone;
                 return (
                   <button key={topic.id} onClick={() => { setActiveTopicId(topic.id); setMode("detail"); }}
-                    style={{ background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus ? "rgba(245,158,11,0.06)" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus ? "rgba(245,158,11,0.25)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%" }}>
+                    style={{ background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus && !examDone ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(251,191,36,0.06))" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus && !examDone ? "rgba(245,158,11,0.45)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", boxShadow: topic.bonus && !examDone ? "0 0 12px rgba(245,158,11,0.15)" : "none" }}>
+                    {topic.bonus && !examDone && (
+                      <div style={{ fontSize: 10, fontWeight: 800, color: "#f59e0b", letterSpacing: 1, marginBottom: 8, textTransform: "uppercase" }}>⭐ Бонусный материал</div>
+                    )}
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: blocksTotal > 0 ? 10 : 0 }}>
                       <div style={{ fontSize: 26 }}>{examDone ? "✅" : topic.emoji}</div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: topic.bonus && !examDone ? "#fcd34d" : "#fff" }}>
                           {i + 1}. {topic.title}
-                          {topic.bonus && !examDone && <span style={{ fontSize: 10, background: "rgba(245,158,11,0.2)", color: "#f59e0b", borderRadius: 6, padding: "2px 6px", fontWeight: 700 }}>БОНУС</span>}
                         </div>
                         <div style={{ fontSize: 11, color: examDone ? "#10b981" : inProgress ? "#a78bfa" : "rgba(255,255,255,0.3)", marginTop: 2 }}>
                           {examDone ? "Экзамен сдан ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
