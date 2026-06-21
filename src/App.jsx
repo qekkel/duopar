@@ -353,7 +353,7 @@ const CURRICULUM = [
     bonusTopicId: "colors_bonus",
     cards: [
       { title: "Основные цвета", body: "rot — красный\nblau — синий\ngelb — жёлтый\ngrün — зелёный\nschwarz — чёрный\nweiß — белый\ngrau — серый\nbraun — коричневый\norange — оранжевый\nlila — фиолетовый\nrosa — розовый" },
-      { title: "Как использовать цвета", body: "Das Auto ist rot. — Машина красная.\nIch mag Blau. — Мне нравится синий.\n\n💡 После глагола «sein» цвет не склоняется:\nDas Haus ist grün. ✓\n\n⚠️ Перед существительным цвет склоняется:\nein rotes Haus (красный дом)\neine blaue Tür (синяя дверь)" },
+      { title: "Как использовать цвета", body: "Das ist rot. — Это красное.\nDas ist blau. — Это синее.\nDas ist grün. — Это зелёное.\nDas ist gelb. — Это жёлтое.\nIch mag Blau. — Мне нравится синий.\nMeine Lieblingsfarbe ist Rot. — Мой любимый цвет красный.\n\n💡 После «sein» цвет не склоняется — просто ставь после глагола!" },
       { title: "Цвета в предложениях", body: "Meine Lieblingsfarbe ist Blau. — Мой любимый цвет синий.\nIch trage ein grünes T-Shirt. — Я ношу зелёную футболку.\nDas rote Auto gehört mir. — Красная машина моя.\n\nСочетания цветов:\nhellblau — светло-синий\ndunkelrot — тёмно-красный\nschwarz-weiß — чёрно-белый\n\n⚠️ hell / dunkel добавляются слитно:\nhellgrün (не «hell grün»)" },
     ],
     exam: [
