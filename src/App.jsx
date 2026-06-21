@@ -1488,7 +1488,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
             else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
             else color = "rgba(255,255,255,0.2)";
           }
-          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
+          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt ? opt.charAt(0).toUpperCase() + opt.slice(1) : opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
         })}
       </div>
     </div>
@@ -1649,7 +1649,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
             else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
             else color = "rgba(255,255,255,0.2)";
           }
-          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
+          return <button key={i} onClick={() => pick(opt)} style={{ padding: "16px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 600, transition: "all 0.2s", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span>{opt ? opt.charAt(0).toUpperCase() + opt.slice(1) : opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}</button>;
         })}
       </div>
     </div>
