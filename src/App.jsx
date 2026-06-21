@@ -229,6 +229,7 @@ const CURRICULUM = [
     title: "Приветствия",
     emoji: "👋",
     level: "A1",
+    bonusTopicId: "greetings_dialect",
     cards: [
       { title: "Как поздороваться", body: "Hallo — Привет\nGuten Morgen — Доброе утро\nGuten Tag — Добрый день\nGuten Abend — Добрый вечер\nHi — Хай (неформально)" },
       { title: "Как попрощаться", body: "Tschüss — Пока\nAuf Wiedersehen — До свидания\nBis bald — До скорого\nBis morgen — До завтра\nGute Nacht — Спокойной ночи" },
@@ -240,6 +241,25 @@ const CURRICULUM = [
       { q: "Как неформально спросить «как дела»?", options: ["Wie heißen Sie?", "Woher kommen Sie?", "Wie geht's?", "Was machen Sie?"], answer: 2 },
       { q: "«Bis bald» означает:", options: ["До завтра", "До свидания", "До скорого", "Спокойной ночи"], answer: 2 },
       { q: "Как ответить «Очень хорошо»?", options: ["Es geht.", "Nicht so gut.", "Danke schön.", "Sehr gut!"], answer: 3 },
+    ],
+  },
+  {
+    id: "greetings_dialect",
+    title: "Диалектные приветствия",
+    emoji: "🗺️",
+    level: "A1",
+    bonus: true,
+    cards: [
+      { title: "Бавария и Австрия", body: "Grüß Gott — Здравствуйте (букв. «Приветствует Бог»)\nServus — Привет / Пока (очень неформально)\nGrüß di — Привет тебе (неформально)\nPfiat di — Пока (баварское)\n\n💡 Grüß Gott — стандартное приветствие в Баварии и Австрии\nЭквивалент Guten Tag на юге" },
+      { title: "Швейцария и север", body: "Grüezi — Здравствуйте (швейцарское)\nSali / Hoi — Привет (швейцарское неформальное)\nAde — Пока (швейцарское / южнонемецкое)\n\nMoin — Привет (северная Германия, Гамбург)\nMoin Moin — тоже Привет (не «добрый день»!)\nTach — Привет (средненемецкое, сокращение от Guten Tag)\n\n💡 Moin говорят в любое время суток" },
+      { title: "Неформальные и молодёжные", body: "Na? — Ну как? / Как дела? (очень неформально)\nAlles klar? — Всё норм?\nAlles gut? — Всё хорошо?\nWas geht? — Что происходит? / Как дела?\nWas geht ab? — Что случилось? / Как ты?\n\n💡 Na? — самое короткое приветствие\nОдно слово = «как дела / привет / ну что»" },
+    ],
+    exam: [
+      { q: "«Grüß Gott» — это приветствие характерное для:", options: ["Северной Германии", "Берлина", "Баварии и Австрии", "Швейцарии"], answer: 2 },
+      { q: "«Moin» говорят:", options: ["только утром", "в любое время суток", "только вечером", "только в Баварии"], answer: 1 },
+      { q: "«Servus» — это:", options: ["только приветствие", "только прощание", "и привет, и пока", "официальное обращение"], answer: 2 },
+      { q: "«Grüezi» — типичное приветствие в:", options: ["Австрии", "Баварии", "Швейцарии", "Гамбурге"], answer: 2 },
+      { q: "«Na?» как приветствие означает:", options: ["Нет", "Ну как дела?", "Спасибо", "Привет, давно не виделись"], answer: 1 },
     ],
   },
   {
@@ -1020,9 +1040,23 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             </button>
           )}
 
+          {(() => {
+            const bonusTopic = topic.bonusTopicId ? CURRICULUM.find(t => t.id === topic.bonusTopicId) : null;
+            if (!bonusTopic) return null;
+            return (
+              <button onClick={() => { setActiveTopicId(bonusTopic.id); }} style={{ width: "100%", marginTop: 16, marginBottom: 4, padding: "14px 18px", borderRadius: 14, background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))", border: "1px solid rgba(245,158,11,0.4)", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 20 }}>⭐</span>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fcd34d" }}>{bonusTopic.title}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>Бонус · необязательно</div>
+                </div>
+                <span style={{ marginLeft: "auto", color: "rgba(245,158,11,0.5)", fontSize: 16 }}>→</span>
+              </button>
+            );
+          })()}
           {topic.bonus && (
             <div style={{ marginTop: 16, marginBottom: 12 }}>
-              <div style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 14, padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <div style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))", border: "1px solid rgba(245,158,11,0.4)", borderRadius: 14, padding: "14px 18px", display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 16 }}>⭐</span>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#fcd34d" }}>Бонусный материал</div>
