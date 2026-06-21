@@ -242,6 +242,15 @@ let _currentAudio = null;
 function isGermanText(text) {
   return !!text && !/[а-яА-ЯёЁ]/.test(text);
 }
+// Returns true if `de` is a letter/letter-pair (not a word with meaning):
+// "A a", "Ä ä", "ä", "ö", "ü" — pronounce exercise, not guess-translation
+function isPronounceCard(de) {
+  if (!de) return false;
+  const words = de.trim().split(/\s+/);
+  if (words.length === 2 && words[1].toLowerCase() === words[0].toLowerCase()) return true;
+  if (words.length === 1 && de.trim().length === 1) return true;
+  return false;
+}
 
 function speakDE(text, audioUrl) {
   // Guard: never speak Russian/Cyrillic text
@@ -1630,20 +1639,22 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           );
         })}
 
-        {/* Итоговый экзамен уровня */}
-        <button onClick={() => { setLevelExamLevel(lvl); setMode("level_exam"); }}
-          style={{ background: allTopicsDone ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.03)", border: `2px dashed ${allTopicsDone ? "#10b981" : lvlColor}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", opacity: allTopicsDone ? 1 : 0.7 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ fontSize: 26 }}>{allTopicsDone ? "🏆" : "📝"}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: allTopicsDone ? "#10b981" : "#fff" }}>Итоговый экзамен {CURRICULUM_LEVELS[lvl].short}</div>
-              <div style={{ fontSize: 11, color: allTopicsDone ? "#10b981" : lvlColor, marginTop: 2 }}>
-                {allTopicsDone ? "Все темы пройдены — сдавай!" : "Все темы уровня в одном экзамене"}
+        {/* Итоговый экзамен — только для последнего уровня A4 */}
+        {lvl === "A4" && (
+          <button onClick={() => { setLevelExamLevel(lvl); setMode("level_exam"); }}
+            style={{ background: allTopicsDone ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.03)", border: `2px dashed ${allTopicsDone ? "#10b981" : lvlColor}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", opacity: allTopicsDone ? 1 : 0.7 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 26 }}>{allTopicsDone ? "🏆" : "📝"}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: allTopicsDone ? "#10b981" : "#fff" }}>Итоговый экзамен A1</div>
+                <div style={{ fontSize: 11, color: allTopicsDone ? "#10b981" : lvlColor, marginTop: 2 }}>
+                  {allTopicsDone ? "Все темы пройдены — сдавай!" : "Все темы уровня в одном экзамене"}
+                </div>
               </div>
+              <div style={{ color: allTopicsDone ? "#10b981" : lvlColor, fontSize: 14 }}>→</div>
             </div>
-            <div style={{ color: allTopicsDone ? "#10b981" : lvlColor, fontSize: 14 }}>→</div>
-          </div>
-        </button>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1999,6 +2010,39 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
 
   if (!practiceCard) return null;
   const card = practiceCard;
+
+  // Letter / sound card → pronounce exercise (no guess-translation for "A a", "ä", etc.)
+  if (audioEnabled && isPronounceCard(card.de)) {
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0, flexShrink: 0 }}>← Назад</button>
+          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+            <div style={{ height: "100%", borderRadius: 2, background: "#7C5CFC", width: `${progress * 100}%`, transition: "width 0.4s" }} />
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🎯 {block.name}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Произнеси вслух · {practiceIdx + 1} из {practiceQueue.length}</div>
+        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "40px 24px", textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontSize: 80, fontWeight: 800, color: "#fff", letterSpacing: 6, marginBottom: 20 }}>{card.de}</div>
+          <AudioButton text={card.audioText || card.de} audioUrl={card.audioUrl} size={40} />
+          {card.ru && isGermanText(card.ru) && (
+            <div style={{ marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+              Пример: <span style={{ color: "#a78bfa", fontWeight: 700 }}>{card.ru}</span>
+              {" "}<AudioButton text={card.ru} size={22} />
+            </div>
+          )}
+          {card.exampleTranslation && (
+            <div style={{ marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{card.exampleTranslation}</div>
+          )}
+        </div>
+        <button onClick={() => advance(true)} style={{ width: "100%", padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
+          Я произнёс ✓
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ paddingTop: 40 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
