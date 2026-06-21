@@ -945,22 +945,26 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   function doneBlocks(topicId) { return completedBlocks[topicId] || new Set(); }
 
   function getTopicBlocks(topic) {
-    return topic.cards.map(card => ({
-      name: card.title,
-      words: (() => {
-        const ws = [];
-        card.body.split("\n").forEach(l => {
-          if (l.includes(" — ") && !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•")) {
-            const parts = l.split(" — ");
-            if (parts.length >= 2) {
-              const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
-              if (de && ru) ws.push({ de, ru, section: card.title });
-            }
+    return topic.cards.map(card => {
+      const ws = [];
+      const tipLines = [];
+      card.body.split("\n").forEach(l => {
+        const trimmed = l.trim();
+        if (!trimmed) return;
+        if (trimmed.includes(" — ") && !trimmed.startsWith("💡") && !trimmed.startsWith("⚠️") && !trimmed.startsWith("•")) {
+          const parts = trimmed.split(" — ");
+          if (parts.length >= 2) {
+            const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
+            if (de && ru) ws.push({ de, ru, section: card.title });
           }
-        });
-        return ws;
-      })(),
-    })).filter(b => b.words.length > 0);
+        } else {
+          tipLines.push(trimmed);
+        }
+      });
+      const tip = tipLines.filter(l => !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•")).join(" ").trim() ||
+                  tipLines.find(l => l.startsWith("💡") || l.startsWith("⚠️"))?.replace(/^[💡⚠️]\s*/, "") || null;
+      return { name: card.title, words: ws, tip: tip || null };
+    }).filter(b => b.words.length > 0);
   }
 
   if (activeTopicId && mode) {
@@ -1333,7 +1337,7 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
 
 function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   const words = block.words;
-  const [phase, setPhase] = useState("intro");
+  const [phase, setPhase] = useState(block.tip ? "tip" : "intro");
   const [introIdx, setIntroIdx] = useState(0);
   const [practiceQueue, setPracticeQueue] = useState(() => shuffle(words));
   const [practiceIdx, setPracticeIdx] = useState(0);
@@ -1378,6 +1382,23 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
   }
 
   const progress = phase === "intro" ? (introIdx + 1) / words.length / 2 : 0.5 + (practiceIdx + 1) / practiceQueue.length / 2;
+
+  if (phase === "tip") {
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0 }}>← Назад</button>
+        </div>
+        <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>📖 {block.name}</div>
+        <div style={{ background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 20, padding: "28px 24px", marginBottom: 24 }}>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{block.tip}</div>
+        </div>
+        <button onClick={() => setPhase("intro")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+          Понятно, начинаем →
+        </button>
+      </div>
+    );
+  }
 
   if (phase === "retry_intro") {
     return (
