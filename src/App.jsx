@@ -1089,8 +1089,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           tipLines.push(trimmed);
         }
       });
-      const introText = tipLines.filter(l => !l.startsWith("💡") && !l.startsWith("⚠️") && !l.startsWith("•")).join(" ").trim();
-      return { name: card.title, words: ws, tip: introText || null };
+      const introText = tipLines.join(" ").trim();
+      return { name: card.title, words: ws, tip: introText.length > 40 ? introText : null };
     }).filter(b => b.words.length > 0);
   }
 
