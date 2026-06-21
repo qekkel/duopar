@@ -2468,7 +2468,8 @@ function MapGameScreen({ onBack, session, profile }) {
   function searchOpponent() {
     matchedRef.current = false;
     setOnlineSetup("searching");
-    const lobby = supabase.channel("matchmaking-lobby", { config: { broadcast: { self: false } } });
+    const myLevel = profile?.lang_level || "A1";
+    const lobby = supabase.channel(`matchmaking-lobby-${myLevel}`, { config: { broadcast: { self: false } } });
     lobbyRef.current = lobby;
 
     lobby.on("broadcast", { event: "looking" }, ({ payload }) => {
@@ -2974,7 +2975,8 @@ function MapGameScreen({ onBack, session, profile }) {
         <button onClick={() => { matchedRef.current = true; lobbyRef.current?.unsubscribe(); setOnlineSetup("choice"); }} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
         <div style={{ fontSize: 40, marginBottom: 20 }}>🌐</div>
         <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Ищем соперника</div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 36 }}>Подбираем игрока онлайн...</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Подбираем игрока уровня <span style={{ color: "#a78bfa", fontWeight: 700 }}>{profile?.lang_level || "A1"}</span></div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 28 }}>Только игроки твоего уровня</div>
         <div style={{ width: 56, height: 56, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 28px", animation: "spin 1s linear infinite" }} />
         <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Если никого нет — через 15 сек играешь с ботом</div>
       </div>
