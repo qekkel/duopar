@@ -965,6 +965,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
   if (activeTopicId && mode) {
     const topic = CURRICULUM.find(t => t.id === activeTopicId);
+    if (!topic) { setActiveTopicId(null); setMode(null); return null; }
     const blocks = getTopicBlocks(topic);
 
     if (mode === "block" && activeBlockIdx !== null) {
@@ -1040,7 +1041,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             const bonusTopic = topic.bonusTopicId ? CURRICULUM.find(t => t.id === topic.bonusTopicId) : null;
             if (!bonusTopic) return null;
             return (
-              <button onClick={() => { setActiveTopicId(bonusTopic.id); }} style={{ width: "100%", marginTop: 16, marginBottom: 4, padding: "14px 18px", borderRadius: 14, background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))", border: "1px solid rgba(245,158,11,0.4)", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={() => { setActiveTopicId(bonusTopic.id); setMode("detail"); }} style={{ width: "100%", marginTop: 16, marginBottom: 4, padding: "14px 18px", borderRadius: 14, background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(251,191,36,0.08))", border: "1px solid rgba(245,158,11,0.4)", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 20 }}>⭐</span>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: "#fcd34d" }}>{bonusTopic.title}</div>
