@@ -1501,9 +1501,14 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
     return [...words, ...allWords].filter(f => { if (seen.has(f.ru)) return false; seen.add(f.ru); return true; });
   }, [words, allWords]);
   const practiceCard = practiceQueue[practiceIdx];
-  const correct = practiceCard?.ru;
+  const reversed = practiceCard?.reversed ?? false;
+  const correct = reversed ? practiceCard?.de : practiceCard?.ru;
   const options = useMemo(() => {
     if (!practiceCard) return [];
+    if (reversed) {
+      const pool = optionPool.filter(f => f.de !== practiceCard.de);
+      return shuffle([practiceCard.de, ...shuffle(pool).slice(0, 3).map(f => f.de)]);
+    }
     const pool = (() => {
       const sameType = optionPool.filter(f => f.ru !== correct && isSentence(f) === isSentence(practiceCard));
       return sameType.length >= 3 ? sameType : optionPool.filter(f => f.ru !== correct);
@@ -1511,12 +1516,12 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
     return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
   }, [practiceIdx, practiceQueue]);
 
-  function startPractice() { setPracticeQueue(shuffle(words)); setPracticeIdx(0); setSelected(null); setWrong([]); setPhase("practice"); }
+  function startPractice() { setPracticeQueue(shuffle(words).map((w, i) => ({ ...w, reversed: i % 2 === 1 }))); setPracticeIdx(0); setSelected(null); setWrong([]); setPhase("practice"); }
 
   function pick(opt) {
     if (selected !== null) return;
     setSelected(opt);
-    const isCorrect = opt === practiceCard.ru;
+    const isCorrect = reversed ? opt === practiceCard.de : opt === practiceCard.ru;
     playSound(isCorrect ? "correct" : "wrong");
     setTimeout(() => {
       if (!isCorrect) setWrong(w => [...w, practiceCard]);
@@ -1614,9 +1619,12 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone }) {
         </div>
       </div>
       <div style={{ fontSize: 11, color: "#7C5CFC", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>🎯 {block.name}</div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Угадай · {practiceIdx + 1} из {practiceQueue.length}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>{reversed ? "Как по-немецки?" : "Угадай перевод"} · {practiceIdx + 1} из {practiceQueue.length}</div>
       <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "36px 24px", textAlign: "center", marginBottom: 20 }}>
-        <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 40, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
+        {reversed
+          ? <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
+          : <div style={{ fontSize: card.de && card.de.length > 14 ? 26 : card.de && card.de.length > 10 ? 32 : 40, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
+        }
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {options.map((opt, i) => {
