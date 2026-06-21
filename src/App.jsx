@@ -673,11 +673,11 @@ const CURRICULUM = [
   },
 
   // ── A1 БОНУСЫ ─────────────────────────────────────────────────
-  { id: "articles_bonus", title: "Хитрости рода", emoji: "🔍", level: "A1", bonus: true, linkedBonus: true,
+  { id: "articles_bonus", title: "Угадай род!", emoji: "🔍", level: "A1", bonus: true, linkedBonus: true,
     cards: [
-      { title: "Мужской род: типичные окончания", body: "-er → der Fahrer (водитель), der Fehler (ошибка)\n-ig → der König (король), der Honig (мёд)\n-ling → der Frühling (весна), der Lehrling (ученик)\n-or → der Motor (мотор), der Doktor (доктор)\n\n💡 Большинство глаголов-существительных мужского рода:\ndas Laufen → исключение, но der Lauf — забег" },
-      { title: "Женский род: типичные окончания", body: "-ung → die Zeitung (газета), die Wohnung (квартира)\n-heit/-keit → die Gesundheit (здоровье), die Freiheit (свобода)\n-schaft → die Freundschaft (дружба), die Mannschaft (команда)\n-ion → die Nation, die Information\n-erin → die Lehrerin, die Ärztin\n\n⚠️ Слова на -ung всегда die!" },
-      { title: "Средний род: типичные окончания", body: "-chen/-lein → das Mädchen (девочка), das Fräulein (девушка)\n-ment → das Dokument, das Instrument\n-um → das Museum, das Datum\n-nis → das Ergebnis (результат)\n\n💡 -chen и -lein всегда das, даже если обозначают человека:\ndas Mädchen (der → das из-за -chen)\n\nГеографические: das Land, das Meer — как правило das" },
+      { title: "Правило -ung → die", tip: "Все слова на -ung — женского рода (die).\n\nЭто правило почти без исключений!\n\nНа карточке: слово без артикля → угадай der / die / das.", body: "Wohnung — die (квартира)\nZeitung — die (газета)\nMeinung — die (мнение)\nÜbung — die (упражнение)\nAbteilung — die (отдел)\nRechnung — die (счёт)\nWerbung — die (реклама)\nVerbindung — die (связь)" },
+      { title: "Правило -chen/-lein → das", tip: "Уменьшительные суффиксы -chen и -lein — всегда средний род (das).\n\nДаже если слово обозначает женщину:\ndas Mädchen — девочка (das, не die!)", body: "Mädchen — das (девочка)\nHähnchen — das (цыплёнок)\nBrötchen — das (булочка)\nHündchen — das (собачка)\nKätzchen — das (кошечка)\nFräulein — das (девушка)\nTischchen — das (столик)\nKindlein — das (ребёночек)" },
+      { title: "Правило -er → der", tip: "Слова с суффиксом -er (чаще всего профессии и деятели) — мужского рода (der).\n\nЖенская форма: добавь -in.\nLehrer → die Lehrerin", body: "Lehrer — der (учитель)\nFahrer — der (водитель)\nArbeiter — der (рабочий)\nSänger — der (певец)\nBäcker — der (пекарь)\nFehler — der (ошибка)\nComputer — der (компьютер)\nSommer — der (лето)" },
     ],
   },
   { id: "family_bonus", title: "Родня и обращения", emoji: "👨‍👩‍👧‍👦", level: "A1", bonus: true, linkedBonus: true,
