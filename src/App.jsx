@@ -339,9 +339,9 @@ const CURRICULUM = [
     emoji: "🔤",
     level: "PH",
     cards: [
-      { title: "Буквы A–M", body: "A a — Apfel\nB b — Brot\nC c — Cent\nD d — Danke\nE e — Essen\nF f — Familie\nG g — gut\nH h — Hallo\nI i — ich\nJ j — ja\nK k — Kaffee\nL l — lesen\nM m — Mutter" },
-      { title: "Буквы N–Z", body: "N n — nein\nO o — Oma\nP p — Park\nQ q — Qualität\nR r — rot\nS s — Sonne\nT t — Tee\nU u — Uhr\nV v — Vater\nW w — Wasser\nX x — Text\nY y — Yoga\nZ z — Zeit" },
-      { title: "Особые буквы: Ä Ö Ü ß", body: "Ä ä — Mädchen\nÖ ö — schön\nÜ ü — müde\nß — Straße\n\n💡 Ä, Ö, Ü называются умлауты.\nEszett пишется только строчной, заглавная — SS." },
+      { title: "Буквы A–M", body: "A a — Apfel (яблоко)\nB b — Brot (хлеб)\nC c — Cent (цент)\nD d — Danke (спасибо)\nE e — Essen (еда)\nF f — Familie (семья)\nG g — gut (хорошо)\nH h — Hallo (привет)\nI i — ich (я)\nJ j — ja (да)\nK k — Kaffee (кофе)\nL l — lesen (читать)\nM m — Mutter (мать)" },
+      { title: "Буквы N–Z", body: "N n — nein (нет)\nO o — Oma (бабушка)\nP p — Park (парк)\nQ q — Qualität (качество)\nR r — rot (красный)\nS s — Sonne (солнце)\nT t — Tee (чай)\nU u — Uhr (часы)\nV v — Vater (отец)\nW w — Wasser (вода)\nX x — Text (текст)\nY y — Yoga (йога)\nZ z — Zeit (время)" },
+      { title: "Особые буквы: Ä Ö Ü ß", body: "Ä ä — Mädchen (девочка)\nÖ ö — schön (красивый)\nÜ ü — müde (усталый)\nß — Straße (улица)\n\n💡 Ä, Ö, Ü называются умлауты.\nEszett пишется только строчной, заглавная — SS." },
     ],
     exam: [
       { q: "Как читается буква Z?", options: ["как «з»", "как «ц»", "как «с»", "как «й»"], answer: 1 },
@@ -357,7 +357,7 @@ const CURRICULUM = [
     emoji: "🗣️",
     level: "PH",
     cards: [
-      { title: "Пять гласных и примеры", body: "A a — Apfel\nE e — Essen\nI i — ich\nO o — Oma\nU u — Uhr\n\n💡 Каждая гласная может звучать коротко или долго." },
+      { title: "Пять гласных и примеры", body: "A a — Apfel (яблоко)\nE e — Essen (еда)\nI i — ich (я)\nO o — Oma (бабушка)\nU u — Uhr (часы)\n\n💡 Каждая гласная может звучать коротко или долго." },
       { title: "Долгие и краткие гласные", body: "💡 Краткая гласная: слог звучит быстро — Essen, Hund, kalt.\n💡 Долгая гласная: слог тянется — See, Uhr, Saal.\n\nEssen — еда\nHund — собака\nkalt — холодный\nSee — озеро\nUhr — часы\nSaal — зал" },
     ],
     exam: [
@@ -374,7 +374,7 @@ const CURRICULUM = [
     emoji: "🔔",
     level: "PH",
     cards: [
-      { title: "Что такое умлаут", body: "💡 Умлаут — это точки над буквой, которые меняют её звук.\n\nä — Mädchen\nö — schön\nü — müde\nspät — поздно\nöffnen — открывать\nfünf — пять" },
+      { title: "Что такое умлаут", body: "💡 Умлаут — это точки над буквой, которые меняют её звук.\n\nä — Mädchen (девочка)\nö — schön (красивый)\nü — müde (усталый)\nspät — поздно\nöffnen — открывать\nfünf — пять" },
       { title: "Умлаут в парах слов", body: "💡 Умлаут часто появляется во множественном числе и в степенях сравнения.\n\nalt — старый\nälter — старше\nkalt — холодный\nKälte — холод\ngroß — большой\ngrößer — больше\nWort — слово\nWörter — слова\nMutter — мать\nMütter — матери" },
     ],
     exam: [
@@ -1397,8 +1397,11 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
         if (!isEmoji && trimmed.includes(" — ")) {
           const parts = trimmed.split(" — ");
           if (parts.length >= 2) {
-            const de = parts[0].trim(), ru = parts[1].trim().replace(/\s*\(.*?\)/g, "");
-            if (de && ru && isGermanText(de)) ws.push({ de, ru, section: card.title, audioText: de.trim().split(/\s+/)[0], audioUrl: card.audioUrl || null, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
+            const de = parts[0].trim(), rawRu = parts[1].trim();
+            const exMatch = rawRu.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+            const ru = exMatch ? exMatch[1].trim() : rawRu;
+            const exampleTranslation = exMatch ? exMatch[2] : null;
+            if (de && ru && isGermanText(de)) ws.push({ de, ru, exampleTranslation, section: card.title, audioText: de.trim().split(/\s+/)[0], audioUrl: card.audioUrl || null, ...(card.fixedOptions ? { fixedOptions: card.fixedOptions } : {}) });
           }
         } else if (!isEmoji) {
           tipLines.push(trimmed);
@@ -1966,10 +1969,15 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
           </div>
           <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
           {audioEnabled && card.ru && !/[а-яёА-ЯЁ]/.test(card.ru) ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Пример:</div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: "#a78bfa" }}>{card.ru.charAt(0).toUpperCase() + card.ru.slice(1)}</div>
-              <AudioButton text={card.ru} size={26} />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Пример:</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "#a78bfa" }}>{card.ru.charAt(0).toUpperCase() + card.ru.slice(1)}</div>
+                <AudioButton text={card.ru} size={26} />
+              </div>
+              {card.exampleTranslation && (
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.28)", fontStyle: "italic" }}>{card.exampleTranslation}</div>
+              )}
             </div>
           ) : (
             <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
