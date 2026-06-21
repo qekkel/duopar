@@ -353,8 +353,8 @@ const CURRICULUM = [
     bonusTopicId: "colors_bonus",
     cards: [
       { title: "Основные цвета", body: "rot — красный\nblau — синий\ngelb — жёлтый\ngrün — зелёный\nschwarz — чёрный\nweiß — белый\ngrau — серый\nbraun — коричневый\norange — оранжевый\nlila — фиолетовый\nrosa — розовый" },
-      { title: "Как использовать цвета", body: "Das ist rot. — Это красное.\nDas ist blau. — Это синее.\nDas ist grün. — Это зелёное.\nDas ist gelb. — Это жёлтое.\nIch mag Blau. — Мне нравится синий.\nMeine Lieblingsfarbe ist Rot. — Мой любимый цвет красный.\n\n💡 После «sein» цвет не склоняется — просто ставь после глагола!" },
-      { title: "Цвета в предложениях", body: "Meine Lieblingsfarbe ist Blau. — Мой любимый цвет синий.\nIch trage ein grünes T-Shirt. — Я ношу зелёную футболку.\nDas rote Auto gehört mir. — Красная машина моя.\n\nСочетания цветов:\nhellblau — светло-синий\ndunkelrot — тёмно-красный\nschwarz-weiß — чёрно-белый\n\n⚠️ hell / dunkel добавляются слитно:\nhellgrün (не «hell grün»)" },
+      { title: "Как использовать цвета", body: "Das ist rot. — Это красное.\nDas ist blau. — Это синее.\nDas ist grün. — Это зелёное.\nDas ist gelb. — Это жёлтое.\nDas ist schwarz. — Это чёрное.\nDas ist weiß. — Это белое.\n\n💡 Цвет ставится после «ist» и не меняется:\nDas ist rot. Das ist blau. Das ist grün. ✓" },
+      { title: "Цвета в предложениях", body: "Das Hemd ist blau. — Рубашка синяя.\nDie Jacke ist rot. — Куртка красная.\nDer Hut ist gelb. — Шляпа жёлтая.\nDas Kleid ist grün. — Платье зелёное.\nhellblau — светло-голубой\ndunkelrot — тёмно-красный\nschwarzweiß — чёрно-белый\n\n⚠️ hell- и dunkel- пишутся слитно:\nhellgrün, dunkelblau, hellgrau" },
     ],
     exam: [
       { q: "Как по-немецки «красный»?", options: ["blau", "grün", "rot", "gelb"], answer: 2 },
