@@ -1189,6 +1189,16 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               <div style={{ fontSize: 28, marginBottom: 6 }}>⭐</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#fcd34d" }}>Бонус пройден!</div>
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Отличная работа</div>
+              {topic.id === "colors_bonus" && (
+                <div style={{ marginTop: 14, borderTop: "1px solid rgba(245,158,11,0.2)", paddingTop: 12 }}>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginBottom: 10 }}>Послушай песню про цвета 🎵</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>Orange Sector — Farben</div>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                    <a href="https://open.spotify.com/track/47uoSjqgclu4zjv3TV6aBG?si=4e759cc2c35940e0" target="_blank" rel="noopener noreferrer" style={{ padding: "8px 14px", borderRadius: 10, background: "#1DB954", color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>▶ Spotify</a>
+                    <a href="https://music.yandex.ru/album/3906770/track/32092219" target="_blank" rel="noopener noreferrer" style={{ padding: "8px 14px", borderRadius: 10, background: "#FFCC00", color: "#000", fontSize: 12, fontWeight: 700, textDecoration: "none" }}>▶ Яндекс</a>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {!topic.bonus && (allDone ? (
