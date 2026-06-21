@@ -1020,22 +1020,25 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             </button>
           )}
 
-          {topic.bonus && (
-            <div style={{ margin: "16px 0 10px" }}>
+          {topic.bonus ? (
+            <div style={{ marginTop: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
                 <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
                 <div style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", letterSpacing: 1 }}>⭐ БОНУС</div>
                 <div style={{ flex: 1, height: 1, background: "rgba(245,158,11,0.25)" }} />
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center" }}>
-                Необязательно · не входит в обязательную программу
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center", marginBottom: 12 }}>
+                Необязательно · можно пройти в любое время
               </div>
+              <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(251,191,36,0.15))", border: "1px solid rgba(245,158,11,0.5)", color: "#fcd34d", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+                ⭐ Пройти бонусный экзамен
+              </button>
             </div>
+          ) : (
+            <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: allDone ? "linear-gradient(135deg, #7C5CFC, #a78bfa)" : "rgba(124,92,252,0.12)", border: allDone ? "none" : "1px solid rgba(124,92,252,0.3)", color: allDone ? "#fff" : "#a78bfa", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+              ⚡ {allDone ? "Сдать экзамен" : "Попробовать экзамен"}
+            </button>
           )}
-
-          <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: allDone ? "linear-gradient(135deg, #7C5CFC, #a78bfa)" : "rgba(124,92,252,0.12)", border: allDone ? "none" : "1px solid rgba(124,92,252,0.3)", color: allDone ? "#fff" : "#a78bfa", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-            ⚡ {allDone ? "Сдать экзамен" : "Попробовать экзамен"}
-          </button>
           {done.size > 0 && !allDone && (
             <button onClick={() => { setActiveBlockIdx(0); setCompletedBlocks(p => ({ ...p, [activeTopicId]: new Set() })); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
               Начать сначала
