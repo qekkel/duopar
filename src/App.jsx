@@ -2039,14 +2039,22 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
   const [phase, setPhase] = useState(block.tip ? "tip" : "intro");
   const [introIdx, setIntroIdx] = useState(0);
 
-  // Autoplay letter sound once when a letter/sound card appears in intro phase
+  // Guard: track which introIdx was last auto-played to prevent StrictMode double-fire
+  const lastAutoPlayedIdx = useRef(-1);
+
+  // Auto-play the main German element once per card in intro phase.
+  // Uses card.audioText (e.g. "A" for letter pair "A a", "der Apfel" for word cards).
+  // Never plays card.ru, example words, or the raw displayText "A a".
   useEffect(() => {
     if (phase !== "intro" || !audioEnabled) return;
     const card = words[introIdx];
-    if (!card || !isPronounceCard(card.de)) return;
-    const text = card.audioText || card.de;
-    if (!isGermanText(text)) return;
-    const t = setTimeout(() => speakDE(text, card.audioUrl || null), 150);
+    if (!card) return;
+    const text = card.audioText;
+    if (!text || !isGermanText(text)) return;
+    // Skip if already played this index (protects against StrictMode double-invoke)
+    if (lastAutoPlayedIdx.current === introIdx) return;
+    lastAutoPlayedIdx.current = introIdx;
+    const t = setTimeout(() => speakDE(text, card.audioUrl || null), 200);
     return () => clearTimeout(t);
   }, [introIdx, phase]);
 
