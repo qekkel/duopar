@@ -1728,6 +1728,7 @@ function parseFlashcards(topic) {
     lines.forEach(line => {
       const parts = line.split(" — ");
       if (parts.length >= 2) {
+        const de = parts[0].trim();
         const raw = parts[1].trim();
         const noteMatch = raw.match(/\(([^)]+)\)/);
         const ru = raw.replace(/\s*\(.*?\)/g, "").trim();
@@ -2354,6 +2355,7 @@ function buildExamQuestions(topic) {
   // Only real words (not letter pairs like "A a" or single sounds like "ä") get guess-translation questions
   const wordCards = flashcards.filter(card => !isPronounceCard(card.de));
   const ARTICLES = new Set(["der","die","das","ein","eine","einen","einem","einer","des","dem","den"]);
+  const wordPool = wordCards;
   const wordQuestions = shuffle(wordCards).slice(0, 6).map(card => {
     const isArticle = ARTICLES.has(card.de.trim().toLowerCase());
     const q = isArticle
@@ -2366,7 +2368,7 @@ function buildExamQuestions(topic) {
       correctText: card.ru,
     };
   });
-  const hardcoded = shuffle(topic.exam).slice(0, 4).map(q => ({ ...q, correctText: null }));
+  const hardcoded = shuffle(topic.exam || []).slice(0, 4).map(q => ({ ...q, correctText: null }));
   return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
 }
 
@@ -2404,7 +2406,13 @@ function buildLevelExamQuestions(lvl) {
 }
 
 function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuiltQuestions }) {
-  const [questions] = useState(() => prebuiltQuestions ?? buildExamQuestions(topic));
+  const [questions] = useState(() => {
+    const qs = prebuiltQuestions ?? buildExamQuestions(topic);
+    if (!qs || qs.length === 0) {
+      console.error("[duopar] TopicExamScreen: no questions for topic", topic?.id || topic?.title);
+    }
+    return qs || [];
+  });
   const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
@@ -2412,6 +2420,17 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
   const total = questions.length;
   const passMark = Math.ceil(total * 0.8);
   const q = questions[qi];
+
+  if (total === 0) {
+    return (
+      <div style={{ paddingTop: 60, textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 8 }}>Проверка ещё не готова</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>Для этой темы пока нет вопросов</div>
+        <button onClick={onBack} style={{ padding: "14px 28px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>← Назад</button>
+      </div>
+    );
+  }
 
   function isCorrect(opt, idx) {
     if (q.correctText !== null) return opt === q.correctText;
