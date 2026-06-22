@@ -455,9 +455,9 @@ const CURRICULUM = [
       { title: "sp и st в начале слова", body: "💡 sp в начале слова = «шп»: Sport, Sprache, spielen.\n💡 st в начале слова = «шт»: Straße, Student, Stadt.\n\nder Sport — спорт\ndie Sprache — язык\nspielen — играть\ndie Straße — улица\nder Student — студент\ndie Stadt — город" },
     ],
     exam: [
-      { q: "«Schule» начинается со звука:", options: ["«с»", "«ц»", "«ш»", "«з»"], answer: 2 },
-      { q: "«Sport» читается как:", options: ["«спорт»", "«шпорт»", "«цпорт»", "«зпорт»"], answer: 1 },
-      { q: "«Straße» начинается со звука:", options: ["«ст»", "«шт»", "«сш»", "«цт»"], answer: 1 },
+      { q: "Какой звук слышен в начале слова «Schule»?", options: ["«с»", "«ц»", "«ш»", "«з»"], answer: 2 },
+      { q: "В начале слова «Sport» сочетание «sp» даёт звук:", options: ["«сп»", "«шп»", "«цп»", "«зп»"], answer: 1 },
+      { q: "В начале слова «Straße» сочетание «st» даёт звук:", options: ["«ст»", "«шт»", "«сш»", "«цт»"], answer: 1 },
       { q: "«ch» в слове «ich» (я) звучит как:", options: ["«к»", "«ш»", "мягкое «хь»", "«с»"], answer: 2 },
       { q: "В каком слове есть звук «ш»?", options: ["Zeit", "Vater", "Schule", "Brot"], answer: 2 },
     ],
@@ -489,11 +489,11 @@ const CURRICULUM = [
       { title: "Слова с трудными сочетаниями", body: "ein — один\nzwei — два\nSie — она / Вы\nDeutsch — немецкий\nheute — сегодня\ndas Wasser — вода\nder Vater — отец\ndie Zeit — время\ndie Schule — школа\nder Sport — спорт" },
     ],
     exam: [
-      { q: "Как читается слово «Schule»?", options: ["«скуле»", "«шуле»", "«цуле»", "«кхуле»"], answer: 1 },
-      { q: "Как читается слово «zwei»?", options: ["«звай»", "«цвай»", "«швай»", "«твай»"], answer: 1 },
-      { q: "Как читается слово «Sport»?", options: ["«спорт»", "«шпорт»", "«цпорт»", "«зпорт»"], answer: 1 },
+      { q: "В каком слове есть сочетание букв «sch»?", options: ["die Schule", "das Brot", "der Zug", "die Zeit"], answer: 0 },
+      { q: "В каком слове сочетание «ei» читается как «ай»?", options: ["zwei", "Schule", "Sport", "Vater"], answer: 0 },
+      { q: "В начале какого слова «sp» читается как «шп»?", options: ["Sport", "Zeit", "Brot", "Vater"], answer: 0 },
       { q: "В слове «Vater» буква V читается как:", options: ["«в»", "«п»", "«ф»", "«б»"], answer: 2 },
-      { q: "Как читается «heute» (сегодня)?", options: ["«хейтэ»", "«хойтэ»", "«хийтэ»", "«хэутэ»"], answer: 1 },
+      { q: "В каком слове сочетание «eu» читается как «ой»?", options: ["heute", "Zeit", "Wasser", "Schule"], answer: 0 },
     ],
   },
   {
@@ -508,7 +508,7 @@ const CURRICULUM = [
       { q: "Как читается «ei»?", options: ["как «ай»", "как «и»", "как «у»", "как «э»"], answer: 0 },
       { q: "Как читается «ie»?", options: ["как «ай»", "как долгое «и»", "как «ой»", "как «ш»"], answer: 1 },
       { q: "В слове «Mädchen» какой умлаут?", options: ["ä", "ö", "ü", "нет умлаута"], answer: 0 },
-      { q: "Что читается как «ш»?", options: ["sch", "ei", "ie", "z"], answer: 0 },
+      { q: "Какое сочетание букв читается как «ш»?", options: ["sch", "ei", "ie", "z"], answer: 0 },
       { q: "Как читается немецкая z?", options: ["как «с»", "как «ц»", "как «ж»", "как «в»"], answer: 1 },
       { q: "Как читается «eu» в слове Deutsch?", options: ["«ой»", "«ай»", "«и»", "«ш»"], answer: 0 },
       { q: "В каком слове есть ß?", options: ["Straße", "Schule", "Vater", "Zug"], answer: 0 },
@@ -1415,6 +1415,11 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const [completedBlocks, setCompletedBlocks] = useState(() => loadBlocks(STORAGE_KEY));
   const [activeLevel, setActiveLevel] = useState("PH");
   const [examEarlyCheck, setExamEarlyCheck] = useState(false);
+  const LEVEL_EXAMS_KEY = `duopar_level_exams_${userId || "guest"}`;
+  const [passedLevelExams, setPassedLevelExams] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(LEVEL_EXAMS_KEY) || "[]")); }
+    catch { return new Set(); }
+  });
 
   useEffect(() => {
     if (userId) setCompletedBlocks(loadBlocks(`duopar_blocks_${userId}`));
@@ -1460,13 +1465,23 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
   // Level exam has no activeTopicId — handle it before the per-topic branch
   if (mode === "level_exam") {
-    const lvlLabel = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" }[levelExamLevel] || levelExamLevel;
+    const LVL_LABEL = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" };
+    const lvlLabel = LVL_LABEL[levelExamLevel] || levelExamLevel;
+    const nextLvlIdx = LEVELS.indexOf(levelExamLevel) + 1;
+    const nextLvlLabel = nextLvlIdx < LEVELS.length ? LVL_LABEL[LEVELS[nextLvlIdx]] : null;
     const fakeTopic = { title: `Экзамен ${lvlLabel}`, cards: [], exam: [] };
     const questions = buildLevelExamQuestions(levelExamLevel);
     if (!questions || questions.length === 0) {
       console.error(`[duopar] buildLevelExamQuestions("${levelExamLevel}") returned no questions — check topic.exam arrays for level ${levelExamLevel}`);
     }
-    return <TopicExamScreen topic={fakeTopic} prebuiltQuestions={questions} onBack={() => setMode(null)} onPass={() => setMode(null)} />;
+    return <TopicExamScreen
+      topic={fakeTopic}
+      prebuiltQuestions={questions}
+      onBack={() => setMode(null)}
+      onPass={() => passLevelExam(levelExamLevel)}
+      levelKey={levelExamLevel}
+      nextLvlLabel={nextLvlLabel}
+    />;
   }
 
   if (activeTopicId && mode) {
@@ -1606,10 +1621,20 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
   const LEVELS = ["PH", "A1", "PR", "A2", "A3", "A4"];
   // Level is unlocked if all previous level non-bonus topics are completed
+  function passLevelExam(lvl) {
+    const next = new Set(passedLevelExams);
+    next.add(lvl);
+    localStorage.setItem(LEVEL_EXAMS_KEY, JSON.stringify([...next]));
+    setPassedLevelExams(next);
+    const nextIdx = LEVELS.indexOf(lvl) + 1;
+    if (nextIdx < LEVELS.length) setActiveLevel(LEVELS[nextIdx]);
+    setMode(null);
+  }
   function isLevelUnlocked(lvl) {
     const idx = LEVELS.indexOf(lvl);
     if (idx === 0) return true;
     const prevLvl = LEVELS[idx - 1];
+    if (passedLevelExams.has(prevLvl)) return true;
     return CURRICULUM.filter(t => t.level === prevLvl && !t.linkedBonus && !t.bonus).every(t => completedTopics.includes(t.id));
   }
   function isLevelDone(lvl) {
@@ -2405,7 +2430,7 @@ function buildLevelExamQuestions(lvl) {
   return shuffle([...allHardcoded, ...wordQuestions]).slice(0, 14);
 }
 
-function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuiltQuestions }) {
+function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuiltQuestions, levelKey, nextLvlLabel }) {
   const [questions] = useState(() => {
     const qs = prebuiltQuestions ?? buildExamQuestions(topic);
     if (!qs || qs.length === 0) {
@@ -2454,6 +2479,45 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
     const nearPass = !passed && score >= Math.floor(total * 0.5);
     const mission = topicId ? TOPIC_TOUR_MISSION[topicId] : null;
     const restartQuiz = () => { setQi(0); setSelected(null); setScore(0); setFinished(false); };
+
+    // Level exam result screen
+    if (levelKey) {
+      const LVL_LABEL = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" };
+      const thisLabel = LVL_LABEL[levelKey] || levelKey;
+      return (
+        <div style={{ paddingTop: 60, textAlign: "center" }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🏆" : nearPass ? "😅" : "📚"}</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
+            {passed ? `Экзамен ${thisLabel} сдан!` : nearPass ? "Почти получилось!" : "Нужно повторить"}
+          </div>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
+            {score} из {total} правильно · нужно {passMark}+
+          </div>
+          {passed && nextLvlLabel && (
+            <div style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.07))", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 16, padding: "14px 18px", marginBottom: 24, fontSize: 14, color: "#10b981", fontWeight: 600 }}>
+              🔓 Открыт блок {nextLvlLabel}
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {passed ? (
+              <>
+                {nextLvlLabel && <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Перейти к {nextLvlLabel} →</button>}
+                <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Вернуться к {thisLabel}</button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+                  {nearPass ? "Почти! Повтори слабые темы и попробуй снова." : "Пройди темы блока и возвращайся."}
+                </div>
+                <button onClick={restartQuiz} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
+                <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Вернуться к {thisLabel}</button>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{ paddingTop: 60, textAlign: "center" }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🎉" : nearPass ? "😅" : "📚"}</div>
