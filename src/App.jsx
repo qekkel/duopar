@@ -1458,6 +1458,17 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     }).filter(b => b.words.length > 0);
   }
 
+  // Level exam has no activeTopicId — handle it before the per-topic branch
+  if (mode === "level_exam") {
+    const lvlLabel = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" }[levelExamLevel] || levelExamLevel;
+    const fakeTopic = { title: `Экзамен ${lvlLabel}`, cards: [], exam: [] };
+    const questions = buildLevelExamQuestions(levelExamLevel);
+    if (!questions || questions.length === 0) {
+      console.error(`[duopar] buildLevelExamQuestions("${levelExamLevel}") returned no questions — check topic.exam arrays for level ${levelExamLevel}`);
+    }
+    return <TopicExamScreen topic={fakeTopic} prebuiltQuestions={questions} onBack={() => setMode(null)} onPass={() => setMode(null)} />;
+  }
+
   if (activeTopicId && mode) {
     const topic = CURRICULUM.find(t => t.id === activeTopicId);
     if (!topic) { setActiveTopicId(null); setMode(null); return null; }
@@ -1488,12 +1499,6 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       return <TopicExamScreen topic={topic} topicId={activeTopicId} isEarlyCheck={examEarlyCheck} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
     }
 
-    if (mode === "level_exam") {
-      const lvlLabel = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" }[levelExamLevel] || levelExamLevel;
-      const fakeTopic = { title: `Экзамен ${lvlLabel}`, cards: [], exam: [] };
-      const questions = buildLevelExamQuestions(levelExamLevel);
-      return <TopicExamScreen topic={fakeTopic} prebuiltQuestions={questions} onBack={() => setMode(null)} onPass={() => setMode(null)} />;
-    }
 
     if (mode === "detail") {
       const done = doneBlocks(activeTopicId);
