@@ -502,7 +502,7 @@ const CURRICULUM = [
     emoji: "📝",
     level: "PH",
     cards: [
-      { title: "Повторение всего пройденного", body: "💡 Проверь себя: как читаются все буквы, дифтонги и сочетания.\n\nder Apfel — яблоко\ndie Straße — улица\nschön — красивый\nDeutsch — немецкий\ndas Mädchen — девочка\ndas Wasser — вода\ndie Zeit — время\nheute — сегодня\ndie Schule — школа\nzwei — два\ngroß — большой\nder Vater — отец" },
+      { title: "Мини-проверка", body: "💡 Проверь себя: как читаются буквы, дифтонги и сочетания.\n• Алфавит и буквы\n• Умлауты: ä, ö, ü\n• Дифтонги: ei, ie, eu, äu\n• Сочетания: sch, ch, sp, st\n• Правила чтения" },
     ],
     exam: [
       { q: "Как читается «ei»?", options: ["как «ай»", "как «и»", "как «у»", "как «э»"], answer: 0 },
@@ -1486,15 +1486,20 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           )}
           <div style={{ fontSize: 56, marginBottom: 12 }}>{topic.emoji}</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: isLinkedBonus ? "#fcd34d" : "#fff", marginBottom: 6 }}>{topic.title}</div>
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 36 }}>{done.size} из {blocks.length} частей пройдено</div>
-
-          <div style={{ display: "flex", gap: 6, marginBottom: 48 }}>
-            {blocks.map((_, i) => (
-              <div key={i} style={{ flex: 1, height: 8, borderRadius: 4, background: done.has(i) ? (isLinkedBonus ? gold : "#7C5CFC") : "rgba(255,255,255,0.1)", transition: "background 0.4s" }} />
-            ))}
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 36 }}>
+            {blocks.length === 0 ? "Тест по всем темам блока" : `${done.size} из ${blocks.length} частей пройдено`}
           </div>
 
-          {!allDone && (
+          {blocks.length > 0 && (
+            <div style={{ display: "flex", gap: 6, marginBottom: 48 }}>
+              {blocks.map((_, i) => (
+                <div key={i} style={{ flex: 1, height: 8, borderRadius: 4, background: done.has(i) ? (isLinkedBonus ? gold : "#7C5CFC") : "rgba(255,255,255,0.1)", transition: "background 0.4s" }} />
+              ))}
+            </div>
+          )}
+          {blocks.length === 0 && <div style={{ marginBottom: 48 }} />}
+
+          {blocks.length > 0 && !allDone && (
             <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "18px", borderRadius: 16, background: isLinkedBonus ? `linear-gradient(135deg, ${gold}, #fbbf24)` : "#7C5CFC", border: "none", color: isLinkedBonus ? "#1a1000" : "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
               {done.size === 0 ? "▶ Начать" : "▶ Продолжить"}
             </button>
@@ -1532,11 +1537,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               )}
             </div>
           )}
-          {!topic.bonus && (
-            <button onClick={() => { setExamEarlyCheck(!allDone); setMode("exam"); }} style={{ width: "100%", padding: "16px", borderRadius: 16, background: allDone ? "linear-gradient(135deg, #7C5CFC, #a78bfa)" : "rgba(124,92,252,0.12)", border: allDone ? "none" : "1px solid rgba(124,92,252,0.3)", color: allDone ? "#fff" : "rgba(167,139,250,0.85)", fontSize: allDone ? 15 : 14, fontWeight: 700, cursor: "pointer" }}>
-              {allDone ? "⚡ Сдать экзамен" : "🎯 Проверить знания"}
-            </button>
-          )}
+          {!topic.bonus && (() => {
+            const examOnly = blocks.length === 0;
+            const bright = allDone || examOnly;
+            return (
+              <button onClick={() => { setExamEarlyCheck(!allDone && !examOnly); setMode("exam"); }} style={{ width: "100%", padding: "16px", borderRadius: 16, background: bright ? "linear-gradient(135deg, #7C5CFC, #a78bfa)" : "rgba(124,92,252,0.12)", border: bright ? "none" : "1px solid rgba(124,92,252,0.3)", color: bright ? "#fff" : "rgba(167,139,250,0.85)", fontSize: bright ? 15 : 14, fontWeight: 700, cursor: "pointer" }}>
+                {examOnly ? "🎯 Начать проверку" : allDone ? "⚡ Сдать экзамен" : "🎯 Проверить знания"}
+              </button>
+            );
+          })()}
 
           {done.size > 0 && (
             <button onClick={() => { const updated = { ...completedBlocks, [activeTopicId]: new Set() }; setCompletedBlocks(updated); saveBlocks(updated); setActiveBlockIdx(0); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
