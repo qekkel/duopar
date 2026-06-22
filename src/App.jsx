@@ -1675,8 +1675,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                   <div style={{ fontSize: 14, fontWeight: 700, color: topic.bonus && !examDone ? "#fcd34d" : "#fff" }}>
                     {idx + 1}. {topic.title}
                   </div>
-                  <div style={{ fontSize: 11, color: examDone ? "#10b981" : inProgress ? "#a78bfa" : "rgba(255,255,255,0.3)", marginTop: 2 }}>
-                    {examDone ? "Экзамен сдан ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
+                  <div style={{ fontSize: 11, color: examDone ? "#10b981" : inProgress ? "#a78bfa" : blocksTotal === 0 ? "#06b6d4" : "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                    {examDone ? "Проверка пройдена ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : blocksTotal === 0 ? `Тест · ${(topic.exam || []).length} вопросов` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
                   </div>
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 14 }}>→</div>
