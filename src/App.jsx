@@ -1380,6 +1380,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const [levelExamLevel, setLevelExamLevel] = useState(null);
   const [completedBlocks, setCompletedBlocks] = useState(() => loadBlocks(STORAGE_KEY));
   const [activeLevel, setActiveLevel] = useState("PH");
+  const [examEarlyCheck, setExamEarlyCheck] = useState(false);
 
   useEffect(() => {
     if (userId) setCompletedBlocks(loadBlocks(`duopar_blocks_${userId}`));
@@ -1450,7 +1451,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     }
 
     if (mode === "exam") {
-      return <TopicExamScreen topic={topic} topicId={activeTopicId} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+      return <TopicExamScreen topic={topic} topicId={activeTopicId} isEarlyCheck={examEarlyCheck} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
     }
 
     if (mode === "level_exam") {
@@ -1531,15 +1532,11 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               )}
             </div>
           )}
-          {!topic.bonus && (allDone ? (
-            <button onClick={() => setMode("exam")} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "linear-gradient(135deg, #7C5CFC, #a78bfa)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-              ⚡ Сдать экзамен
+          {!topic.bonus && (
+            <button onClick={() => { setExamEarlyCheck(!allDone); setMode("exam"); }} style={{ width: "100%", padding: "16px", borderRadius: 16, background: allDone ? "linear-gradient(135deg, #7C5CFC, #a78bfa)" : "rgba(124,92,252,0.12)", border: allDone ? "none" : "1px solid rgba(124,92,252,0.3)", color: allDone ? "#fff" : "rgba(167,139,250,0.85)", fontSize: allDone ? 15 : 14, fontWeight: 700, cursor: "pointer" }}>
+              {allDone ? "⚡ Сдать экзамен" : "🎯 Проверить знания"}
             </button>
-          ) : (
-            <div style={{ width: "100%", padding: "16px", borderRadius: 16, background: "rgba(124,92,252,0.06)", border: "1px solid rgba(124,92,252,0.12)", color: "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 600, textAlign: "center", boxSizing: "border-box" }}>
-              🔒 Экзамен — после всех частей
-            </div>
-          ))}
+          )}
 
           {done.size > 0 && (
             <button onClick={() => { const updated = { ...completedBlocks, [activeTopicId]: new Set() }; setCompletedBlocks(updated); saveBlocks(updated); setActiveBlockIdx(0); setMode("block"); }} style={{ marginTop: 10, background: "none", border: "none", color: "rgba(255,255,255,0.25)", fontSize: 13, cursor: "pointer" }}>
@@ -2289,16 +2286,17 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
 
 function buildExamQuestions(topic) {
   const flashcards = parseFlashcards(topic);
-  // mix flashcard words + hardcoded exam questions, deduplicate
+  // Only real words (not letter pairs like "A a" or single sounds like "ä") get guess-translation questions
+  const wordCards = flashcards.filter(card => !isPronounceCard(card.de));
   const ARTICLES = new Set(["der","die","das","ein","eine","einen","einem","einer","des","dem","den"]);
-  const wordQuestions = shuffle(flashcards).slice(0, 6).map(card => {
+  const wordQuestions = shuffle(wordCards).slice(0, 6).map(card => {
     const isArticle = ARTICLES.has(card.de.trim().toLowerCase());
     const q = isArticle
       ? `Какой род обозначает артикль «${card.de}»?`
       : `Как переводится «${card.de}»?`;
     return {
       q,
-      options: shuffle([card.ru, ...shuffle(flashcards.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
+      options: shuffle([card.ru, ...shuffle(wordCards.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
       answer: null,
       correctText: card.ru,
     };
@@ -2307,14 +2305,14 @@ function buildExamQuestions(topic) {
   return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
 }
 
-function TopicExamScreen({ topic, topicId, onBack, onPass }) {
+function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass }) {
   const [questions] = useState(() => buildExamQuestions(topic));
   const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const total = questions.length;
-  const passMark = Math.ceil(total * 0.7);
+  const passMark = Math.ceil(total * 0.8);
   const q = questions[qi];
 
   function isCorrect(opt, idx) {
@@ -2336,12 +2334,25 @@ function TopicExamScreen({ topic, topicId, onBack, onPass }) {
 
   if (finished) {
     const passed = score >= passMark;
+    const nearPass = !passed && score >= Math.floor(total * 0.5);
     const mission = topicId ? TOPIC_TOUR_MISSION[topicId] : null;
+    const restartQuiz = () => { setQi(0); setSelected(null); setScore(0); setFinished(false); };
     return (
       <div style={{ paddingTop: 60, textAlign: "center" }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🎉" : "😅"}</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{passed ? "Тема пройдена!" : "Попробуй ещё раз"}</div>
-        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: passed && mission ? 20 : 32 }}>{score} из {total} правильно · нужно {passMark}+</div>
+        <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🎉" : nearPass ? "😅" : "📚"}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
+          {passed
+            ? (isEarlyCheck ? "Отлично! Тема засчитана." : "Тема пройдена!")
+            : nearPass ? "Почти получилось!" : "Лучше пройти тему"}
+        </div>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: passed && mission ? 20 : 32 }}>
+          {score} из {total} правильно · нужно {passMark}+
+        </div>
+        {passed && isEarlyCheck && (
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>
+            Ты можешь идти дальше или пройти части для закрепления
+          </div>
+        )}
         {passed && mission && (
           <div style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.07))", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 16, padding: "16px 18px", marginBottom: 24, textAlign: "left" }}>
             <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>🗺️ Открылась миссия в туре</div>
@@ -2349,13 +2360,25 @@ function TopicExamScreen({ topic, topicId, onBack, onPass }) {
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>Теперь можешь применить знания в игре</div>
           </div>
         )}
-        {passed
-          ? <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Продолжить →</button>
-          : <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button onClick={() => { setQi(0); setSelected(null); setScore(0); setFinished(false); }} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
-              <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Учить ещё раз</button>
-            </div>
-        }
+        {passed ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Дальше →</button>
+            {isEarlyCheck && (
+              <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>Повторить тему</button>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {nearPass
+              ? <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Повтори слабые места и попробуй снова</div>
+              : <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Пройди части темы спокойно, а потом вернись к проверке</div>
+            }
+            <button onClick={restartQuiz} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
+            <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>
+              {isEarlyCheck ? "Начать тему" : "← Учить ещё раз"}
+            </button>
+          </div>
+        )}
       </div>
     );
   }
