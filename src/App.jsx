@@ -1455,13 +1455,10 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     }
 
     if (mode === "level_exam") {
-      const lvlTopics = CURRICULUM.filter(t => t.level === levelExamLevel);
-      const fakeTopic = {
-        title: `Итоговый экзамен ${levelExamLevel}`,
-        cards: lvlTopics.flatMap(t => t.cards),
-        exam: shuffle(lvlTopics.flatMap(t => t.exam)).slice(0, 8),
-      };
-      return <TopicExamScreen topic={fakeTopic} onBack={() => setMode(null)} onPass={() => setMode(null)} />;
+      const lvlLabel = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" }[levelExamLevel] || levelExamLevel;
+      const fakeTopic = { title: `Экзамен ${lvlLabel}`, cards: [], exam: [] };
+      const questions = buildLevelExamQuestions(levelExamLevel);
+      return <TopicExamScreen topic={fakeTopic} prebuiltQuestions={questions} onBack={() => setMode(null)} onPass={() => setMode(null)} />;
     }
 
     if (mode === "detail") {
@@ -1645,22 +1642,30 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           );
         })}
 
-        {/* Итоговый экзамен — только для последнего уровня A4 */}
-        {lvl === "A4" && (
-          <button onClick={() => { setLevelExamLevel(lvl); setMode("level_exam"); }}
-            style={{ background: allTopicsDone ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.03)", border: `2px dashed ${allTopicsDone ? "#10b981" : lvlColor}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%", opacity: allTopicsDone ? 1 : 0.7 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ fontSize: 26 }}>{allTopicsDone ? "🏆" : "📝"}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: allTopicsDone ? "#10b981" : "#fff" }}>Итоговый экзамен A1</div>
-                <div style={{ fontSize: 11, color: allTopicsDone ? "#10b981" : lvlColor, marginTop: 2 }}>
-                  {allTopicsDone ? "Все темы пройдены — сдавай!" : "Все темы уровня в одном экзамене"}
+        {/* Экзамен уровня — для всех блоков */}
+        {(() => {
+          const lvlLabel = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" }[lvl] || lvl;
+          const isFinal = lvl === "A4";
+          const examBg = allTopicsDone ? (isFinal ? "rgba(16,185,129,0.08)" : "rgba(124,92,252,0.1)") : "rgba(255,255,255,0.03)";
+          const examBorder = allTopicsDone ? (isFinal ? "#10b981" : lvlColor) : lvlColor;
+          const examColor = allTopicsDone ? (isFinal ? "#10b981" : "#fff") : "#fff";
+          const examIcon = allTopicsDone ? (isFinal ? "🏆" : "⚡") : "🎯";
+          const examTitle = isFinal ? "Итоговый экзамен A1" : `Сдать экзамен ${lvlLabel}`;
+          const examSub = allTopicsDone ? "Все темы пройдены — сдавай!" : "Тест по всем темам блока";
+          return (
+            <button onClick={() => { setLevelExamLevel(lvl); setMode("level_exam"); }}
+              style={{ background: examBg, border: `2px dashed ${examBorder}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", cursor: "pointer", width: "100%" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 26 }}>{examIcon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: examColor }}>{examTitle}</div>
+                  <div style={{ fontSize: 11, color: allTopicsDone ? (isFinal ? "#10b981" : lvlColor) : lvlColor, marginTop: 2 }}>{examSub}</div>
                 </div>
+                <div style={{ color: allTopicsDone ? (isFinal ? "#10b981" : lvlColor) : lvlColor, fontSize: 14 }}>→</div>
               </div>
-              <div style={{ color: allTopicsDone ? "#10b981" : lvlColor, fontSize: 14 }}>→</div>
-            </div>
-          </button>
-        )}
+            </button>
+          );
+        })()}
       </div>
     </div>
   );
@@ -2314,8 +2319,41 @@ function buildExamQuestions(topic) {
   return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
 }
 
-function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass }) {
-  const [questions] = useState(() => buildExamQuestions(topic));
+function buildLevelExamQuestions(lvl) {
+  const lvlTopics = CURRICULUM.filter(t => t.level === lvl && !t.bonus);
+  // Collect all hardcoded exam questions from every topic in the level
+  const allHardcoded = shuffle(lvlTopics.flatMap(t => t.exam || []))
+    .slice(0, 10)
+    .map(q => ({ ...q, correctText: null }));
+  // Collect word-translation questions only from topics with real word flashcards
+  const ARTICLES = new Set(["der","die","das","ein","eine","einen","einem","einer","des","dem","den"]);
+  const allWords = lvlTopics.flatMap(t => {
+    const cards = [];
+    (t.cards || []).forEach(card => {
+      card.body.split("\n").forEach(l => {
+        const trimmed = l.trim();
+        if (!trimmed.includes(" — ") || trimmed.startsWith("💡") || trimmed.startsWith("⚠️") || trimmed.startsWith("•")) return;
+        const parts = trimmed.split(" — ");
+        if (parts.length < 2) return;
+        const de = parts[0].trim();
+        const ru = parts[1].trim().replace(/\s*\(.*?\)/g, "").trim();
+        if (de && ru && isGermanText(de) && !isPronounceCard(de)) cards.push({ de, ru });
+      });
+    });
+    return cards;
+  });
+  const wordPool = shuffle(allWords);
+  const wordQuestions = wordPool.slice(0, 5).map(card => ({
+    q: `Как переводится «${card.de}»?`,
+    options: shuffle([card.ru, ...shuffle(wordPool.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
+    answer: null,
+    correctText: card.ru,
+  }));
+  return shuffle([...allHardcoded, ...wordQuestions]).slice(0, 14);
+}
+
+function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuiltQuestions }) {
+  const [questions] = useState(() => prebuiltQuestions ?? buildExamQuestions(topic));
   const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
   const [score, setScore] = useState(0);
