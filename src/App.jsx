@@ -3568,7 +3568,6 @@ const CAT_EMOJI = { "Основы":"🔤","Природа":"🌿","Еда":"🍕
 function MapGameScreen({ onBack, session, profile }) {
   const [geoFeatures, setGeoFeatures] = useState(null);
   const [phase, setPhase] = useState("matchmaking");
-  const [cdMatch, setCdMatch] = useState(5);
   const [botName, setBotName] = useState(() => BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)]);
 
   // ── ONLINE STATE ──
@@ -3621,12 +3620,6 @@ function MapGameScreen({ onBack, session, profile }) {
   const battleQsRef = useRef([]);
 
   useEffect(() => { fetch(GEO_URL).then(r => r.json()).then(d => setGeoFeatures(d.features)); }, []);
-  useEffect(() => {
-    if (phase !== "matchmaking") return;
-    if (cdMatch <= 0) { setPhase("playing"); return; }
-    const t = setTimeout(() => setCdMatch(c => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [phase, cdMatch]);
   useEffect(() => () => { clearTimeout(botDuelRef.current); clearInterval(duelIvRef.current); }, []);
 
   // ── ONLINE: cleanup channel on unmount ──
@@ -3763,14 +3756,14 @@ function MapGameScreen({ onBack, session, profile }) {
       }, 400);
     });
 
-    // fallback to bot after 15s
+    // after 45s, show "no match found" screen — never auto-start bot
     setTimeout(() => {
       if (!matchedRef.current) {
         matchedRef.current = true;
         lobby.unsubscribe();
-        setPhase("playing");
+        setOnlineSetup("no_match");
       }
-    }, 15000);
+    }, 45000);
   }
 
   function proceedOnlinePicks(myPick, theirPick) {
@@ -3820,6 +3813,8 @@ function MapGameScreen({ onBack, session, profile }) {
 
   function handleTerritoryClick(sid) {
     if (rPhase !== "territory_select" || territories[sid] === "player") return;
+    // In bot mode, wait until bot has picked its territory (600ms delay in nextRound)
+    if (!onlineModeRef.current && !botPickRevealed) return;
 
     setPlayerPick(sid); pPickRef.current = sid;
 
@@ -4125,7 +4120,7 @@ function MapGameScreen({ onBack, session, profile }) {
     setOnlineSetup("choice"); setMyRole(null); myRoleRef.current = null;
     setRoomCode(""); setJoinInput("");
     channelRef.current?.unsubscribe(); channelRef.current = null;
-    setPhase("matchmaking"); setCdMatch(5); nextRound();
+    setPhase("matchmaking"); nextRound();
   }
 
   // auto-advance from round_result after 2.5s
@@ -4225,11 +4220,38 @@ function MapGameScreen({ onBack, session, profile }) {
         <style>{ANIM_CSS}</style>
         <button onClick={() => { matchedRef.current = true; lobbyRef.current?.unsubscribe(); setOnlineSetup("choice"); }} style={{ position: "absolute", top: 20, left: 16, background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 22, cursor: "pointer" }}>←</button>
         <div style={{ fontSize: 40, marginBottom: 20 }}>🌐</div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Ищем соперника</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Ищем партнёра...</div>
         <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Подбираем игрока уровня <span style={{ color: "#a78bfa", fontWeight: 700 }}>{profile?.lang_level || "A1"}</span></div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 28 }}>Только игроки твоего уровня</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginBottom: 28 }}>Поиск может занять до 45 секунд</div>
         <div style={{ width: 56, height: 56, borderRadius: "50%", border: "3px solid rgba(124,92,252,0.3)", borderTopColor: "#7C5CFC", margin: "0 auto 28px", animation: "spin 1s linear infinite" }} />
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Если никого нет — через 15 сек играешь с ботом</div>
+        <button onClick={() => { matchedRef.current = true; lobbyRef.current?.unsubscribe(); setOnlineSetup("choice"); }}
+          style={{ marginTop: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "12px 28px", fontSize: 14, color: "rgba(255,255,255,0.5)", cursor: "pointer" }}>
+          Отменить поиск
+        </button>
+      </div>
+    );
+
+    // No match found after 45s
+    if (onlineSetup === "no_match") return (
+      <div style={{ paddingTop: 60, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
+        <style>{ANIM_CSS}</style>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>😕</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Пока никого не нашли</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>Нет игроков уровня {profile?.lang_level || "A1"} онлайн прямо сейчас</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={() => { matchedRef.current = false; searchOpponent(); }}
+            style={{ width: "100%", background: "linear-gradient(135deg,#10b981,#34d399)", border: "none", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, color: "#fff", cursor: "pointer" }}>
+            🔄 Искать ещё
+          </button>
+          <button onClick={() => setPhase("playing")}
+            style={{ width: "100%", background: "rgba(124,92,252,0.15)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 16, padding: "16px", fontSize: 15, fontWeight: 700, color: "#a78bfa", cursor: "pointer" }}>
+            🤖 Играть с ботом
+          </button>
+          <button onClick={() => setOnlineSetup("choice")}
+            style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}>
+            ← Назад
+          </button>
+        </div>
       </div>
     );
 
