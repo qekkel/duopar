@@ -1488,16 +1488,27 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           </div>
 
           {blocks.length > 0 && (
-            <div style={{ display: "flex", gap: 6, marginBottom: 48 }}>
-              {blocks.map((_, i) => (
-                <div key={i} style={{ flex: 1, height: 8, borderRadius: 4, background: done.has(i) ? (isLinkedBonus ? gold : "#7C5CFC") : "rgba(255,255,255,0.1)", transition: "background 0.4s" }} />
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
+              {blocks.map((block, i) => {
+                const isDone = done.has(i);
+                const isCurrent = !isDone && !done.has(i - 1) && (i === 0 || done.has(i - 1));
+                return (
+                  <button key={i} onClick={() => { setActiveBlockIdx(i); setMode("block"); }}
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, background: isDone ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${isDone ? "rgba(16,185,129,0.3)" : isCurrent ? (isLinkedBonus ? "rgba(245,158,11,0.3)" : "rgba(124,92,252,0.3)") : "rgba(255,255,255,0.08)"}`, cursor: "pointer", textAlign: "left", width: "100%" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: isDone ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: isDone ? "#10b981" : "rgba(255,255,255,0.35)", fontWeight: 700, flexShrink: 0 }}>
+                      {isDone ? "✓" : i + 1}
+                    </div>
+                    <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: isDone ? "#10b981" : "#fff" }}>{block.name}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>→</div>
+                  </button>
+                );
+              })}
             </div>
           )}
-          {blocks.length === 0 && <div style={{ marginBottom: 48 }} />}
+          {blocks.length === 0 && <div style={{ marginBottom: 20 }} />}
 
           {blocks.length > 0 && !allDone && (
-            <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "18px", borderRadius: 16, background: isLinkedBonus ? `linear-gradient(135deg, ${gold}, #fbbf24)` : "#7C5CFC", border: "none", color: isLinkedBonus ? "#1a1000" : "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
+            <button onClick={() => { setActiveBlockIdx(nextBlock); setMode("block"); }} style={{ width: "100%", padding: "14px", borderRadius: 16, background: isLinkedBonus ? `linear-gradient(135deg, ${gold}, #fbbf24)` : "#7C5CFC", border: "none", color: isLinkedBonus ? "#1a1000" : "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
               {done.size === 0 ? "▶ Начать" : "▶ Продолжить"}
             </button>
           )}
@@ -2197,8 +2208,9 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
         </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
           <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>📚 {block.name}</div>
+          <button onClick={startPractice} style={{ background: "none", border: "none", color: "rgba(124,92,252,0.6)", fontSize: 12, cursor: "pointer", padding: 0 }}>Проверить →</button>
         </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Карточка {introIdx + 1} из {words.length}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {words.length}</div>
         {(() => { const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", gold: "#f59e0b", golden: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelgrau: "#374151", dunkelblau: "#1e3a8a", hellblau: "#93c5fd", hellbraun: "#c4956a", dunkelgrün: "#166534", olivgrün: "#6b7c3f" }; const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, ""); const colorHex = COLOR_MAP[deKey]; return (
         <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "36px 28px 28px", textAlign: "center", marginBottom: 16, position: "relative" }}>
           {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
