@@ -370,10 +370,10 @@ const CURRICULUM = [
       { title: "Долгие и краткие гласные", body: "💡 Краткая гласная: слог звучит быстро — Essen, Hund, kalt.\n💡 Долгая гласная: слог тянется — See, Uhr, Saal.\n\ndas Essen — еда\nder Hund — собака\nkalt — холодный\nder See — озеро\ndie Uhr — часы\nder Saal — зал" },
     ],
     exam: [
-      { q: "Какое слово начинается с гласной А?", options: ["Brot", "Apfel", "Zeit", "Hund"], answer: 1 },
+      { q: "В каком слове гласная звучит долго?", options: ["das Essen", "der Hund", "der See", "kalt"], answer: 2 },
       { q: "В слове «Uhr» какая гласная?", options: ["A", "E", "I", "U"], answer: 3 },
-      { q: "Слово «ich» начинается с гласной:", options: ["A", "E", "I", "O"], answer: 2 },
-      { q: "В слове «Essen» первая буква:", options: ["A", "E", "I", "U"], answer: 1 },
+      { q: "Гласная «i» в слове «ich» звучит:", options: ["долго", "коротко", "как «е»", "не произносится"], answer: 1 },
+      { q: "«Das Essen» значит:", options: ["вода", "еда", "время", "дом"], answer: 1 },
       { q: "Гласная в «See» (озеро) звучит:", options: ["коротко", "долго", "не произносится", "как «ш»"], answer: 1 },
     ],
   },
