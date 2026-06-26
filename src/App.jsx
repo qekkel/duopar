@@ -1591,7 +1591,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       max += 5; // lesson
       if (t.exam?.length) max += 15; // topic exam
       // Count as earned if awarded via new system OR via old completedTopics tracking
-      if (awarded[`l_${t.id}`] || completedTopics.has(t.id)) earned += 5;
+      if (awarded[`l_${t.id}`] || completedTopics.includes(t.id)) earned += 5;
       if (awarded[`e_${t.id}`]) earned += 15;
     }
     if (awarded[`lv_${lvl}`] || passedLevelExams.has(lvl)) earned += 25;
