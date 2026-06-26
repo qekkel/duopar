@@ -173,6 +173,114 @@ const ALL_QUESTIONS = [
   { id: 90, level: "A4", type: "choose", category: "Работа", prompt: "Как правильно сказать «Я учительница»?", word: null, options: ["Ich bin eine Lehrerin.", "Ich bin die Lehrerin.", "Ich bin Lehrerin.", "Ich habe Lehrerin."], correct: 2, hint: "Профессия — без артикля!" },
   { id: 91, level: "A4", type: "choose", category: "Общение", prompt: "Как попрощаться по телефону?", word: null, options: ["Auf Wiedersehen!", "Guten Abend!", "Auf Wiederhören!", "Tschüss auf Telefon!"], correct: 2, hint: "hören = слышать — особое прощание для телефона" },
   { id: 92, level: "A4", type: "choose", category: "Досуг", prompt: "«Hast du Lust ins Kino zu gehen?» — что это значит?", word: null, options: ["Ты уже был в кино?", "Хочешь пойти в кино?", "Тебе понравилось кино?", "Ты идёшь в кино?"], correct: 1, hint: "Lust haben = хотеть, иметь желание" },
+
+  // ── A1 РАСШИРЕНИЕ ──
+  { id: 93, level: "A1", type: "translate", category: "Числа", prompt: "Как переводится?", word: "elf", options: ["Десять", "Одиннадцать", "Двенадцать", "Тринадцать"], correct: 1, hint: "11" },
+  { id: 94, level: "A1", type: "translate", category: "Числа", prompt: "Как переводится?", word: "zwanzig", options: ["Двенадцать", "Пятнадцать", "Двадцать", "Тридцать"], correct: 2, hint: "20" },
+  { id: 95, level: "A1", type: "translate", category: "Числа", prompt: "Как переводится?", word: "hundert", options: ["Тысяча", "Сто", "Пятьдесят", "Двести"], correct: 1, hint: "100" },
+  { id: 96, level: "A1", type: "translate", category: "Числа", prompt: "Как переводится?", word: "dreißig", options: ["Тринадцать", "Двадцать три", "Тридцать", "Тридцать три"], correct: 2, hint: "30 — без мягкого знака в написании" },
+  { id: 97, level: "A1", type: "translate", category: "Время", prompt: "Как переводится?", word: "Montag", options: ["Вторник", "Понедельник", "Среда", "Пятница"], correct: 1, hint: "Первый день рабочей недели" },
+  { id: 98, level: "A1", type: "translate", category: "Время", prompt: "Как переводится?", word: "Mittwoch", options: ["Понедельник", "Вторник", "Среда", "Четверг"], correct: 2, hint: "Mitte = середина + Woche = неделя" },
+  { id: 99, level: "A1", type: "translate", category: "Время", prompt: "Как переводится?", word: "Freitag", options: ["Четверг", "Пятница", "Суббота", "Среда"], correct: 1, hint: "Начало выходных в Германии" },
+  { id: 100, level: "A1", type: "translate", category: "Время", prompt: "Как переводится?", word: "Januar", options: ["Март", "Февраль", "Январь", "Декабрь"], correct: 2, hint: "Первый месяц года" },
+  { id: 101, level: "A1", type: "translate", category: "Время", prompt: "Как переводится?", word: "Dezember", options: ["Сентябрь", "Ноябрь", "Октябрь", "Декабрь"], correct: 3, hint: "Последний месяц года" },
+  { id: 102, level: "A1", type: "translate", category: "Время", prompt: "Как переводится?", word: "der Sommer", options: ["Зима", "Весна", "Лето", "Осень"], correct: 2, hint: "Жаркое время года" },
+  { id: 103, level: "A1", type: "translate", category: "Время", prompt: "Как переводится?", word: "der Winter", options: ["Лето", "Осень", "Весна", "Зима"], correct: 3, hint: "Холодное время года" },
+  { id: 104, level: "A1", type: "translate", category: "Цвета", prompt: "Как переводится?", word: "grün", options: ["Синий", "Жёлтый", "Зелёный", "Белый"], correct: 2, hint: "Цвет травы" },
+  { id: 105, level: "A1", type: "translate", category: "Цвета", prompt: "Как переводится?", word: "gelb", options: ["Зелёный", "Жёлтый", "Белый", "Чёрный"], correct: 1, hint: "Цвет солнца" },
+  { id: 106, level: "A1", type: "translate", category: "Цвета", prompt: "Как переводится?", word: "weiß", options: ["Красный", "Серый", "Белый", "Розовый"], correct: 2, hint: "Цвет снега" },
+  { id: 107, level: "A1", type: "translate", category: "Цвета", prompt: "Как переводится?", word: "schwarz", options: ["Белый", "Серый", "Коричневый", "Чёрный"], correct: 3, hint: "Тёмный как ночь" },
+  { id: 108, level: "A1", type: "translate", category: "Тело", prompt: "Как переводится?", word: "der Kopf", options: ["Рука", "Нога", "Голова", "Спина"], correct: 2, hint: "На нём лицо" },
+  { id: 109, level: "A1", type: "translate", category: "Тело", prompt: "Как переводится?", word: "die Hand", options: ["Нога", "Рука", "Плечо", "Живот"], correct: 1, hint: "Ею машут при прощании" },
+  { id: 110, level: "A1", type: "translate", category: "Тело", prompt: "Как переводится?", word: "das Auge", options: ["Ухо", "Нос", "Рот", "Глаз"], correct: 3, hint: "Им смотрят" },
+  { id: 111, level: "A1", type: "translate", category: "Тело", prompt: "Как переводится?", word: "die Nase", options: ["Рот", "Ухо", "Нос", "Щека"], correct: 2, hint: "Им нюхают и дышат" },
+  { id: 112, level: "A1", type: "translate", category: "Одежда", prompt: "Как переводится?", word: "das Hemd", options: ["Пальто", "Рубашка", "Куртка", "Брюки"], correct: 1, hint: "Надевают под пиджак" },
+  { id: 113, level: "A1", type: "translate", category: "Одежда", prompt: "Как переводится?", word: "die Hose", options: ["Юбка", "Рубашка", "Брюки", "Пальто"], correct: 2, hint: "Две штанины" },
+  { id: 114, level: "A1", type: "translate", category: "Одежда", prompt: "Как переводится?", word: "der Schuh", options: ["Носок", "Ботинок", "Шляпа", "Перчатка"], correct: 1, hint: "Надевают на ногу" },
+  { id: 115, level: "A1", type: "translate", category: "Одежда", prompt: "Как переводится?", word: "die Jacke", options: ["Свитер", "Платье", "Куртка", "Шарф"], correct: 2, hint: "Верхняя одежда" },
+  { id: 116, level: "A1", type: "translate", category: "Семья", prompt: "Как переводится?", word: "der Bruder", options: ["Сестра", "Дядя", "Брат", "Племянник"], correct: 2, hint: "Сын родителей, но не ты" },
+  { id: 117, level: "A1", type: "translate", category: "Семья", prompt: "Как переводится?", word: "die Schwester", options: ["Мать", "Тётя", "Бабушка", "Сестра"], correct: 3, hint: "Дочь родителей, но не ты" },
+  { id: 118, level: "A1", type: "translate", category: "Семья", prompt: "Как переводится?", word: "die Oma", options: ["Тётя", "Мать", "Бабушка", "Сестра"], correct: 2, hint: "Мама мамы или папы" },
+  { id: 119, level: "A1", type: "translate", category: "Семья", prompt: "Как переводится?", word: "der Opa", options: ["Дядя", "Дедушка", "Папа", "Брат"], correct: 1, hint: "Папа мамы или папы" },
+  { id: 120, level: "A1", type: "translate", category: "Школа", prompt: "Как переводится?", word: "das Heft", options: ["Книга", "Ручка", "Тетрадь", "Линейка"], correct: 2, hint: "Пишут в него" },
+  { id: 121, level: "A1", type: "translate", category: "Школа", prompt: "Как переводится?", word: "der Stift", options: ["Тетрадь", "Ножницы", "Ручка/карандаш", "Ластик"], correct: 2, hint: "Им рисуют и пишут" },
+  { id: 122, level: "A1", type: "translate", category: "Школа", prompt: "Как переводится?", word: "die Tafel", options: ["Парта", "Доска", "Стул", "Стол"], correct: 1, hint: "Учитель пишет на ней мелом" },
+  { id: 123, level: "A1", type: "choose", category: "Фразы", prompt: "Как сказать «Как тебя зовут?»?", word: null, options: ["Wie alt bist du?", "Wo wohnst du?", "Wie heißt du?", "Was machst du?"], correct: 2, hint: "heißen = называться" },
+  { id: 124, level: "A1", type: "choose", category: "Фразы", prompt: "Как сказать «Я не понимаю»?", word: null, options: ["Ich verstehe nicht.", "Ich weiß nicht.", "Ich spreche nicht.", "Ich kenne nicht."], correct: 0, hint: "verstehen = понимать" },
+  { id: 125, level: "A1", type: "choose", category: "Фразы", prompt: "Как попросить повторить?", word: null, options: ["Bitte sprechen Sie lauter.", "Wie bitte?", "Was ist das?", "Ich verstehe."], correct: 1, hint: "«Bitte» одно слово — вежливая просьба переспросить" },
+  { id: 126, level: "A1", type: "translate", category: "Фразы", prompt: "Как переводится?", word: "Entschuldigung", options: ["Пожалуйста", "Привет", "Извините", "Спасибо"], correct: 2, hint: "Говорят, когда хотят привлечь внимание или извиниться" },
+  { id: 127, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится?", word: "das Wasser", options: ["Сок", "Чай", "Молоко", "Вода"], correct: 3, hint: "H₂O" },
+  { id: 128, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится?", word: "der Kaffee", options: ["Чай", "Кофе", "Сок", "Суп"], correct: 1, hint: "Немцы пьют его много" },
+  { id: 129, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится?", word: "das Fleisch", options: ["Рыба", "Сыр", "Мясо", "Яйцо"], correct: 2, hint: "Говядина, свинина, курица — всё это оно" },
+  { id: 130, level: "A1", type: "translate", category: "Еда", prompt: "Как переводится?", word: "das Gemüse", options: ["Фрукты", "Мясо", "Рыба", "Овощи"], correct: 3, hint: "Морковь, капуста, брокколи — всё это" },
+  { id: 131, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится?", word: "der Baum", options: ["Куст", "Цветок", "Трава", "Дерево"], correct: 3, hint: "Высокое, с ветками" },
+  { id: 132, level: "A1", type: "translate", category: "Природа", prompt: "Как переводится?", word: "die Sonne", options: ["Луна", "Звезда", "Солнце", "Облако"], correct: 2, hint: "Светит днём" },
+
+  // ── A2 РАСШИРЕНИЕ ──
+  { id: 133, level: "A2", type: "choose", category: "Грамматика", prompt: "Perfekt от «fahren» (sein/haben)?", word: null, options: ["Ich habe gefahren.", "Ich bin gefahren.", "Ich war gefahren.", "Ich habe fahrt."], correct: 1, hint: "fahren = движение → sein" },
+  { id: 134, level: "A2", type: "choose", category: "Грамматика", prompt: "Perfekt от «kaufen»?", word: null, options: ["Ich bin gekauft.", "Ich habe kaufte.", "Ich habe gekauft.", "Ich kaufte haben."], correct: 2, hint: "kaufen → gekauft (schwaches Verb)" },
+  { id: 135, level: "A2", type: "choose", category: "Грамматика", prompt: "Как сказать «больше»?", word: null, options: ["mehr", "viel", "sehr", "noch"], correct: 0, hint: "Сравнительная степень от viel" },
+  { id: 136, level: "A2", type: "fill", category: "Грамматика", prompt: "Выбери форму глагола:", word: "Wir ___ gestern ins Theater gegangen.", options: ["haben", "sind", "waren", "hatten"], correct: 1, hint: "gehen → sein в Perfekt" },
+  { id: 137, level: "A2", type: "fill", category: "Грамматика", prompt: "Выбери правильную форму:", word: "Der Film ist ___ als das Buch.", options: ["gut", "besser", "best", "guter"], correct: 1, hint: "Сравнительная степень от gut" },
+  { id: 138, level: "A2", type: "fill", category: "Грамматика", prompt: "Предлог места:", word: "Das Buch liegt ___ dem Tisch.", options: ["an", "auf", "in", "über"], correct: 1, hint: "auf + Dativ = на (горизонтальная поверхность)" },
+  { id: 139, level: "A2", type: "choose", category: "Грамматика", prompt: "«Ich möchte...» — это какой глагол?", word: null, options: ["Perfekt от mögen", "Модальный глагол", "Futur I", "Reflexivverb"], correct: 1, hint: "Вежливая форма желания" },
+  { id: 140, level: "A2", type: "translate", category: "Погода", prompt: "Как переводится?", word: "der Nebel", options: ["Дождь", "Туман", "Снег", "Ветер"], correct: 1, hint: "Когда ничего не видно" },
+  { id: 141, level: "A2", type: "translate", category: "Погода", prompt: "Как переводится?", word: "der Sturm", options: ["Дождь", "Снег", "Буря", "Ветерок"], correct: 2, hint: "Сильная непогода" },
+  { id: 142, level: "A2", type: "translate", category: "Погода", prompt: "Как переводится?", word: "sonnig", options: ["Облачно", "Ветрено", "Туманно", "Солнечно"], correct: 3, hint: "Sonne + -ig" },
+  { id: 143, level: "A2", type: "translate", category: "Хобби", prompt: "Как переводится?", word: "malen", options: ["Петь", "Рисовать", "Читать", "Танцевать"], correct: 1, hint: "Кистью и красками" },
+  { id: 144, level: "A2", type: "translate", category: "Хобби", prompt: "Как переводится?", word: "reisen", options: ["Читать", "Готовить", "Путешествовать", "Рисовать"], correct: 2, hint: "Reise = поездка" },
+  { id: 145, level: "A2", type: "translate", category: "Хобби", prompt: "Как переводится?", word: "kochen", options: ["Есть", "Готовить", "Покупать", "Мыть"], correct: 1, hint: "Что делают на кухне" },
+  { id: 146, level: "A2", type: "translate", category: "Хобби", prompt: "Как переводится?", word: "schwimmen", options: ["Бегать", "Прыгать", "Плавать", "Летать"], correct: 2, hint: "В бассейне или море" },
+  { id: 147, level: "A2", type: "choose", category: "Фразы", prompt: "«Darf ich...?» — это вежливый вопрос о...?", word: null, options: ["Мнении", "Разрешении", "Цене", "Направлении"], correct: 1, hint: "dürfen = иметь разрешение" },
+  { id: 148, level: "A2", type: "choose", category: "Фразы", prompt: "Как вежливо спросить о цене?", word: null, options: ["Was ist das?", "Was kostet das?", "Wie viel Uhr ist es?", "Wie weit ist es?"], correct: 1, hint: "kosten = стоить" },
+  { id: 149, level: "A2", type: "translate", category: "Магазин", prompt: "Как переводится?", word: "der Preis", options: ["Скидка", "Чек", "Цена", "Сдача"], correct: 2, hint: "На ценнике написан..." },
+  { id: 150, level: "A2", type: "translate", category: "Магазин", prompt: "Как переводится?", word: "die Kasse", options: ["Скидка", "Корзина", "Касса", "Ценник"], correct: 2, hint: "Там платят за покупки" },
+  { id: 151, level: "A2", type: "translate", category: "Магазин", prompt: "Как переводится?", word: "der Rabatt", options: ["Акция", "Скидка", "Подарок", "Цена"], correct: 1, hint: "Уменьшение цены" },
+  { id: 152, level: "A2", type: "fill", category: "Грамматика", prompt: "Dativ множественного числа:", word: "Sie hilft ___ Kindern.", options: ["die", "der", "den", "das"], correct: 2, hint: "Dativ Plural → den" },
+  { id: 153, level: "A2", type: "choose", category: "Грамматика", prompt: "Разделяемый глагол: aufmachen в предложении:", word: null, options: ["Er aufmacht die Tür.", "Er macht die Tür auf.", "Er macht auf die Tür.", "Aufmacht er die Tür."], correct: 1, hint: "Приставка уходит в конец предложения" },
+  { id: 154, level: "A2", type: "translate", category: "Город", prompt: "Как переводится?", word: "die Ampel", options: ["Перекрёсток", "Светофор", "Знак", "Мост"], correct: 1, hint: "Красный-жёлтый-зелёный" },
+  { id: 155, level: "A2", type: "translate", category: "Город", prompt: "Как переводится?", word: "die Haltestelle", options: ["Вокзал", "Остановка", "Платформа", "Метро"], correct: 1, hint: "Где ждут автобус" },
+  { id: 156, level: "A2", type: "translate", category: "Путешествия", prompt: "Как переводится?", word: "der Flughafen", options: ["Порт", "Вокзал", "Аэропорт", "Стоянка"], correct: 2, hint: "Там летают самолёты" },
+  { id: 157, level: "A2", type: "translate", category: "Путешествия", prompt: "Как переводится?", word: "der Koffer", options: ["Рюкзак", "Сумка", "Чемодан", "Пакет"], correct: 2, hint: "Берут с собой в поездку" },
+  { id: 158, level: "A2", type: "translate", category: "Путешествия", prompt: "Как переводится?", word: "das Hotel", options: ["Ресторан", "Кафе", "Отель", "Музей"], correct: 2, hint: "Там ночуют туристы" },
+  { id: 159, level: "A2", type: "translate", category: "Работа", prompt: "Как переводится?", word: "der Arzt", options: ["Учитель", "Юрист", "Врач", "Продавец"], correct: 2, hint: "Лечит людей" },
+  { id: 160, level: "A2", type: "translate", category: "Работа", prompt: "Как переводится?", word: "der Lehrer", options: ["Врач", "Учитель", "Инженер", "Водитель"], correct: 1, hint: "Работает в школе" },
+  { id: 161, level: "A2", type: "choose", category: "Грамматика", prompt: "«Ich werde morgen arbeiten» — это какое время?", word: null, options: ["Perfekt", "Präteritum", "Futur I", "Plusquamperfekt"], correct: 2, hint: "werden + инфинитив = будущее время" },
+  { id: 162, level: "A2", type: "choose", category: "Грамматика", prompt: "Какой глагол правильно отрицается?", word: null, options: ["Ich nicht habe Hunger.", "Ich habe kein Hunger.", "Ich habe nicht Hunger.", "Ich habe keinen Hunger."], correct: 3, hint: "kein + Maskulinum Akkusativ → keinen" },
+
+  // ── A3 РАСШИРЕНИЕ ──
+  { id: 163, level: "A3", type: "choose", category: "Грамматика", prompt: "«Er lässt sich die Haare schneiden» — что значит?", word: null, options: ["Он стрижёт себя сам", "Ему стригут волосы", "Он стрижёт других", "Волосы выпадают"], correct: 1, hint: "lassen + sich = заставить сделать что-то с собой" },
+  { id: 164, level: "A3", type: "choose", category: "Грамматика", prompt: "Genitiv от «der Mann»:", word: null, options: ["dem Mann", "den Mann", "des Mannes", "die Mann"], correct: 2, hint: "Мужской род, Genitiv → des + -es/-s" },
+  { id: 165, level: "A3", type: "fill", category: "Грамматика", prompt: "Konjunktiv II:", word: "Wenn ich Zeit ___, würde ich reisen.", options: ["habe", "hätte", "hatte", "gehabt"], correct: 1, hint: "Konjunktiv II от haben → hätte" },
+  { id: 166, level: "A3", type: "translate", category: "Технологии", prompt: "Как переводится?", word: "herunterladen", options: ["Отправить", "Удалить", "Скачать", "Установить"], correct: 2, hint: "herunter = вниз, laden = загружать" },
+  { id: 167, level: "A3", type: "translate", category: "Технологии", prompt: "Как переводится?", word: "das Passwort", options: ["Логин", "Браузер", "Пароль", "Приложение"], correct: 2, hint: "Pass + Wort = слово-пропуск" },
+  { id: 168, level: "A3", type: "translate", category: "Технологии", prompt: "Как переводится?", word: "der Bildschirm", options: ["Клавиатура", "Мышь", "Экран", "Принтер"], correct: 2, hint: "Bild = картинка, Schirm = экран" },
+  { id: 169, level: "A3", type: "choose", category: "Фразы", prompt: "«Es kommt darauf an» — что это значит?", word: null, options: ["Это не важно", "Это зависит от ситуации", "Это правда", "Это сложно"], correct: 1, hint: "darauf ankommen = зависеть от чего-то" },
+  { id: 170, level: "A3", type: "translate", category: "Медицина", prompt: "Как переводится?", word: "das Krankenhaus", options: ["Аптека", "Поликлиника", "Больница", "Клиника"], correct: 2, hint: "krank = больной, Haus = дом" },
+  { id: 171, level: "A3", type: "translate", category: "Медицина", prompt: "Как переводится?", word: "die Versicherung", options: ["Рецепт", "Полис/страховка", "Справка", "Направление"], correct: 1, hint: "versichern = страховать" },
+  { id: 172, level: "A3", type: "choose", category: "Грамматика", prompt: "Wie lautet das Passiv?", word: null, options: ["Das Essen wird gekocht.", "Das Essen kocht sich.", "Das Essen hat gekocht.", "Das Essen wird kochen."], correct: 0, hint: "Passiv Präsens: werden + Partizip II" },
+  { id: 173, level: "A3", type: "choose", category: "Грамматика", prompt: "Что такое «Nebensatz»?", word: null, options: ["Главное предложение", "Придаточное предложение", "Вопросительное предложение", "Пассивная конструкция"], correct: 1, hint: "Neben = рядом, Satz = предложение — зависимая часть" },
+  { id: 174, level: "A3", type: "fill", category: "Грамматика", prompt: "Weil-Satz:", word: "Ich bleibe zu Hause, ___ ich krank bin.", options: ["dass", "weil", "wenn", "ob"], correct: 1, hint: "weil = потому что → глагол в конец" },
+  { id: 175, level: "A3", type: "translate", category: "Среда", prompt: "Как переводится?", word: "die Umwelt", options: ["Погода", "Природа", "Окружающая среда", "Земля"], correct: 2, hint: "um = вокруг, Welt = мир" },
+  { id: 176, level: "A3", type: "translate", category: "Среда", prompt: "Как переводится?", word: "recyceln", options: ["Выбрасывать", "Перерабатывать", "Сжигать", "Хранить"], correct: 1, hint: "Из английского" },
+  { id: 177, level: "A3", type: "translate", category: "Путешествия", prompt: "Как переводится?", word: "die Unterkunft", options: ["Билет", "Маршрут", "Виза", "Жильё/ночлег"], correct: 3, hint: "unterkommen = найти жильё" },
+  { id: 178, level: "A3", type: "choose", category: "Фразы", prompt: "Как сказать «я согласен»?", word: null, options: ["Ich bin damit einverstanden.", "Ich bin dafür.", "Das stimmt mich.", "Ich denke so."], correct: 0, hint: "einverstanden sein = быть согласным" },
+  { id: 179, level: "A3", type: "choose", category: "Грамматика", prompt: "«damit» в Nebensatz — что оно вводит?", word: null, options: ["Причину", "Цель/намерение", "Условие", "Время"], correct: 1, hint: "damit = чтобы (цель действия)" },
+  { id: 180, level: "A3", type: "translate", category: "Общество", prompt: "Как переводится?", word: "die Gesellschaft", options: ["Правительство", "Организация", "Общество", "Партия"], correct: 2, hint: "gesellig = общительный" },
+
+  // ── A4 РАСШИРЕНИЕ ──
+  { id: 181, level: "A4", type: "choose", category: "Грамматика", prompt: "Konjunktiv I используется для:", word: null, options: ["Условных предложений", "Косвенной речи", "Пассивного залога", "Будущего времени"], correct: 1, hint: "В газетах и официальных текстах" },
+  { id: 182, level: "A4", type: "choose", category: "Грамматика", prompt: "Что значит «sich bewerben um»?", word: null, options: ["Отказаться от", "Подать заявку/претендовать на", "Предложить что-то", "Спросить о"], correct: 1, hint: "Bewerbung = заявление о приёме на работу" },
+  { id: 183, level: "A4", type: "translate", category: "Работа", prompt: "Как переводится?", word: "die Bewerbung", options: ["Должность", "Резюме", "Заявление/аппликация", "Контракт"], correct: 2, hint: "bewerben = подавать заявку" },
+  { id: 184, level: "A4", type: "translate", category: "Работа", prompt: "Как переводится?", word: "kündigen", options: ["Устроиться", "Уволиться", "Продлить", "Повысить"], correct: 1, hint: "Подача заявления об увольнении" },
+  { id: 185, level: "A4", type: "choose", category: "Деловой язык", prompt: "Как вежливо начать деловое письмо?", word: null, options: ["Hallo!", "Hey!", "Sehr geehrte Damen und Herren,", "Tschüss!"], correct: 2, hint: "Официальное обращение без имени" },
+  { id: 186, level: "A4", type: "choose", category: "Деловой язык", prompt: "«Mit freundlichen Grüßen» — это:", word: null, options: ["Приветствие в начале письма", "Прощание в конце письма", "Заголовок документа", "Подпись на договоре"], correct: 1, hint: "MfG — стандартная официальная подпись" },
+  { id: 187, level: "A4", type: "translate", category: "Деловой язык", prompt: "Как переводится?", word: "der Termin", options: ["Договор", "Встреча/назначенное время", "Отчёт", "Заказ"], correct: 1, hint: "Termин для деловой встречи" },
+  { id: 188, level: "A4", type: "translate", category: "Общество", prompt: "Как переводится?", word: "die Genehmigung", options: ["Заявление", "Разрешение/одобрение", "Отказ", "Требование"], correct: 1, hint: "genehmigen = одобрять" },
+  { id: 189, level: "A4", type: "choose", category: "Грамматика", prompt: "Zweiteilige Konjunktion: «nicht nur... sondern auch» значит:", word: null, options: ["Либо... либо", "Не только... но и", "Ни... ни", "Хотя... тем не менее"], correct: 1, hint: "Усиливает: не просто одно, а обе вещи" },
+  { id: 190, level: "A4", type: "choose", category: "Грамматика", prompt: "«trotzdem» означает:", word: null, options: ["Поэтому", "Следовательно", "Тем не менее", "Например"], correct: 2, hint: "Vorbei = уступка — но всё равно..." },
+  { id: 191, level: "A4", type: "translate", category: "Деловой язык", prompt: "Как переводится?", word: "die Fachkraft", options: ["Новичок", "Специалист", "Стажёр", "Менеджер"], correct: 1, hint: "Fach = специальность, Kraft = сила/человек" },
+  { id: 192, level: "A4", type: "choose", category: "Деловой язык", prompt: "«hiermit» — это слово используется:", word: null, options: ["В разговоре с друзьями", "В официальных документах", "В смс", "В вопросах"], correct: 1, hint: "hier + mit — официальный канцелярский маркер" },
 ];
 
 // Вопросы для теста на определение уровня
@@ -3628,6 +3736,7 @@ function MapGameScreen({ onBack, session, profile }) {
   const ansTimerRef = useRef(null);
   const botTurnRef = useRef(null);
   const pPickDoneRef = useRef(false); // true once player picked or timer expired
+  const usedQIdsRef = useRef(new Set());
 
   useEffect(() => { fetch(GEO_URL).then(r => r.json()).then(d => setGeoFeatures(d.features)); }, []);
   useEffect(() => () => {
@@ -3641,7 +3750,10 @@ function MapGameScreen({ onBack, session, profile }) {
 
   // ── BOT MODE: start parallel picks when game begins ──
   useEffect(() => {
-    if (phase === "playing" && !onlineModeRef.current) { startLandTimer(); scheduleBotPick(); }
+    if (phase === "playing" && !onlineModeRef.current) {
+      usedQIdsRef.current.clear();
+      startLandTimer(); scheduleBotPick();
+    }
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function myUsername() { return profile?.username || session?.user?.email?.split("@")[0] || "Игрок"; }
@@ -3904,10 +4016,22 @@ function MapGameScreen({ onBack, session, profile }) {
     setRPhase("territory_select");
   }
 
-  const cats = [...new Set(ALL_QUESTIONS.map(q => q.category).filter(Boolean))];
+  const gameLevel = profile?.lang_level || "A1";
+  const cats = [...new Set(ALL_QUESTIONS.filter(q => q.level === gameLevel).map(q => q.category).filter(Boolean))];
   function pickQ(cat) {
-    const pool = cat ? ALL_QUESTIONS.filter(q => q.category === cat) : ALL_QUESTIONS;
-    return (pool.length ? pool : ALL_QUESTIONS)[Math.floor(Math.random() * (pool.length || ALL_QUESTIONS.length))];
+    // Filter by user's level, prefer unused questions
+    let pool = ALL_QUESTIONS.filter(q => q.level === gameLevel && !usedQIdsRef.current.has(q.id));
+    if (cat) pool = pool.filter(q => q.category === cat);
+    if (!pool.length) {
+      // All level questions used — reset and reuse
+      usedQIdsRef.current.clear();
+      pool = ALL_QUESTIONS.filter(q => q.level === gameLevel);
+      if (cat) pool = pool.filter(q => q.category === cat);
+    }
+    if (!pool.length) pool = ALL_QUESTIONS; // last fallback
+    const q = pool[Math.floor(Math.random() * pool.length)];
+    usedQIdsRef.current.add(q.id);
+    return q;
   }
   function getStateId(f) { return STATE_ID_MAP[f.properties.GEN || f.properties.NAME_1 || f.properties.name || ""] || null; }
   function stateName(id) { return Object.keys(STATE_ID_MAP).find(k => STATE_ID_MAP[k] === id) || id; }
@@ -4204,6 +4328,7 @@ function MapGameScreen({ onBack, session, profile }) {
 
   function restartGame() {
     stopLandTimer(); stopAnsTimer(); clearTimeout(botTurnRef.current);
+    usedQIdsRef.current.clear();
     terrRef.current = {}; setTerritories({});
     setOnlineMode(false); onlineModeRef.current = false;
     setOnlineSetup("choice"); setMyRole(null); myRoleRef.current = null;
@@ -4376,7 +4501,7 @@ function MapGameScreen({ onBack, session, profile }) {
           </div>
           <button onClick={() => setPhase("playing")}
             style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.4)", cursor: "pointer" }}>
-            🤖 Соло с ботом
+            🤖 Соло с ботом · уровень {gameLevel}
           </button>
         </div>
       </div>
