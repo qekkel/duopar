@@ -2686,16 +2686,21 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
   const options = useMemo(() => {
     if (!practiceCard) return [];
     if (practiceCard.fixedOptions) return shuffle(practiceCard.fixedOptions);
+    const cardIsLetter = isPronounceCard(practiceCard.de);
     if (reversed) {
       const wordCount = practiceCard.de.trim().split(/\s+/).length;
-      const pool = optionPool.filter(f => f.de !== practiceCard.de && f.de.trim().split(/\s+/).length === wordCount);
-      const fallbackPool = optionPool.filter(f => f.de !== practiceCard.de);
-      const distractors = pool.length >= 3 ? pool : fallbackPool;
+      // distractors must be same type (letter vs word) and similar word count
+      const sameKind = optionPool.filter(f => f.de !== practiceCard.de && isPronounceCard(f.de) === cardIsLetter);
+      const pool = sameKind.filter(f => f.de.trim().split(/\s+/).length === wordCount);
+      const distractors = pool.length >= 3 ? pool : sameKind;
       return shuffle([practiceCard.de, ...shuffle(distractors).slice(0, 3).map(f => f.de)]);
     }
     const pool = (() => {
-      const sameType = optionPool.filter(f => f.ru !== correct && isSentence(f) === isSentence(practiceCard));
-      return sameType.length >= 3 ? sameType : optionPool.filter(f => f.ru !== correct);
+      const sameKind = optionPool.filter(f => f.ru !== correct && isPronounceCard(f.de) === cardIsLetter);
+      const sameType = sameKind.filter(f => isSentence(f) === isSentence(practiceCard));
+      if (sameType.length >= 3) return sameType;
+      if (sameKind.length >= 3) return sameKind;
+      return optionPool.filter(f => f.ru !== correct);
     })();
     return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
   }, [practiceIdx, practiceQueue]);
