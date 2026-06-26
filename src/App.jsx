@@ -1515,9 +1515,23 @@ function loadBlocks(key) {
 }
 
 function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubtitle, onDone }) {
-  const [visible, setVisible] = useState(true);
   const total = amount + daily;
   const [counted, setCounted] = useState(Math.max(0, totalAfter - total));
+  // "showing" → playing normally; "fastClosing" → accelerated exit; "gone" → unmounted
+  const [phase, setPhase] = useState("showing");
+  const closingRef = useRef(false);
+  const countIvRef = useRef(null);
+  const autoCloseTimerRef = useRef(null);
+
+  function startClose(fast) {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    clearInterval(countIvRef.current);
+    clearTimeout(autoCloseTimerRef.current);
+    if (fast) setCounted(totalAfter); // jump counter to final value instantly
+    setPhase("fastClosing");
+    setTimeout(() => { setPhase("gone"); setTimeout(onDone, 30); }, fast ? 350 : 250);
+  }
 
   useEffect(() => {
     playSound("correct");
@@ -1529,32 +1543,35 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
       let cur = totalAfter - total;
       const tgt = totalAfter;
       const t0 = setTimeout(() => {
-        const iv = setInterval(() => {
+        countIvRef.current = setInterval(() => {
           cur = Math.min(cur + Math.max(1, Math.ceil((tgt - cur) / 5)), tgt);
           setCounted(cur);
-          if (cur >= tgt) clearInterval(iv);
+          if (cur >= tgt) clearInterval(countIvRef.current);
         }, 75);
       }, 700);
-      return () => clearTimeout(t0);
+      return () => { clearTimeout(t0); clearInterval(countIvRef.current); };
     }
   }, []);
 
   useEffect(() => {
     const dur = isRepeat ? 2200 : 3200;
-    const t = setTimeout(() => { setVisible(false); setTimeout(onDone, 350); }, dur);
-    return () => clearTimeout(t);
+    autoCloseTimerRef.current = setTimeout(() => startClose(false), dur);
+    return () => clearTimeout(autoCloseTimerRef.current);
   }, []);
 
-  const dismiss = () => { setVisible(false); setTimeout(onDone, 200); };
-  if (!visible) return null;
+  if (phase === "gone") return null;
 
   const flyN = total > 0 ? Math.min(Math.max(total, 5), 14) : 0;
+  const isExiting = phase === "fastClosing";
 
   return (
-    <div onClick={dismiss} style={{ position: "fixed", inset: 0, zIndex: 9999,
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      background: isRepeat ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.8)",
-      backdropFilter: "blur(7px)", cursor: "pointer", animation: "rwdIn 0.25s ease" }}>
+    <div
+      onClick={() => startClose(true)}
+      style={{ position: "fixed", inset: 0, zIndex: 9999,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        background: isRepeat ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.8)",
+        backdropFilter: "blur(7px)", cursor: "pointer",
+        animation: isExiting ? "rwdOut 0.35s ease forwards" : "rwdIn 0.25s ease" }}>
 
       {Array.from({ length: flyN }).map((_, i) => {
         const angle = (i / flyN) * 360;
@@ -1563,12 +1580,16 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
         const dy = Math.sin((angle * Math.PI) / 180) * dist - 15;
         return (
           <div key={i} style={{ position: "absolute", fontSize: 22, pointerEvents: "none",
-            animation: `rwdStar 1.1s cubic-bezier(0.22,1,0.36,1) ${i * 55}ms both`,
+            animation: isExiting
+              ? "rwdStarFast 0.25s ease forwards"
+              : `rwdStar 1.1s cubic-bezier(0.22,1,0.36,1) ${i * 55}ms both`,
             "--dx": `${dx}px`, "--dy": `${dy}px` }}>⭐</div>
         );
       })}
 
-      <div style={{ textAlign: "center", padding: "0 28px" }}>
+      <div style={{ textAlign: "center", padding: "0 28px",
+        transform: isExiting ? "scale(0.93)" : "scale(1)",
+        transition: isExiting ? "transform 0.35s ease" : undefined }}>
         <div style={{ fontSize: isRepeat ? 26 : 16, fontWeight: isRepeat ? 800 : 600,
           color: isRepeat ? "#fff" : "rgba(255,255,255,0.55)",
           marginBottom: 16, animation: "rwdUp 0.4s 0.05s both" }}>{title}</div>
@@ -1613,6 +1634,7 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
 
       <style>{`
         @keyframes rwdIn { from{opacity:0} to{opacity:1} }
+        @keyframes rwdOut { 0%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(0.95)} }
         @keyframes rwdPop { from{transform:scale(0.3);opacity:0} to{transform:scale(1);opacity:1} }
         @keyframes rwdUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
         @keyframes rwdCountPulse { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
@@ -1620,6 +1642,9 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
           0%{transform:translate(0,0) scale(0);opacity:0}
           20%{opacity:1;transform:translate(calc(var(--dx)*.3),calc(var(--dy)*.3)) scale(1.4)}
           100%{transform:translate(var(--dx),var(--dy)) scale(0.4);opacity:0}
+        }
+        @keyframes rwdStarFast {
+          0%{opacity:1} 100%{opacity:0;transform:translate(0,0) scale(0)}
         }
       `}</style>
     </div>
@@ -1649,6 +1674,23 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const [displayStars, setDisplayStars] = useState(() => parseInt(localStorage.getItem(STARS_KEY) || "0", 10));
   const [starsAnim, setStarsAnim] = useState(null); // { delta, label }
   const countUpRef = useRef(null);
+  const syncTimerRef = useRef(null);
+
+  // Collect current progress from localStorage and save to Supabase (debounced 1.5s)
+  function syncToServer() {
+    if (!userId) return;
+    clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      const progress = {
+        stars: parseInt(localStorage.getItem(STARS_KEY) || "0", 10),
+        awarded: (() => { try { return JSON.parse(localStorage.getItem(AWARDED_KEY) || "{}"); } catch { return {}; } })(),
+        blocks: (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { return {}; } })(),
+        levelExams: (() => { try { return JSON.parse(localStorage.getItem(LEVEL_EXAMS_KEY) || "[]"); } catch { return []; } })(),
+        daily: (() => { try { return JSON.parse(localStorage.getItem(DAILY_KEY) || "{}"); } catch { return {}; } })(),
+      };
+      supabase.from("profiles").update({ progress }).eq("id", userId).then();
+    }, 1500);
+  }
 
   // Animate star counter up whenever stars increases
   useEffect(() => {
@@ -1675,6 +1717,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   function markAwarded(key) {
     const a = getAwarded(); a[key] = true;
     localStorage.setItem(AWARDED_KEY, JSON.stringify(a));
+    syncToServer();
   }
 
   function awardStars(delta, label) {
@@ -1705,9 +1748,11 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     if (actualAmount > 0) {
       if (awardKey) markAwarded(awardKey);
       setStars(prev => { const n = prev + actualAmount; localStorage.setItem(STARS_KEY, String(n)); return n; });
+      syncToServer();
     }
     if (dailyAmt > 0) {
       setStars(prev => { const n = prev + dailyAmt; localStorage.setItem(STARS_KEY, String(n)); return n; });
+      syncToServer();
     }
     setRewardInfo({
       title: alreadyAwarded ? (repeatTitle || "Gut gemacht!") : title,
@@ -1751,6 +1796,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       if (d[type] === today) return false;
       d[type] = today;
       localStorage.setItem(DAILY_KEY, JSON.stringify(d));
+      syncToServer();
       return true;
     } catch { return false; }
   }
@@ -1765,6 +1811,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       serializable[k] = updated[k] instanceof Set ? [...updated[k]] : [];
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+    syncToServer();
   }
 
   function doneBlocks(topicId) { return completedBlocks[topicId] || new Set(); }
@@ -2007,6 +2054,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     next.add(lvl);
     localStorage.setItem(LEVEL_EXAMS_KEY, JSON.stringify([...next]));
     setPassedLevelExams(next);
+    syncToServer();
     const nextIdx = LEVELS.indexOf(lvl) + 1;
     if (nextIdx < LEVELS.length) setActiveLevel(LEVELS[nextIdx]);
     setMode(null);
@@ -2056,10 +2104,17 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
         return (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>{CURRICULUM_LEVELS[lvl].label}</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 12px" }}>
-              <span style={{ fontSize: 15, transition: "transform 0.15s", ...(displayStars !== stars ? { transform: "scale(1.3)" } : {}) }}>⭐</span>
-              <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d" }}>{earned}</span>
-              <span style={{ fontSize: 11, color: "rgba(245,158,11,0.45)", fontWeight: 600 }}>/ {max}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {/* Level block progress */}
+              <div style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "3px 9px" }}>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>в блоке</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fcd34d" }}>{earned}/{max}</span>
+              </div>
+              {/* Total star balance */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 12px" }}>
+                <span style={{ fontSize: 15, transition: "transform 0.15s", ...(displayStars !== stars ? { transform: "scale(1.3)" } : {}) }}>⭐</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d" }}>{displayStars}</span>
+              </div>
             </div>
           </div>
         );
@@ -2409,6 +2464,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   const recRef = useRef(null);
   const recRuRef = useRef(null);
   const audioStreamRef = useRef(null);
+  const advancedRef = useRef(false);
   const audioCtxRef = useRef(null);
   const animRef = useRef(null);
   const vizStreamRef = useRef(null);
@@ -2482,7 +2538,9 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de, card.audioText]);
 
   function accept(heard) {
-    stopViz();
+    if (advancedRef.current) return;
+    advancedRef.current = true;
+    stopAllRec(); stopViz();
     // Track letters that needed retries — for adaptive exam questions
     if (topicId && isShortSound && retryCount > 0) {
       try {
@@ -2745,7 +2803,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
                 🎙️ {retryCount > 0 || status === "not_heard" ? "Попробовать ещё раз" : "Произнести"}
               </button>
               {showFallback && (
-                <button onClick={() => onAdvance(true)} style={{ padding: "14px", borderRadius: 14, background: isShortSound && status === "idle" ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.05)", border: `1px solid ${isShortSound && status === "idle" ? "rgba(124,92,252,0.25)" : "rgba(255,255,255,0.12)"}`, color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                <button onClick={() => accept(null)} style={{ padding: "14px", borderRadius: 14, background: isShortSound && status === "idle" ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.05)", border: `1px solid ${isShortSound && status === "idle" ? "rgba(124,92,252,0.25)" : "rgba(255,255,255,0.12)"}`, color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                   ✓ Я произнёс/произнесла
                 </button>
               )}
@@ -2760,7 +2818,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       )}
       {mode === "self" && status !== "success" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={() => onAdvance(true)} style={{ padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
+          <button onClick={() => accept(null)} style={{ padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
             Я произнёс/произнесла ✓
           </button>
           <button onClick={() => { setMode("check"); setStatus("idle"); setLastHeard(null); }} style={{ padding: "10px", background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer" }}>
@@ -3478,24 +3536,43 @@ function PHLevelExamScreen({ onBack, onPass, nextLvlLabel }) {
   const q = questions[qi];
   const total = questions.length;
   const passMark = Math.ceil(total * 0.7);
+  const onPassCalledRef = useRef(false);
 
   function advance(isCorrect) {
+    const nextScore = score + (isCorrect ? 1 : 0);
     setTopicScores(prev => { const t = prev[q.topic] || { correct: 0, total: 0 }; return { ...prev, [q.topic]: { correct: t.correct + (isCorrect ? 1 : 0), total: t.total + 1 } }; });
     if (isCorrect) setScore(s => s + 1);
-    setTimeout(() => { if (qi + 1 < total) { setQi(i => i + 1); setQKey(k => k + 1); } else setFinished(true); }, isCorrect ? 500 : 700);
+    setTimeout(() => {
+      if (qi + 1 < total) { setQi(i => i + 1); setQKey(k => k + 1); }
+      else {
+        setFinished(true);
+        if (nextScore >= passMark && !onPassCalledRef.current) {
+          onPassCalledRef.current = true;
+          setTimeout(onPass, 400);
+        }
+      }
+    }, isCorrect ? 500 : 700);
   }
-  function restart() { setQi(0); setQKey(k => k + 1); setScore(0); setTopicScores({}); setFinished(false); }
+  function restart() { onPassCalledRef.current = false; setQi(0); setQKey(k => k + 1); setScore(0); setTopicScores({}); setFinished(false); }
 
   if (finished) {
     const pct = Math.round((score / total) * 100);
     const passed = score >= passMark;
+    // Passed → useEffect auto-calls onPass() → RewardOverlay. Show brief flash.
+    if (passed) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+          <div style={{ fontSize: 64 }}>🏆</div>
+        </div>
+      );
+    }
     const weakTopics = Object.entries(topicScores).filter(([, v]) => v.correct / v.total < 0.6).map(([k]) => k);
     return (
       <div style={{ paddingTop: 50, paddingBottom: 32 }}>
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div style={{ fontSize: 60, marginBottom: 12 }}>{passed ? "🏆" : pct >= 50 ? "😅" : "📚"}</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{passed ? "Экзамен A1-1 сдан!" : pct >= 50 ? "Почти получилось!" : "Нужно повторить"}</div>
-          <div style={{ fontSize: 40, fontWeight: 900, color: passed ? "#10b981" : "#f59e0b", marginBottom: 4 }}>{pct}%</div>
+          <div style={{ fontSize: 60, marginBottom: 12 }}>{pct >= 50 ? "😅" : "📚"}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{pct >= 50 ? "Почти получилось!" : "Нужно повторить"}</div>
+          <div style={{ fontSize: 40, fontWeight: 900, color: "#f59e0b", marginBottom: 4 }}>{pct}%</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{score} из {total} правильно · нужно {passMark}+</div>
         </div>
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "16px", marginBottom: 16 }}>
@@ -3518,9 +3595,7 @@ function PHLevelExamScreen({ onBack, onPass, nextLvlLabel }) {
             {weakTopics.map(t => <div key={t} style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 3 }}>• {TOPIC_LABELS[t] || t}</div>)}
           </div>
         )}
-        {passed && nextLvlLabel && <div style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.06))", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 14, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#10b981", fontWeight: 600 }}>🔓 Открыт блок {nextLvlLabel}</div>}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {passed && nextLvlLabel && <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Перейти к {nextLvlLabel} →</button>}
           <button onClick={restart} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Пройти заново</button>
           <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)", border: "none", fontSize: 14, cursor: "pointer" }}>← Вернуться к курсу</button>
         </div>
@@ -3583,6 +3658,7 @@ function ExamPronounceQ({ card, onDone }) {
   const [retryCount, setRetryCount] = useState(0);
   const recRef = useRef(null); const recRuRef = useRef(null);
   const vizStreamRef = useRef(null); const vizCtxRef = useRef(null); const vizAnimRef = useRef(null);
+  const acceptedRef = useRef(false);
 
   const letter = (card.audioText || card.de.split(" ")[0]);
   const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de]);
@@ -3620,11 +3696,16 @@ function ExamPronounceQ({ card, onDone }) {
     }).catch(() => {});
   }
 
-  function accept(ok) { stopAll(); stopVizLocal(); setStatus("success"); playSound("correct"); setTimeout(() => onDone(ok), 1000); }
+  function accept(ok) {
+    if (acceptedRef.current) return;
+    acceptedRef.current = true;
+    stopAll(); stopVizLocal(); setStatus("success"); playSound("correct"); setTimeout(() => onDone(ok), 1000);
+  }
 
   function listen() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { accept(true); return; }
+    stopAll(); // kill any previous recognizers before starting new ones
     setStatus("listening"); startVizLocal();
     let finished = false, errCount = 0;
     function onHit() { if (finished) return; finished = true; accept(true); }
@@ -3700,6 +3781,7 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
   const [finished, setFinished] = useState(false);
   const total = questions.length;
   const passMark = Math.ceil(total * 0.8);
+  const onPassCalledRef = useRef(false);
   const q = questions[qi];
 
   if (total === 0) {
@@ -3718,9 +3800,16 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
     return idx === q.answer;
   }
 
-  function advance() {
+  // finalScore = score after the current answer (computed at pick/onDone time to avoid async state lag)
+  function advance(finalScore) {
     if (qi + 1 < total) { setQi(qi + 1); setSelected(null); }
-    else setFinished(true);
+    else {
+      setFinished(true);
+      if (finalScore >= passMark && !onPassCalledRef.current) {
+        onPassCalledRef.current = true;
+        setTimeout(onPass, 400);
+      }
+    }
   }
 
   function pick(opt, idx) {
@@ -3729,48 +3818,38 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
     const correct = isCorrect(opt, idx);
     if (correct) { playSound("correct"); setScore(s => s + 1); }
     else playSound("wrong");
-    setTimeout(advance, 900);
+    const nextScore = score + (correct ? 1 : 0);
+    setTimeout(() => advance(nextScore), 900);
   }
 
   if (finished) {
     const passed = score >= passMark;
-    const nearPass = !passed && score >= Math.floor(total * 0.5);
-    const mission = topicId ? TOPIC_TOUR_MISSION[topicId] : null;
-    const restartQuiz = () => { setQi(0); setSelected(null); setScore(0); setFinished(false); };
+    // Passed → onPass() already called from advance() → RewardOverlay will appear
+    if (passed) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+          <div style={{ fontSize: 64 }}>🎉</div>
+        </div>
+      );
+    }
 
-    // Level exam result screen
+    const nearPass = score >= Math.floor(total * 0.5);
+    const restartQuiz = () => { onPassCalledRef.current = false; setQi(0); setSelected(null); setScore(0); setFinished(false); };
+
     if (levelKey) {
       const LVL_LABEL = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" };
       const thisLabel = LVL_LABEL[levelKey] || levelKey;
       return (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
-          <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🏆" : nearPass ? "😅" : "📚"}</div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
-            {passed ? `Экзамен ${thisLabel} сдан!` : nearPass ? "Почти получилось!" : "Нужно повторить"}
-          </div>
-          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
-            {score} из {total} правильно · нужно {passMark}+
-          </div>
-          {passed && nextLvlLabel && (
-            <div style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.07))", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 16, padding: "14px 18px", marginBottom: 24, fontSize: 14, color: "#10b981", fontWeight: 600 }}>
-              🔓 Открыт блок {nextLvlLabel}
-            </div>
-          )}
+          <div style={{ fontSize: 52, marginBottom: 14 }}>{nearPass ? "😅" : "📚"}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{nearPass ? "Почти получилось!" : "Нужно повторить"}</div>
+          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 28 }}>{score} из {total} правильно · нужно {passMark}+</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {passed ? (
-              <>
-                {nextLvlLabel && <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Перейти к {nextLvlLabel} →</button>}
-                <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Вернуться к {thisLabel}</button>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
-                  {nearPass ? "Почти! Повтори слабые темы и попробуй снова." : "Пройди темы блока и возвращайся."}
-                </div>
-                <button onClick={restartQuiz} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
-                <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Вернуться к {thisLabel}</button>
-              </>
-            )}
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>
+              {nearPass ? "Почти! Повтори слабые темы и попробуй снова." : "Пройди темы блока и возвращайся."}
+            </div>
+            <button onClick={restartQuiz} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
+            <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>← Вернуться к {thisLabel}</button>
           </div>
         </div>
       );
@@ -3778,46 +3857,18 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
 
     return (
       <div style={{ paddingTop: 60, textAlign: "center" }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>{passed ? "🎉" : nearPass ? "😅" : "📚"}</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>
-          {passed
-            ? (isEarlyCheck ? "Отлично! Тема засчитана." : "Тема пройдена!")
-            : nearPass ? "Почти получилось!" : "Лучше пройти тему"}
+        <div style={{ fontSize: 52, marginBottom: 14 }}>{nearPass ? "😅" : "📚"}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{nearPass ? "Почти получилось!" : "Лучше пройти тему"}</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 28 }}>{score} из {total} правильно · нужно {passMark}+</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>
+            {nearPass ? "Повтори слабые места и попробуй снова" : "Пройди части темы спокойно, а потом вернись к проверке"}
+          </div>
+          <button onClick={restartQuiz} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
+          <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>
+            {isEarlyCheck ? "Начать тему" : "← Учить ещё раз"}
+          </button>
         </div>
-        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: passed && mission ? 20 : 32 }}>
-          {score} из {total} правильно · нужно {passMark}+
-        </div>
-        {passed && isEarlyCheck && (
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>
-            Ты можешь идти дальше или пройти части для закрепления
-          </div>
-        )}
-        {passed && mission && (
-          <div style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.07))", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 16, padding: "16px 18px", marginBottom: 24, textAlign: "left" }}>
-            <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>🗺️ Открылась миссия в туре</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}>{mission.flag} {mission.land}</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>Теперь можешь применить знания в игре</div>
-          </div>
-        )}
-        {passed ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Дальше →</button>
-            {isEarlyCheck && (
-              <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>Повторить тему</button>
-            )}
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {nearPass
-              ? <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Повтори слабые места и попробуй снова</div>
-              : <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Пройди части темы спокойно, а потом вернись к проверке</div>
-            }
-            <button onClick={restartQuiz} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Попробовать снова</button>
-            <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>
-              {isEarlyCheck ? "Начать тему" : "← Учить ещё раз"}
-            </button>
-          </div>
-        )}
       </div>
     );
   }
@@ -3833,7 +3884,7 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{qi + 1}/{total}</span>
         </div>
         <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>⚡ Экзамен · {topic.title}</div>
-        <ExamPronounceQ key={qi} card={q.card} onDone={(ok) => { if (ok) { playSound("correct"); setScore(s => s + 1); } advance(); }} />
+        <ExamPronounceQ key={qi} card={q.card} onDone={(ok) => { if (ok) setScore(s => s + 1); advance(score + (ok ? 1 : 0)); }} />
       </div>
     );
   }
@@ -6360,6 +6411,10 @@ function MapGameScreen({ onBack, session, profile }) {
 
 // ── MAIN APP ──────────────────────────────────────────────────
 export default function DuoPar() {
+  // version tag — update this when deploying to confirm cache is busted
+  // eslint-disable-next-line no-console
+  console.log("DuoPar build: 2026-06-26-reward-v3");
+
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [completedTopics, setCompletedTopics] = useState([]);
@@ -6406,12 +6461,20 @@ export default function DuoPar() {
       supabase.from("profiles").select("*").eq("id", session.user.id).single()
         .then(({ data }) => {
           if (!data) return;
+          // Restore server progress into localStorage BEFORE CurriculumScreen mounts
+          if (data.progress && Object.keys(data.progress).length > 0) {
+            const uid = session.user.id;
+            const p = data.progress;
+            if (p.stars !== undefined) localStorage.setItem(`duopar_stars_${uid}`, String(p.stars));
+            if (p.awarded) localStorage.setItem(`duopar_awarded_${uid}`, JSON.stringify(p.awarded));
+            if (p.blocks) localStorage.setItem(`duopar_blocks_${uid}`, JSON.stringify(p.blocks));
+            if (p.levelExams) localStorage.setItem(`duopar_level_exams_${uid}`, JSON.stringify(p.levelExams));
+            if (p.daily) localStorage.setItem(`duopar_daily_${uid}`, JSON.stringify(p.daily));
+          }
           if (!data.lang_level) {
             if (isNewSignup.current) {
-              // Новый пользователь — показать онбординг
               setScreen("onboarding");
             } else {
-              // Возвращающийся без уровня — поставить A1 по умолчанию
               supabase.from("profiles").update({ lang_level: "A1" }).eq("id", session.user.id);
               setProfile({ ...data, lang_level: "A1" });
               setScreen("lobby");
