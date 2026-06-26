@@ -2259,8 +2259,9 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         setStatus("no_mic");
       } else if (e.error === "no-speech") {
         if (isShortSound) {
-          // For letters/short sounds: no-speech → just show fallback, don't block
-          setStatus("not_heard");
+          // For letters: single sounds like "ha","ef" don't register as German speech.
+          // User clearly tried → accept immediately.
+          accept(null);
         } else {
           setNotHeardCount(c => {
             const next = c + 1;
