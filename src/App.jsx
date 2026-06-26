@@ -2189,6 +2189,25 @@ function speechHit(allTexts, expected) {
   return false;
 }
 
+// Russian names for German letters (how a Russian speaker says them)
+const RU_LETTER_NAMES = {
+  a:["а","аа"], b:["бэ","бе","б"], c:["цэ","це"],
+  d:["дэ","де","д"], e:["е","э"], f:["эф","еф","ф"],
+  g:["гэ","ге","г"], h:["ха","аш","х"], i:["и","ии"],
+  j:["йот","й"], k:["ка","к"], l:["эль","эл","эло","л"],
+  m:["эм","м"], n:["эн","н"], o:["о","оо"],
+  p:["пэ","пе","п"], q:["ку","к"], r:["эр","ер","р"],
+  s:["эс","ес","с"], t:["тэ","те","т"], u:["у","уу"],
+  v:["фау","фав","ф"], w:["вэ","ве","в"],
+  x:["икс"], y:["ипсилон","упсилон"], z:["цэт","цет","зет"],
+};
+
+function ruLetterHit(transcript, letter) {
+  const t = transcript.trim().toLowerCase();
+  const variants = RU_LETTER_NAMES[letter.toLowerCase()] || [];
+  return variants.some(v => t === v || t.startsWith(v) || v.startsWith(t));
+}
+
 function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, onAdvance }) {
   const [mode, setMode] = useState("check"); // "check" | "self"
   const [status, setStatus] = useState("idle"); // "idle"|"listening"|"success"|"retry"|"not_heard"|"no_mic"
@@ -2196,6 +2215,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   const [notHeardCount, setNotHeardCount] = useState(0);
   const [lastHeard, setLastHeard] = useState(null);
   const recRef = useRef(null);
+  const recRuRef = useRef(null);
   const audioStreamRef = useRef(null);
   const audioCtxRef = useRef(null);
   const animRef = useRef(null);
@@ -2212,13 +2232,19 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   useEffect(() => {
     return () => {
       if (recRef.current) { try { recRef.current.abort(); } catch(e) {} }
+      if (recRuRef.current) { try { recRuRef.current.abort(); } catch(e) {} }
       stopAudioDetect();
     };
   }, []);
 
+  function stopAllRec() {
+    if (recRef.current) { try { recRef.current.abort(); } catch(e) {} recRef.current = null; }
+    if (recRuRef.current) { try { recRuRef.current.abort(); } catch(e) {} recRuRef.current = null; }
+  }
+
   useEffect(() => {
     setMode("check"); setStatus("idle"); setRetryCount(0); setNotHeardCount(0); setLastHeard(null);
-    if (recRef.current) { try { recRef.current.abort(); } catch(e) {} recRef.current = null; }
+    stopAllRec();
     stopAudioDetect();
   }, [card.de]);
 
@@ -2274,45 +2300,90 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     if (!SR) { setMode("self"); return; }
     setStatus("listening");
 
-    const rec = new SR();
-    recRef.current = rec;
-    rec.lang = "de-DE";
-    rec.maxAlternatives = 5;
-    // interimResults for short sounds: catches "ha"/"ef"/"be" before no-speech fires
-    rec.interimResults = isShortSound;
+    // For letter sounds: run de-DE + ru-RU recognizers in parallel.
+    // Russian STT reliably hears "эм","ха","эф" etc. that de-DE ignores.
+    if (isShortSound) {
+      const letter = (card.audioText || card.de).trim().split(/\s+/)[0].toLowerCase();
+      let done = false;
+      let errCount = 0;
 
-    rec.onresult = (e) => {
-      const resultItem = e.results[e.results.length - 1];
-      const isFinal = resultItem.isFinal;
-      const results = Array.from(resultItem);
-      const best = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0]);
-      const heard = best.transcript.trim();
-      const allTexts = results.map(r => normalizeSpeech(r.transcript));
-      const hit = speechHit(allTexts, expected);
+      function onMatch(heard) {
+        if (done) return;
+        done = true;
+        stopAllRec();
+        accept(heard);
+      }
 
-      if (isShortSound) {
-        // For letters: accept on any interim/final result that matches phonetically.
-        // Even if it's "Hallo" for H → "hallo".includes("ha") → hit.
-        if (hit) {
-          recRef.current = null;
-          try { rec.stop(); } catch(e) {}
-          accept(heard);
-        } else if (isFinal) {
-          // Final result but no match → show what was heard, offer retry
-          recRef.current = null;
-          setLastHeard(heard);
+      function onMiss(heard) {
+        if (done) return;
+        errCount++;
+        if (errCount >= 2) {
+          // Both recognizers returned no result
+          done = true;
+          stopAllRec();
+          setLastHeard(heard || null);
           setRetryCount(c => {
             const next = c + 1;
-            if (next >= 2) { accept(heard); } else { setStatus("retry"); }
+            if (next >= 2) { accept(heard); } else { setStatus("not_heard"); }
             return next;
           });
         }
-        // interim + no match → keep listening
-        return;
       }
 
-      if (!isFinal) return;
+      function makeRec(lang) {
+        const rec = new SR();
+        rec.lang = lang;
+        rec.interimResults = true;
+        rec.maxAlternatives = 5;
+        rec.onresult = (e) => {
+          if (done) return;
+          const resultItem = e.results[e.results.length - 1];
+          const results = Array.from(resultItem);
+          const heard = results[0].transcript.trim();
+          let hit = false;
+          if (lang === "de-DE") {
+            hit = speechHit(results.map(r => normalizeSpeech(r.transcript)), expected);
+          } else {
+            hit = results.some(r => ruLetterHit(r.transcript, letter));
+          }
+          if (hit) onMatch(heard);
+          else if (resultItem.isFinal) onMiss(heard);
+        };
+        rec.onerror = (e) => {
+          if (done) return;
+          if (e.error === "not-allowed" || e.error === "permission-denied") {
+            done = true; stopAllRec(); setStatus("no_mic");
+          } else {
+            onMiss(null);
+          }
+        };
+        rec.onend = () => {
+          if (!done) onMiss(null);
+        };
+        return rec;
+      }
+
+      const deRec = makeRec("de-DE");
+      const ruRec = makeRec("ru-RU");
+      recRef.current = deRec;
+      recRuRef.current = ruRec;
+      deRec.start();
+      ruRec.start();
+      return;
+    }
+
+    // Normal words: single de-DE recognizer
+    const rec = new SR();
+    recRef.current = rec;
+    rec.lang = "de-DE";
+    rec.interimResults = false;
+    rec.maxAlternatives = 5;
+
+    rec.onresult = (e) => {
       recRef.current = null;
+      const results = Array.from(e.results[0]);
+      const heard = results[0].transcript.trim();
+      const hit = speechHit(results.map(r => normalizeSpeech(r.transcript)), expected);
       if (hit) {
         accept(heard);
       } else {
@@ -2330,8 +2401,6 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       if (e.error === "not-allowed" || e.error === "permission-denied") {
         setStatus("no_mic");
       } else if (e.error === "no-speech") {
-        // For letters no-speech means the user was silent (not that sound wasn't recognized).
-        // Show retry, don't auto-accept — they need to actually say something.
         setNotHeardCount(c => { setStatus("not_heard"); return c + 1; });
       } else {
         setMode("self"); setStatus("idle");
@@ -2347,7 +2416,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   }
 
   function stopListening() {
-    if (recRef.current) { try { recRef.current.stop(); } catch(e) {} recRef.current = null; }
+    stopAllRec();
     setStatus("idle");
   }
 
