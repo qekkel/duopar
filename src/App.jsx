@@ -2184,23 +2184,32 @@ function speechHit(allTexts, expected) {
 
 function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, onAdvance }) {
   const [mode, setMode] = useState("check"); // "check" | "self"
-  const [status, setStatus] = useState("idle"); // "idle"|"listening"|"success"|"retry"|"not_heard"|"no_mic"|"low_conf"
+  const [status, setStatus] = useState("idle"); // "idle"|"listening"|"success"|"retry"|"not_heard"|"no_mic"
   const [retryCount, setRetryCount] = useState(0);
-  const [lastHeard, setLastHeard] = useState(null); // what recognition heard
+  const [notHeardCount, setNotHeardCount] = useState(0);
+  const [lastHeard, setLastHeard] = useState(null);
   const recRef = useRef(null);
+
+  // Short sounds (≤4 raw chars, or single-syllable): accept ANY detected speech
+  const rawTarget = normalizeSpeech(card.audioText || card.de).replace(/\s+/g, "");
+  const isShortSound = rawTarget.length <= 4;
 
   useEffect(() => {
     return () => { if (recRef.current) { try { recRef.current.abort(); } catch(e) {} } };
   }, []);
 
   useEffect(() => {
-    setMode("check"); setStatus("idle"); setRetryCount(0); setLastHeard(null);
+    setMode("check"); setStatus("idle"); setRetryCount(0); setNotHeardCount(0); setLastHeard(null);
     if (recRef.current) { try { recRef.current.abort(); } catch(e) {} recRef.current = null; }
   }, [card.de]);
 
-  // Expected: built from audioText (the German word/phrase to pronounce)
-  // Never from card.ru (Russian translation)
   const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de, card.audioText]);
+
+  function accept(heard) {
+    setLastHeard(heard || null);
+    setStatus("success");
+    setTimeout(() => onAdvance(true), 1200);
+  }
 
   function startListening() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -2215,28 +2224,26 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     rec.onresult = (e) => {
       recRef.current = null;
       const results = Array.from(e.results[0]);
-      // Pick best alternative by confidence
       const best = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0]);
-      setLastHeard(best.transcript.trim());
+      const heard = best.transcript.trim();
+
+      if (isShortSound) {
+        // For short sounds: any detected speech = success
+        accept(heard);
+        return;
+      }
 
       const allTexts = results.map(r => normalizeSpeech(r.transcript));
       const hit = speechHit(allTexts, expected);
-      const bestConf = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0])?.confidence ?? 1;
-
-      if (hit && (bestConf === 0 || bestConf >= MIN_CONFIDENCE)) {
-        setStatus("success");
-        setTimeout(() => onAdvance(true), 1400);
-      } else if (hit) {
-        // Matched text but low confidence — still accept, just softer feedback
-        setStatus("success");
-        setTimeout(() => onAdvance(true), 1400);
+      if (hit) {
+        accept(heard);
       } else {
+        setLastHeard(heard);
         setRetryCount(c => {
           const next = c + 1;
-          // After 3 failed attempts → auto-pass so user isn't stuck forever
-          if (next >= 3) {
-            setStatus("success");
-            setTimeout(() => onAdvance(true), 1000);
+          if (next >= 2) {
+            // After 2 mismatches → auto-pass, don't keep blocking
+            accept(heard);
           } else {
             setStatus("retry");
           }
@@ -2247,14 +2254,26 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
 
     rec.onerror = (e) => {
       recRef.current = null;
-      if (e.error === "not-allowed" || e.error === "permission-denied") { setStatus("no_mic"); }
-      else if (e.error === "no-speech") { setStatus("not_heard"); }
-      else { setMode("self"); setStatus("idle"); }
+      if (e.error === "not-allowed" || e.error === "permission-denied") {
+        setStatus("no_mic");
+      } else if (e.error === "no-speech") {
+        setNotHeardCount(c => {
+          const next = c + 1;
+          if (isShortSound && next >= 2) {
+            // Short sounds: auto-pass after 2 "no-speech" events
+            accept(null);
+          } else {
+            setStatus("not_heard");
+          }
+          return next;
+        });
+      } else {
+        setMode("self"); setStatus("idle");
+      }
     };
 
     rec.onend = () => {
       if (recRef.current) recRef.current = null;
-      // Only set not_heard if we never got onresult
       setStatus(s => s === "listening" ? "not_heard" : s);
     };
 
@@ -2268,6 +2287,9 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
 
   const exampleWord = card.ru && isGermanText(card.ru) ? card.ru : null;
   const displayTarget = (card.audioText && isGermanText(card.audioText)) ? card.audioText : card.de;
+
+  // "Я произнёс" button: always visible for short sounds; after 1st attempt for words
+  const showFallback = isShortSound || retryCount >= 1 || status === "not_heard" || status === "no_mic";
 
   return (
     <div style={{ paddingTop: 40 }}>
@@ -2296,36 +2318,43 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
           <div style={{ marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{card.exampleTranslation}</div>
         )}
 
-        {/* Status feedback */}
         {status === "listening" && (
           <div style={{ marginTop: 20, color: "#a78bfa", fontWeight: 600, fontSize: 15 }}>🎙️ Слушаю...</div>
         )}
         {status === "success" && (
           <div style={{ marginTop: 20, color: "#10b981", fontWeight: 700, fontSize: 16 }}>
-            ✓ Отлично! Я расслышал: <em>{lastHeard}</em>
+            ✓ Отлично! {lastHeard ? <>Услышал: <em>{lastHeard}</em></> : "Засчитано."}
           </div>
         )}
         {status === "retry" && (
           <div style={{ marginTop: 20, fontSize: 14 }}>
-            <div style={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>Я расслышал: <em style={{ color: "#f59e0b" }}>{lastHeard}</em></div>
-            <div style={{ color: retryCount >= 3 ? "rgba(255,255,255,0.4)" : "#f59e0b" }}>
-              {retryCount >= 3 ? "Произношение тренируется постепенно." : "Нужно: " + displayTarget + ". Послушай ещё раз и попробуй."}
+            <div style={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>
+              Услышал: <em style={{ color: "#f59e0b" }}>{lastHeard}</em>
             </div>
-          </div>
-        )}
-        {status === "low_conf" && (
-          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
-            Я не уверен, что расслышал правильно. Попробуй ещё раз.
+            <div style={{ color: "#f59e0b" }}>Нужно: {displayTarget}. Послушай ещё раз и попробуй.</div>
           </div>
         )}
         {status === "not_heard" && (
-          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Я не расслышал. Попробуй ещё раз.</div>
+          <div style={{ marginTop: 20, fontSize: 14, color: "rgba(255,255,255,0.45)" }}>
+            {isShortSound
+              ? "Короткие звуки сложно уловить. Произнеси вслух и нажми «Я произнёс/произнесла»."
+              : "Не уловил звук. Попробуй ещё раз или нажми «Я произнёс/произнесла»."}
+          </div>
         )}
         {status === "no_mic" && (
-          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Без микрофона я не смогу проверить произношение. Можешь повторить сам/сама и продолжить.</div>
+          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
+            Нет доступа к микрофону. Повтори сам/сама и нажми «Я произнёс/произнесла».
+          </div>
         )}
         {mode === "self" && status === "idle" && (
-          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Хорошо. Тогда просто послушай и повтори про себя или шёпотом.</div>
+          <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
+            Послушай и повтори про себя или шёпотом.
+          </div>
+        )}
+        {isShortSound && status === "idle" && mode === "check" && (
+          <div style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
+            Нажми «Произнести», скажи звук вслух, или нажми «Я произнёс/произнесла» — и идём дальше.
+          </div>
         )}
       </div>
 
@@ -2338,11 +2367,11 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
           ) : (
             <>
               <button onClick={startListening} style={{ padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
-                🎙️ {retryCount > 0 ? "Попробовать ещё раз" : "Произнести"}
+                🎙️ {retryCount > 0 || status === "not_heard" ? "Попробовать ещё раз" : "Произнести"}
               </button>
-              {(retryCount >= 1 || status === "not_heard" || status === "no_mic" || status === "low_conf") && (
-                <button onClick={() => onAdvance(true)} style={{ padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.65)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-                  Я произнёс/произнесла ✓
+              {showFallback && (
+                <button onClick={() => onAdvance(true)} style={{ padding: "14px", borderRadius: 14, background: isShortSound && status === "idle" ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.05)", border: `1px solid ${isShortSound && status === "idle" ? "rgba(124,92,252,0.25)" : "rgba(255,255,255,0.12)"}`, color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                  ✓ Я произнёс/произнесла
                 </button>
               )}
               {status !== "no_mic" && (
