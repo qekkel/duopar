@@ -1514,37 +1514,70 @@ function loadBlocks(key) {
   } catch { return {}; }
 }
 
-function BlockCompleteScreen({ info, onContinue }) {
-  const [count, setCount] = useState(0);
-  const target = info.stars + info.daily;
+function BlockCompleteOverlay({ info, onDone }) {
+  const [visible, setVisible] = useState(true);
+  const total = info.stars + info.daily;
+  const stars = Array.from({ length: Math.max(total, info.stars > 0 ? 6 : 0) });
 
   useEffect(() => {
-    if (target === 0) { const t = setTimeout(onContinue, 1800); return () => clearTimeout(t); }
-    let n = 0;
-    const interval = setInterval(() => {
-      n++;
-      setCount(n);
-      if (n >= target) clearInterval(interval);
-    }, 120);
-    return () => clearInterval(interval);
+    // Play congratulation sounds
+    playSound("correct");
+    if (total > 0) {
+      setTimeout(() => playSound("correct"), 350);
+      setTimeout(() => playSound("correct"), 700);
+    }
+    const t = setTimeout(() => { setVisible(false); setTimeout(onDone, 400); }, 2200);
+    return () => clearTimeout(t);
   }, []);
 
+  if (!visible) return null;
+
   return (
-    <div onClick={onContinue} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70vh", textAlign: "center", cursor: "pointer", userSelect: "none" }}>
-      <div style={{ fontSize: 64, marginBottom: 16, animation: "popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)" }}>✅</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 6 }}>{info.blockName}</div>
-      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>Часть пройдена!</div>
-      {target > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,215,0,0.1)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: 20, padding: "16px 32px", marginBottom: 12 }}>
-          <span style={{ fontSize: 36 }}>⭐</span>
-          <span style={{ fontSize: 40, fontWeight: 900, color: "#fbbf24", minWidth: 48, transition: "all 0.1s" }}>+{count}</span>
-        </div>
-      )}
-      {info.daily > 0 && count >= info.stars && (
-        <div style={{ fontSize: 13, color: "#fbbf24", opacity: 0.7, marginBottom: 20 }}>включая бонус дня +{info.daily} ⭐</div>
-      )}
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 32 }}>Нажми чтобы продолжить</div>
-      <style>{`@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
+    <div onClick={() => { setVisible(false); setTimeout(onDone, 300); }}
+      style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.72)", backdropFilter: "blur(4px)", cursor: "pointer", animation: "overlayIn 0.25s ease" }}>
+
+      {/* Flying stars */}
+      {total > 0 && stars.map((_, i) => {
+        const angle = (i / stars.length) * 360;
+        const dist = 80 + Math.random() * 60;
+        const dx = Math.cos((angle * Math.PI) / 180) * dist;
+        const dy = Math.sin((angle * Math.PI) / 180) * dist - 40;
+        const delay = i * 60;
+        return (
+          <div key={i} style={{
+            position: "absolute", fontSize: 28, pointerEvents: "none",
+            animation: `starBurst 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}ms both`,
+            "--dx": `${dx}px`, "--dy": `${dy}px`,
+          }}>⭐</div>
+        );
+      })}
+
+      {/* Center badge */}
+      <div style={{ position: "relative", textAlign: "center" }}>
+        <div style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: 12, animation: "fadeUp 0.4s 0.1s both" }}>{info.blockName}</div>
+        {total > 0 ? (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#92400e,#d97706)", borderRadius: 24, padding: "18px 40px", boxShadow: "0 0 40px rgba(251,191,36,0.5)", animation: "popIn 0.5s 0.15s cubic-bezier(0.34,1.56,0.64,1) both" }}>
+            <span style={{ fontSize: 40 }}>⭐</span>
+            <span style={{ fontSize: 48, fontWeight: 900, color: "#fff" }}>+{total}</span>
+          </div>
+        ) : (
+          <div style={{ fontSize: 48, animation: "popIn 0.4s 0.1s cubic-bezier(0.34,1.56,0.64,1) both" }}>✅</div>
+        )}
+        {info.daily > 0 && (
+          <div style={{ fontSize: 13, color: "#fbbf24", marginTop: 10, opacity: 0.8, animation: "fadeUp 0.4s 0.5s both" }}>+{info.daily} ⭐ дневной бонус</div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes overlayIn { from { opacity:0 } to { opacity:1 } }
+        @keyframes popIn { from { transform:scale(0.4); opacity:0 } to { transform:scale(1); opacity:1 } }
+        @keyframes fadeUp { from { transform:translateY(10px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+        @keyframes starBurst {
+          0% { transform:translate(0,0) scale(0); opacity:0 }
+          30% { opacity:1; transform:translate(calc(var(--dx)*0.4),calc(var(--dy)*0.4)) scale(1.2) }
+          100% { transform:translate(var(--dx),var(--dy)) scale(0.6); opacity:0 }
+        }
+      `}</style>
     </div>
   );
 }
@@ -1553,7 +1586,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const STORAGE_KEY = `duopar_blocks_${userId || "guest"}`;
 
   const [activeTopicId, setActiveTopicId] = useState(null);
-  const [mode, setMode] = useState(null); // "detail" | "block" | "block_complete" | "exam" | "level_exam"
+  const [mode, setMode] = useState(null); // "detail" | "block" | "exam" | "level_exam"
   const [activeBlockIdx, setActiveBlockIdx] = useState(null);
   const [blockCompleteInfo, setBlockCompleteInfo] = useState(null); // { blockName, stars, daily }
   const [levelExamLevel, setLevelExamLevel] = useState(null);
@@ -1720,13 +1753,6 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     if (!topic) { setActiveTopicId(null); setMode(null); return null; }
     const blocks = getTopicBlocks(topic);
 
-    if (mode === "block_complete" && blockCompleteInfo) {
-      return <BlockCompleteScreen
-        info={blockCompleteInfo}
-        onContinue={() => { setMode("detail"); setBlockCompleteInfo(null); }}
-      />;
-    }
-
     if (mode === "block" && activeBlockIdx !== null) {
       const block = blocks[activeBlockIdx];
       if (!block || !block.words || block.words.length === 0) { setMode("detail"); return null; }
@@ -1749,7 +1775,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           awardStarsOnce(3, "+3 ⭐", `b_${activeTopicId}_${activeBlockIdx}`);
           if (daily) awardStars(5, "+5 ⭐ Дневной бонус!");
           setBlockCompleteInfo({ blockName: block.name, stars: alreadyAwarded ? 0 : 3, daily: daily ? 5 : 0 });
-          setMode("block_complete");
+          setMode("detail");
         }}
       />;
     }
@@ -1892,6 +1918,12 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
   return (
     <div style={{ paddingTop: 40 }}>
+      {blockCompleteInfo && (
+        <BlockCompleteOverlay
+          info={blockCompleteInfo}
+          onDone={() => setBlockCompleteInfo(null)}
+        />
+      )}
       <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
 
       {/* Level tabs — always clickable, scrollbar hidden via CSS class */}
