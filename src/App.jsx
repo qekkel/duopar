@@ -1691,6 +1691,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
         block={block}
         allWords={blocks.flatMap(b => b.words)}
         audioEnabled={topic.audioEnabled === true || topic.level === "PH"}
+        topicId={activeTopicId}
         onBack={() => setMode("detail")}
         onDone={() => {
           setCompletedBlocks(prev => {
@@ -2215,7 +2216,7 @@ function ruLetterHit(transcript, letter) {
   return variants.some(v => t === v || t.startsWith(v) || v.startsWith(t));
 }
 
-function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, onAdvance }) {
+function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, onAdvance, topicId }) {
   const [mode, setMode] = useState("check"); // "check" | "self"
   const [status, setStatus] = useState("idle"); // "idle"|"listening"|"success"|"retry"|"not_heard"|"no_mic"
   const [retryCount, setRetryCount] = useState(0);
@@ -2299,6 +2300,15 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
 
   function accept(heard) {
     stopViz();
+    // Track letters that needed retries — for adaptive exam questions
+    if (topicId && isShortSound && retryCount > 0) {
+      try {
+        const key = `duopar_struggled_${topicId}`;
+        const prev = JSON.parse(localStorage.getItem(key) || "[]");
+        const letter = (card.audioText || card.de.split(" ")[0]).toUpperCase();
+        if (!prev.includes(letter)) { prev.push(letter); localStorage.setItem(key, JSON.stringify(prev)); }
+      } catch(e) {}
+    }
     setLastHeard(heard || null);
     setStatus("success");
     setTimeout(() => onAdvance(true), 1200);
@@ -2579,7 +2589,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   );
 }
 
-function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }) {
+function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, topicId }) {
   const words = block.words;
   const [phase, setPhase] = useState(block.tip ? "tip" : "intro");
   const [introIdx, setIntroIdx] = useState(0);
@@ -2785,6 +2795,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
       progress={1}
       practiceIdx={pronounceIdx}
       queueLen={regularWords.length}
+      topicId={topicId}
       onBack={onBack}
       onAdvance={() => {
         const next = pronounceIdx + 1;
@@ -2799,7 +2810,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
 
   // Letter / sound card → pronounce exercise (no guess-translation for "A a", "ä", etc.)
   if (audioEnabled && isPronounceCard(card.de)) {
-    return <PronounceCard card={card} block={block} progress={progress} practiceIdx={practiceIdx} queueLen={practiceQueue.length} onBack={onBack} onAdvance={advance} />;
+    return <PronounceCard card={card} block={block} progress={progress} practiceIdx={practiceIdx} queueLen={practiceQueue.length} topicId={topicId} onBack={onBack} onAdvance={advance} />;
   }
 
   return (
@@ -2877,8 +2888,17 @@ function buildExamQuestions(topic) {
     };
   });
 
-  // Pronounce questions for letter topics: say the letter out loud
-  const pronounceQuestions = shuffle(letterCards).slice(0, 3).map(card => ({
+  // Pronounce questions — prioritise letters the user struggled with
+  const struggledKey = `duopar_struggled_${topic.id}`;
+  let struggled = [];
+  try { struggled = JSON.parse(localStorage.getItem(struggledKey) || "[]"); } catch(e) {}
+  const struggledCards = letterCards.filter(c => {
+    const letter = (c.audioText || c.de.split(" ")[0]).toUpperCase();
+    return struggled.includes(letter);
+  });
+  const otherLetterCards = letterCards.filter(c => !struggledCards.includes(c));
+  const pronouncePool = [...struggledCards, ...shuffle(otherLetterCards)];
+  const pronounceQuestions = pronouncePool.slice(0, Math.min(3, pronouncePool.length)).map(card => ({
     type: "pronounce",
     q: "Произнеси букву вслух:",
     card,
