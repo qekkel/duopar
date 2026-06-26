@@ -2157,13 +2157,20 @@ function buildExpected(de, audioText) {
   if (short.length <= 3) {
     variants.add(short);
     // common mishears / phonetic variants for German letters
-    const PHONETICS = { a:["ah","aa"], b:["be","beh"], c:["tse","ce"], d:["de","deh"], e:["eh","ee"],
-      f:["ef","eff"], g:["ge","geh"], h:["ha","hah"], i:["ih","ee","ie"], j:["yot","jot","jod"],
-      k:["ka","kah"], l:["el","ll"], m:["em","mm"], n:["en","nn"], o:["oh","oo"],
-      p:["pe","peh"], q:["ku","kuh"], r:["er","rr","arr"], s:["es","ss"], t:["te","teh"],
-      u:["uh","oo"], v:["fau","fow","vau"], w:["ve","veh","weh"], x:["iks","ix"],
-      y:["ypsilon","upsilon"], z:["tset","zet","tsett"],
-      a:["ah","aa"], ae:["a"], oe:["o"], ue:["u","ue"], ss:["s"],
+    const PHONETICS = {
+      a:["ah","aa","a"], b:["be","beh","bi"], c:["tse","ce","se","zee"],
+      d:["de","deh","di"], e:["eh","ee","e"], f:["ef","eff","if"],
+      g:["ge","geh","gi","gay"], h:["ha","hah","haa"], i:["ih","ee","ie","i"],
+      j:["yot","jot","jod","yod"], k:["ka","kah","kaa"], l:["el","ll","ell"],
+      m:["em","mm"], n:["en","nn"], o:["oh","oo","o"],
+      p:["pe","peh","pi","pay"], q:["ku","kuh","koo"], r:["er","rr","arr","are"],
+      s:["es","ss","ess"], t:["te","teh","ti","tee"], u:["uh","oo","u"],
+      v:["fau","fow","vau","fao"], w:["ve","veh","weh","vee"],
+      x:["iks","ix","icks"], y:["ypsilon","upsilon","igrek"],
+      z:["tset","zet","tsett","tsets"],
+      ae:["a","ae"], oe:["o","oe"], ue:["u","ue"], ss:["s","ess"],
+      ch:["tch","sh","ch","hh"], sch:["sh","sch"], ck:["k","ck"],
+      ei:["ai","eye","ei"], ie:["ee","ie"], eu:["oy","oi","eu"],
     };
     const ph = PHONETICS[short];
     if (ph) ph.forEach(v => variants.add(v));
@@ -2227,12 +2234,6 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       const best = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0]);
       const heard = best.transcript.trim();
 
-      if (isShortSound) {
-        // For short sounds: any detected speech = success
-        accept(heard);
-        return;
-      }
-
       const allTexts = results.map(r => normalizeSpeech(r.transcript));
       const hit = speechHit(allTexts, expected);
       if (hit) {
@@ -2241,8 +2242,8 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         setLastHeard(heard);
         setRetryCount(c => {
           const next = c + 1;
-          if (next >= 2) {
-            // After 2 mismatches → auto-pass, don't keep blocking
+          // Letters/short sounds: auto-pass after 2 misses; words after 3
+          if (next >= (isShortSound ? 2 : 3)) {
             accept(heard);
           } else {
             setStatus("retry");
