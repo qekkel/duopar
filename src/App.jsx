@@ -2861,11 +2861,11 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
 
 function buildExamQuestions(topic) {
   const flashcards = parseFlashcards(topic);
-  // Only real words (not letter pairs like "A a" or single sounds like "ä") get guess-translation questions
   const wordCards = flashcards.filter(card => !isPronounceCard(card.de));
+  const letterCards = flashcards.filter(card => isPronounceCard(card.de));
   const ARTICLES = new Set(["der","die","das","ein","eine","einen","einem","einer","des","dem","den"]);
-  const wordPool = wordCards;
-  const wordQuestions = shuffle(wordCards).slice(0, 6).map(card => {
+
+  const wordQuestions = shuffle(wordCards).slice(0, 4).map(card => {
     const isArticle = ARTICLES.has(card.de.trim().toLowerCase());
     const q = isArticle
       ? `Какой род обозначает артикль «${card.de}»?`
@@ -2873,12 +2873,36 @@ function buildExamQuestions(topic) {
     return {
       q,
       options: shuffle([card.ru, ...shuffle(wordCards.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
-      answer: null,
-      correctText: card.ru,
+      answer: null, correctText: card.ru,
     };
   });
-  const hardcoded = shuffle(topic.exam || []).slice(0, 4).map(q => ({ ...q, correctText: null }));
-  return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
+
+  // Pronounce questions for letter topics: say the letter out loud
+  const pronounceQuestions = shuffle(letterCards).slice(0, 3).map(card => ({
+    type: "pronounce",
+    q: "Произнеси букву вслух:",
+    card,
+    options: [], answer: null, correctText: null,
+  }));
+
+  // Audio-listen: hear the letter, pick which one it is
+  const audioQuestions = letterCards.length >= 4
+    ? shuffle(letterCards).slice(0, 2).map(card => {
+        const letter = (card.audioText || card.de.split(" ")[0]);
+        const distractors = shuffle(letterCards.filter(c => c !== card)).slice(0, 3).map(c => c.audioText || c.de.split(" ")[0]);
+        return {
+          type: "audio_choice",
+          q: "Послушай и выбери правильную букву:",
+          audioText: letter,
+          options: shuffle([letter, ...distractors]),
+          answer: null, correctText: letter,
+        };
+      })
+    : [];
+
+  const hardcoded = shuffle(topic.exam || []).slice(0, 3).map(q => ({ ...q, correctText: null }));
+  const all = [...pronounceQuestions, ...audioQuestions, ...wordQuestions, ...hardcoded];
+  return shuffle(all).slice(0, 8);
 }
 
 // ── PH LEVEL EXAM — rich interactive exam ────────────────────────
@@ -3233,6 +3257,104 @@ function buildLevelExamQuestions(lvl) {
   return shuffle([...allHardcoded, ...wordQuestions]).slice(0, 14);
 }
 
+function ExamPronounceQ({ card, onDone }) {
+  const [status, setStatus] = useState("idle"); // idle | listening | success | fail
+  const [barHeights, setBarHeights] = useState([4,7,12,9,5,10,4]);
+  const recRef = useRef(null); const recRuRef = useRef(null);
+  const vizStreamRef = useRef(null); const vizCtxRef = useRef(null); const vizAnimRef = useRef(null);
+
+  const letter = (card.audioText || card.de.split(" ")[0]);
+  const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de]);
+
+  useEffect(() => { setTimeout(() => _speakTTS(letter), 300); }, [card.de]);
+  useEffect(() => () => { stopAll(); stopVizLocal(); }, []);
+
+  function stopAll() {
+    [recRef, recRuRef].forEach(r => { if (r.current) { try { r.current.abort(); } catch(e) {} r.current = null; } });
+  }
+  function stopVizLocal() {
+    cancelAnimationFrame(vizAnimRef.current);
+    if (vizStreamRef.current) { vizStreamRef.current.getTracks().forEach(t => t.stop()); vizStreamRef.current = null; }
+    if (vizCtxRef.current) { vizCtxRef.current.close().catch(() => {}); vizCtxRef.current = null; }
+    setBarHeights([4,7,12,9,5,10,4]);
+  }
+  function startVizLocal() {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+      vizStreamRef.current = stream;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      vizCtxRef.current = ctx;
+      const analyser = ctx.createAnalyser(); analyser.fftSize = 128;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      function tick() {
+        analyser.getByteFrequencyData(data);
+        const N = 7, bucket = Math.floor(data.length / N);
+        setBarHeights(Array.from({ length: N }, (_, i) => {
+          const avg = data.slice(i*bucket,(i+1)*bucket).reduce((s,v)=>s+v,0)/bucket;
+          return Math.max(4, Math.min(38, avg * 0.45));
+        }));
+        vizAnimRef.current = requestAnimationFrame(tick);
+      }
+      vizAnimRef.current = requestAnimationFrame(tick);
+    }).catch(() => {});
+  }
+
+  function listen() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { done(true); return; }
+    setStatus("listening"); startVizLocal();
+    let finished = false, errCount = 0;
+    function finish(ok) {
+      if (finished) return; finished = true; stopAll(); stopVizLocal();
+      setStatus(ok ? "success" : "fail");
+      setTimeout(() => onDone(ok), 900);
+    }
+    function makeRec(lang) {
+      const rec = new SR(); rec.lang = lang; rec.interimResults = true; rec.maxAlternatives = 5;
+      rec.onresult = (e) => {
+        if (finished) return;
+        const item = e.results[e.results.length - 1];
+        const texts = Array.from(item).map(r => r.transcript.trim());
+        const hit = lang === "de-DE"
+          ? speechHit(texts.map(t => normalizeSpeech(t)), expected)
+          : texts.some(t => ruLetterHit(t, letter));
+        if (hit) finish(true);
+        else if (item.isFinal) { errCount++; if (errCount >= 2) finish(false); }
+      };
+      rec.onerror = () => { errCount++; if (errCount >= 2) finish(false); };
+      rec.onend = () => { if (!finished) { errCount++; if (errCount >= 2) finish(false); } };
+      return rec;
+    }
+    recRef.current = makeRec("de-DE"); recRuRef.current = makeRec("ru-RU");
+    recRef.current.start(); recRuRef.current.start();
+  }
+
+  function done(ok) { stopAll(); stopVizLocal(); setStatus(ok ? "success" : "fail"); setTimeout(() => onDone(ok), 800); }
+
+  return (
+    <div style={{ textAlign: "center", padding: "20px 0" }}>
+      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>Произнеси букву вслух:</div>
+      <div style={{ fontSize: 96, fontWeight: 800, color: "#fff", letterSpacing: 8, marginBottom: 20 }}>{card.de}</div>
+      <AudioButton text={letter} size={32} style={{ margin: "0 auto 20px" }} />
+      {status === "listening" && (
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, height: 44, marginBottom: 16 }}>
+          {barHeights.map((h, i) => (
+            <div key={i} style={{ width: 5, borderRadius: 3, background: h > 10 ? "#a78bfa" : "rgba(167,139,250,0.35)", height: `${h}px`, transition: "height 0.05s ease-out" }} />
+          ))}
+        </div>
+      )}
+      {status === "success" && <div style={{ color: "#10b981", fontWeight: 700, fontSize: 18, marginBottom: 16 }}>✓ Отлично!</div>}
+      {status === "fail" && <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, marginBottom: 16 }}>Идём дальше</div>}
+      {status === "idle" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={listen} style={{ padding: "14px 24px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎙️ Произнести</button>
+          <button onClick={() => done(true)} style={{ padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "none", fontSize: 13, cursor: "pointer" }}>✓ Я произнёс/произнесла</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuiltQuestions, levelKey, nextLvlLabel }) {
   const [questions] = useState(() => {
     const qs = prebuiltQuestions ?? buildExamQuestions(topic);
@@ -3265,16 +3387,35 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
     return idx === q.answer;
   }
 
+  function advance() {
+    if (qi + 1 < total) { setQi(qi + 1); setSelected(null); }
+    else setFinished(true);
+  }
+
   function pick(opt, idx) {
     if (selected !== null) return;
     setSelected(opt);
     const correct = isCorrect(opt, idx);
     if (correct) { playSound("correct"); setScore(s => s + 1); }
     else playSound("wrong");
-    setTimeout(() => {
-      if (qi + 1 < total) { setQi(qi + 1); setSelected(null); }
-      else setFinished(true);
-    }, 900);
+    setTimeout(advance, 900);
+  }
+
+  // Pronounce question: render ExamPronounceQ and skip normal question flow
+  if (q?.type === "pronounce") {
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0 }}>← Назад</button>
+          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+            <div style={{ height: "100%", borderRadius: 2, background: "#f59e0b", width: `${(qi / total) * 100}%`, transition: "width 0.4s" }} />
+          </div>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{qi + 1}/{total}</span>
+        </div>
+        <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>⚡ Экзамен · {topic.title}</div>
+        <ExamPronounceQ key={qi} card={q.card} onDone={(ok) => { if (ok) { playSound("correct"); setScore(s => s + 1); } advance(); }} />
+      </div>
+    );
   }
 
   if (finished) {
@@ -3374,9 +3515,9 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
       <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
         {questions.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < qi ? "#10b981" : i === qi ? "#f59e0b" : "rgba(255,255,255,0.1)" }} />)}
       </div>
-      {q.hasAudio && q.audioText && (
+      {(q.hasAudio || q.type === "audio_choice") && q.audioText && (
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-          <AudioButton text={q.audioText} size={48} />
+          <AudioButton text={q.audioText} size={48} autoPlay />
         </div>
       )}
       <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.4, marginBottom: 28 }}>{q.q}</div>
