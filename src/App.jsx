@@ -2842,7 +2842,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
     return <PronounceCard
       card={word}
       block={block}
-      progress={1}
+      progress={regularWords.length > 1 ? pronounceIdx / regularWords.length : 0}
       practiceIdx={pronounceIdx}
       queueLen={regularWords.length}
       topicId={topicId}
