@@ -1588,10 +1588,17 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     let earned = 0;
     let max = 25; // level exam
     for (const t of topics) {
-      max += 5; // lesson
+      const blocks = getTopicBlocks(t);
+      const numBlocks = blocks.length || 1;
+      max += numBlocks * 3; // 3 stars per block
       if (t.exam?.length) max += 15; // topic exam
-      // Count as earned if awarded via new system OR via old completedTopics tracking
-      if (awarded[`l_${t.id}`] || completedTopics.includes(t.id)) earned += 5;
+      // Per-block awards (new) + legacy topic award fallback
+      for (let i = 0; i < numBlocks; i++) {
+        if (awarded[`b_${t.id}_${i}`]) earned += 3;
+      }
+      if (!Object.keys(awarded).some(k => k.startsWith(`b_${t.id}_`)) && completedTopics.includes(t.id)) {
+        earned += numBlocks * 3; // legacy: topic was completed before per-block system
+      }
       if (awarded[`e_${t.id}`]) earned += 15;
     }
     if (awarded[`lv_${lvl}`] || passedLevelExams.has(lvl)) earned += 25;
@@ -1694,7 +1701,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             return updated;
           });
           const daily = checkDailyBonus("lesson");
-          awardStarsOnce(5, "+5 ⭐ Урок пройден!", `l_${activeTopicId}`);
+          awardStarsOnce(3, "+3 ⭐", `b_${activeTopicId}_${activeBlockIdx}`);
           if (daily) awardStars(5, "+5 ⭐ Дневной бонус!");
           setMode("detail");
         }}
