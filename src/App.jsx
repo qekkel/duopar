@@ -1514,68 +1514,101 @@ function loadBlocks(key) {
   } catch { return {}; }
 }
 
-function BlockCompleteOverlay({ info, onDone }) {
+function RewardOverlay({ title, amount, daily, totalAfter, onDone }) {
   const [visible, setVisible] = useState(true);
-  const total = info.stars + info.daily;
-  const stars = Array.from({ length: Math.max(total, info.stars > 0 ? 6 : 0) });
+  const total = amount + daily;
+  const [counted, setCounted] = useState(Math.max(0, totalAfter - total));
 
   useEffect(() => {
-    // Play congratulation sounds
     playSound("correct");
-    if (total > 0) {
-      setTimeout(() => playSound("correct"), 350);
-      setTimeout(() => playSound("correct"), 700);
+    if (total >= 5) setTimeout(() => playSound("correct"), 360);
+    if (total >= 12) setTimeout(() => playSound("correct"), 720);
+    if (total > 0 && totalAfter > 0) {
+      let cur = totalAfter - total;
+      const tgt = totalAfter;
+      const t0 = setTimeout(() => {
+        const iv = setInterval(() => {
+          cur = Math.min(cur + Math.max(1, Math.ceil((tgt - cur) / 5)), tgt);
+          setCounted(cur);
+          if (cur >= tgt) clearInterval(iv);
+        }, 75);
+      }, 700);
+      return () => clearTimeout(t0);
     }
-    const t = setTimeout(() => { setVisible(false); setTimeout(onDone, 400); }, 2200);
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => { setVisible(false); setTimeout(onDone, 350); }, 3200);
     return () => clearTimeout(t);
   }, []);
 
+  const dismiss = () => { setVisible(false); setTimeout(onDone, 200); };
   if (!visible) return null;
 
-  return (
-    <div onClick={() => { setVisible(false); setTimeout(onDone, 300); }}
-      style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.72)", backdropFilter: "blur(4px)", cursor: "pointer", animation: "overlayIn 0.25s ease" }}>
+  const flyN = total > 0 ? Math.min(Math.max(total, 5), 14) : 0;
 
-      {/* Flying stars */}
-      {total > 0 && stars.map((_, i) => {
-        const angle = (i / stars.length) * 360;
-        const dist = 80 + Math.random() * 60;
+  return (
+    <div onClick={dismiss} style={{ position: "fixed", inset: 0, zIndex: 9999,
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      background: "rgba(0,0,0,0.8)", backdropFilter: "blur(7px)", cursor: "pointer",
+      animation: "rwdIn 0.25s ease" }}>
+
+      {Array.from({ length: flyN }).map((_, i) => {
+        const angle = (i / flyN) * 360;
+        const dist = 85 + (i % 4) * 22;
         const dx = Math.cos((angle * Math.PI) / 180) * dist;
-        const dy = Math.sin((angle * Math.PI) / 180) * dist - 40;
-        const delay = i * 60;
+        const dy = Math.sin((angle * Math.PI) / 180) * dist - 15;
         return (
-          <div key={i} style={{
-            position: "absolute", fontSize: 28, pointerEvents: "none",
-            animation: `starBurst 0.9s cubic-bezier(0.22,1,0.36,1) ${delay}ms both`,
-            "--dx": `${dx}px`, "--dy": `${dy}px`,
-          }}>⭐</div>
+          <div key={i} style={{ position: "absolute", fontSize: 22, pointerEvents: "none",
+            animation: `rwdStar 1.1s cubic-bezier(0.22,1,0.36,1) ${i * 55}ms both`,
+            "--dx": `${dx}px`, "--dy": `${dy}px` }}>⭐</div>
         );
       })}
 
-      {/* Center badge */}
-      <div style={{ position: "relative", textAlign: "center" }}>
-        <div style={{ fontSize: 20, fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: 12, animation: "fadeUp 0.4s 0.1s both" }}>{info.blockName}</div>
+      <div style={{ textAlign: "center", padding: "0 28px" }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.55)",
+          marginBottom: 20, animation: "rwdUp 0.4s 0.05s both" }}>{title}</div>
+
         {total > 0 ? (
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "linear-gradient(135deg,#92400e,#d97706)", borderRadius: 24, padding: "18px 40px", boxShadow: "0 0 40px rgba(251,191,36,0.5)", animation: "popIn 0.5s 0.15s cubic-bezier(0.34,1.56,0.64,1) both" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 12,
+            background: "linear-gradient(135deg, #92400e, #d97706)",
+            borderRadius: 28, padding: "18px 44px",
+            boxShadow: "0 0 70px rgba(251,191,36,0.5), 0 8px 32px rgba(0,0,0,0.4)",
+            animation: "rwdPop 0.55s 0.1s cubic-bezier(0.34,1.56,0.64,1) both",
+            marginBottom: 22 }}>
             <span style={{ fontSize: 40 }}>⭐</span>
-            <span style={{ fontSize: 48, fontWeight: 900, color: "#fff" }}>+{total}</span>
+            <span style={{ fontSize: 56, fontWeight: 900, color: "#fff", lineHeight: 1 }}>+{total}</span>
           </div>
         ) : (
-          <div style={{ fontSize: 48, animation: "popIn 0.4s 0.1s cubic-bezier(0.34,1.56,0.64,1) both" }}>✅</div>
+          <div style={{ fontSize: 52, animation: "rwdPop 0.45s 0.1s cubic-bezier(0.34,1.56,0.64,1) both", marginBottom: 22 }}>✅</div>
         )}
-        {info.daily > 0 && (
-          <div style={{ fontSize: 13, color: "#fbbf24", marginTop: 10, opacity: 0.8, animation: "fadeUp 0.4s 0.5s both" }}>+{info.daily} ⭐ дневной бонус</div>
+
+        {daily > 0 && (
+          <div style={{ fontSize: 13, color: "#fbbf24", marginBottom: 14, opacity: 0.8,
+            animation: "rwdUp 0.4s 0.5s both" }}>включая +{daily} ⭐ дневной бонус</div>
         )}
+
+        <div style={{ animation: "rwdUp 0.4s 0.7s both", minHeight: 30 }}>
+          {totalAfter > 0 && (
+            <>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>Всего у тебя: </span>
+              <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24",
+                display: "inline-block",
+                animation: counted < totalAfter ? "none" : "rwdCountPulse 0.3s ease" }}>{counted} ⭐</span>
+            </>
+          )}
+        </div>
       </div>
 
       <style>{`
-        @keyframes overlayIn { from { opacity:0 } to { opacity:1 } }
-        @keyframes popIn { from { transform:scale(0.4); opacity:0 } to { transform:scale(1); opacity:1 } }
-        @keyframes fadeUp { from { transform:translateY(10px); opacity:0 } to { transform:translateY(0); opacity:1 } }
-        @keyframes starBurst {
-          0% { transform:translate(0,0) scale(0); opacity:0 }
-          30% { opacity:1; transform:translate(calc(var(--dx)*0.4),calc(var(--dy)*0.4)) scale(1.2) }
-          100% { transform:translate(var(--dx),var(--dy)) scale(0.6); opacity:0 }
+        @keyframes rwdIn { from{opacity:0} to{opacity:1} }
+        @keyframes rwdPop { from{transform:scale(0.3);opacity:0} to{transform:scale(1);opacity:1} }
+        @keyframes rwdUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
+        @keyframes rwdCountPulse { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+        @keyframes rwdStar {
+          0%{transform:translate(0,0) scale(0);opacity:0}
+          20%{opacity:1;transform:translate(calc(var(--dx)*.3),calc(var(--dy)*.3)) scale(1.4)}
+          100%{transform:translate(var(--dx),var(--dy)) scale(0.4);opacity:0}
         }
       `}</style>
     </div>
@@ -1588,11 +1621,11 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const [activeTopicId, setActiveTopicId] = useState(null);
   const [mode, setMode] = useState(null); // "detail" | "block" | "exam" | "level_exam"
   const [activeBlockIdx, setActiveBlockIdx] = useState(null);
-  const [blockCompleteInfo, setBlockCompleteInfo] = useState(null); // { blockName, stars, daily }
   const [levelExamLevel, setLevelExamLevel] = useState(null);
   const [completedBlocks, setCompletedBlocks] = useState(() => loadBlocks(STORAGE_KEY));
   const [activeLevel, setActiveLevel] = useState("PH");
   const [examEarlyCheck, setExamEarlyCheck] = useState(false);
+  const [rewardInfo, setRewardInfo] = useState(null); // { title, amount, daily, totalAfter, afterDone }
   const LEVEL_EXAMS_KEY = `duopar_level_exams_${userId || "guest"}`;
   const [passedLevelExams, setPassedLevelExams] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(LEVEL_EXAMS_KEY) || "[]")); }
@@ -1650,6 +1683,24 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     awardStars(delta, label);
   }
 
+  // Show reward overlay + award stars. withDailyBonus applies only to block completions.
+  function showReward({ title, amount, awardKey, withDailyBonus = false, afterDone }) {
+    const alreadyAwarded = awardKey ? isAwarded(awardKey) : false;
+    const actualAmount = alreadyAwarded ? 0 : amount;
+    const hasDaily = withDailyBonus ? checkDailyBonus("lesson") : false;
+    const dailyAmt = hasDaily ? 5 : 0;
+    const totalAfter = stars + actualAmount + dailyAmt;
+
+    if (actualAmount > 0) {
+      if (awardKey) markAwarded(awardKey);
+      setStars(prev => { const n = prev + actualAmount; localStorage.setItem(STARS_KEY, String(n)); return n; });
+    }
+    if (dailyAmt > 0) {
+      setStars(prev => { const n = prev + dailyAmt; localStorage.setItem(STARS_KEY, String(n)); return n; });
+    }
+    setRewardInfo({ title, amount: actualAmount, daily: dailyAmt, totalAfter, afterDone });
+  }
+
   // Per-level star stats for earned/max display
   function getLevelStarData(lvl) {
     const topics = CURRICULUM.filter(t => t.level === lvl);
@@ -1660,7 +1711,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       const blocks = getTopicBlocks(t);
       const numBlocks = blocks.length || 1;
       max += numBlocks * 3; // 3 stars per block
-      if (t.exam?.length) max += 15; // topic exam
+      if (t.exam?.length) { max += 5; max += 15; } // early check + full exam
       // Per-block awards (new) + legacy topic award fallback
       for (let i = 0; i < numBlocks; i++) {
         if (awarded[`b_${t.id}_${i}`]) earned += 3;
@@ -1668,6 +1719,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       if (!Object.keys(awarded).some(k => k.startsWith(`b_${t.id}_`)) && completedTopics.includes(t.id)) {
         earned += numBlocks * 3; // legacy: topic was completed before per-block system
       }
+      if (awarded[`ec_${t.id}`]) earned += 5;
       if (awarded[`e_${t.id}`]) earned += 15;
     }
     if (awarded[`lv_${lvl}`] || passedLevelExams.has(lvl)) earned += 25;
@@ -1729,23 +1781,24 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   // Level exam has no activeTopicId — handle it before the per-topic branch
   if (mode === "level_exam") {
     const LVL_LABEL = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" };
+    const lvlLabel = LVL_LABEL[levelExamLevel] || levelExamLevel;
     const nextLvlIdx = LEVELS.indexOf(levelExamLevel) + 1;
     const nextLvlLabel = nextLvlIdx < LEVELS.length ? LVL_LABEL[LEVELS[nextLvlIdx]] : null;
-    const handlePass = () => { awardStarsOnce(25, "+25 ⭐ Уровень сдан! 🏆", `lv_${levelExamLevel}`); passLevelExam(levelExamLevel); };
-    if (levelExamLevel === "PH") {
-      return <PHLevelExamScreen onBack={() => setMode(null)} onPass={handlePass} nextLvlLabel={nextLvlLabel} />;
-    }
-    const lvlLabel = LVL_LABEL[levelExamLevel] || levelExamLevel;
-    const fakeTopic = { title: `Экзамен ${lvlLabel}`, cards: [], exam: [] };
-    const questions = buildLevelExamQuestions(levelExamLevel);
-    return <TopicExamScreen
-      topic={fakeTopic}
-      prebuiltQuestions={questions}
-      onBack={() => setMode(null)}
-      onPass={handlePass}
-      levelKey={levelExamLevel}
-      nextLvlLabel={nextLvlLabel}
-    />;
+    const handlePass = () => showReward({
+      title: `Экзамен ${lvlLabel} сдан! 🏆`,
+      amount: 25,
+      awardKey: `lv_${levelExamLevel}`,
+      afterDone: () => { passLevelExam(levelExamLevel); setMode(null); },
+    });
+    const lvlScreen = levelExamLevel === "PH"
+      ? <PHLevelExamScreen onBack={() => setMode(null)} onPass={handlePass} nextLvlLabel={nextLvlLabel} />
+      : <TopicExamScreen topic={{ title: `Экзамен ${lvlLabel}`, cards: [], exam: [] }} prebuiltQuestions={buildLevelExamQuestions(levelExamLevel)} onBack={() => setMode(null)} onPass={handlePass} levelKey={levelExamLevel} nextLvlLabel={nextLvlLabel} />;
+    return (
+      <>
+        {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
+        {lvlScreen}
+      </>
+    );
   }
 
   if (activeTopicId && mode) {
@@ -1756,32 +1809,66 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     if (mode === "block" && activeBlockIdx !== null) {
       const block = blocks[activeBlockIdx];
       if (!block || !block.words || block.words.length === 0) { setMode("detail"); return null; }
-      return <TopicBlockLearnScreen
-        block={block}
-        allWords={blocks.flatMap(b => b.words)}
-        audioEnabled={topic.audioEnabled === true || topic.level === "PH"}
-        topicId={activeTopicId}
-        onBack={() => setMode("detail")}
-        onDone={() => {
-          setCompletedBlocks(prev => {
-            const s = new Set(prev[activeTopicId] || []);
-            s.add(activeBlockIdx);
-            const updated = { ...prev, [activeTopicId]: s };
-            saveBlocks(updated);
-            return updated;
-          });
-          const alreadyAwarded = isAwarded(`b_${activeTopicId}_${activeBlockIdx}`);
-          const daily = checkDailyBonus("lesson");
-          awardStarsOnce(3, "+3 ⭐", `b_${activeTopicId}_${activeBlockIdx}`);
-          if (daily) awardStars(5, "+5 ⭐ Дневной бонус!");
-          setBlockCompleteInfo({ blockName: block.name, stars: alreadyAwarded ? 0 : 3, daily: daily ? 5 : 0 });
-          setMode("detail");
-        }}
-      />;
+      return (
+        <>
+          {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
+          <TopicBlockLearnScreen
+            block={block}
+            allWords={blocks.flatMap(b => b.words)}
+            audioEnabled={topic.audioEnabled === true || topic.level === "PH"}
+            topicId={activeTopicId}
+            onBack={() => setMode("detail")}
+            onDone={() => {
+              setCompletedBlocks(prev => {
+                const s = new Set(prev[activeTopicId] || []);
+                s.add(activeBlockIdx);
+                const updated = { ...prev, [activeTopicId]: s };
+                saveBlocks(updated);
+                return updated;
+              });
+              showReward({
+                title: `«${block.name}» пройдена!`,
+                amount: 3,
+                awardKey: `b_${activeTopicId}_${activeBlockIdx}`,
+                withDailyBonus: true,
+                afterDone: () => setMode("detail"),
+              });
+            }}
+          />
+        </>
+      );
     }
 
     if (mode === "exam") {
-      return <TopicExamScreen topic={topic} topicId={activeTopicId} isEarlyCheck={examEarlyCheck} onBack={() => setMode("detail")} onPass={() => { awardStarsOnce(15, "+15 ⭐ Тема сдана! 🎉", `e_${activeTopicId}`); onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+      const isEarly = examEarlyCheck;
+      return (
+        <>
+          {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
+          <TopicExamScreen
+            topic={topic}
+            topicId={activeTopicId}
+            isEarlyCheck={isEarly}
+            onBack={() => setMode("detail")}
+            onPass={() => {
+              if (isEarly) {
+                showReward({
+                  title: "Проверка знаний пройдена! 🎯",
+                  amount: 5,
+                  awardKey: `ec_${activeTopicId}`,
+                  afterDone: () => setMode("detail"),
+                });
+              } else {
+                showReward({
+                  title: "Тема пройдена! 🎉",
+                  amount: 15,
+                  awardKey: `e_${activeTopicId}`,
+                  afterDone: () => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); },
+                });
+              }
+            }}
+          />
+        </>
+      );
     }
 
 
@@ -1797,6 +1884,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
       return (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
+          {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
           <button
             onClick={() => { if (backTarget) setActiveTopicId(backTarget.id); else { setMode(null); setActiveTopicId(null); } }}
             style={{ background: "none", border: "none", color: isLinkedBonus ? "rgba(245,158,11,0.5)" : "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 40, padding: 0, display: "block" }}
@@ -1918,12 +2006,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
   return (
     <div style={{ paddingTop: 40 }}>
-      {blockCompleteInfo && (
-        <BlockCompleteOverlay
-          info={blockCompleteInfo}
-          onDone={() => setBlockCompleteInfo(null)}
-        />
-      )}
+      {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
       <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 20, padding: 0 }}>← Назад</button>
 
       {/* Level tabs — always clickable, scrollbar hidden via CSS class */}
