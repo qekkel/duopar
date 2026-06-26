@@ -4297,18 +4297,22 @@ function MapGameScreen({ onBack, session, profile }) {
 
   function proceedToParallelAnswering() {
     stopLandTimer();
-    const q = pickQ(null);
-    setQuestion(q); qRef.current = q;
-    setPAnswer(null); pAnsRef.current = null;
-    setEliminatedOpts(new Set()); setHintRule(null); setHintUsedThisQ(false); setShowHintMenu(false);
-    setBotDone(false); setBotOk(null); botOkRef.current = null;
-    setRPhase("answering");
-    startAnsTimer();
+    // Brief pause to show both picks on the map before moving to question
+    setRPhase("picks_revealed");
     clearTimeout(botTurnRef.current);
     botTurnRef.current = setTimeout(() => {
-      const ok = Math.random() < 0.65;
-      botOkRef.current = ok; setBotOk(ok); setBotDone(true);
-    }, 1500 + Math.random() * 2000);
+      const q = pickQ(null);
+      setQuestion(q); qRef.current = q;
+      setPAnswer(null); pAnsRef.current = null;
+      setEliminatedOpts(new Set()); setHintRule(null); setHintUsedThisQ(false); setShowHintMenu(false);
+      setBotDone(false); setBotOk(null); botOkRef.current = null;
+      setRPhase("answering");
+      startAnsTimer();
+      botTurnRef.current = setTimeout(() => {
+        const ok = Math.random() < 0.65;
+        botOkRef.current = ok; setBotOk(ok); setBotDone(true);
+      }, 1500 + Math.random() * 2000);
+    }, 1600);
   }
 
   function forfeitGame() {
@@ -5252,6 +5256,33 @@ function MapGameScreen({ onBack, session, profile }) {
           ))}
         </div>
       )}
+    </div>
+  );
+
+  // ── PICKS REVEALED (brief pause showing both selections before question) ──
+  if (phase === "playing" && !onlineModeRef.current && rPhase === "picks_revealed") return (
+    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+      <style>{ANIM_CSS}</style>
+      <ExitModal />
+      <ScoreBar />
+      <MapSvg />
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        <div style={{ flex: 1, padding: "12px 14px", background: "rgba(124,92,252,0.18)", border: "2px solid rgba(124,92,252,0.55)", borderRadius: 12, animation: "pulse 0.8s ease 2" }}>
+          <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, marginBottom: 3 }}>ТЫ ВЫБРАЛ</div>
+          <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
+            👆 {playerPick && playerPick !== "skip" ? stateName(playerPick) : "—"}
+          </div>
+        </div>
+        <div style={{ flex: 1, padding: "12px 14px", background: "rgba(245,158,11,0.18)", border: "2px solid rgba(245,158,11,0.55)", borderRadius: 12, animation: "pulse 0.8s ease 2" }}>
+          <div style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700, marginBottom: 3 }}>{botName.toUpperCase()} ВЫБРАЛ</div>
+          <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
+            🟡 {botPick ? stateName(botPick) : "—"}
+          </div>
+        </div>
+      </div>
+      <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, textAlign: "center" }}>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>Сейчас будет вопрос…</div>
+      </div>
     </div>
   );
 
