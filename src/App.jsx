@@ -2222,6 +2222,14 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { setMode("self"); return; }
     setStatus("listening");
+
+    // For single letters/short sounds: just count as done after 1s — recognition
+    // of isolated letter sounds in de-DE is unreliable by design.
+    if (isShortSound) {
+      setTimeout(() => accept(null), 1000);
+      return;
+    }
+
     const rec = new SR();
     recRef.current = rec;
     rec.lang = "de-DE";
