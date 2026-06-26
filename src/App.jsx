@@ -1514,12 +1514,48 @@ function loadBlocks(key) {
   } catch { return {}; }
 }
 
+function BlockCompleteScreen({ info, onContinue }) {
+  const [count, setCount] = useState(0);
+  const target = info.stars + info.daily;
+
+  useEffect(() => {
+    if (target === 0) { const t = setTimeout(onContinue, 1800); return () => clearTimeout(t); }
+    let n = 0;
+    const interval = setInterval(() => {
+      n++;
+      setCount(n);
+      if (n >= target) clearInterval(interval);
+    }, 120);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div onClick={onContinue} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "70vh", textAlign: "center", cursor: "pointer", userSelect: "none" }}>
+      <div style={{ fontSize: 64, marginBottom: 16, animation: "popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)" }}>✅</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 6 }}>{info.blockName}</div>
+      <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32 }}>Часть пройдена!</div>
+      {target > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,215,0,0.1)", border: "1px solid rgba(255,215,0,0.25)", borderRadius: 20, padding: "16px 32px", marginBottom: 12 }}>
+          <span style={{ fontSize: 36 }}>⭐</span>
+          <span style={{ fontSize: 40, fontWeight: 900, color: "#fbbf24", minWidth: 48, transition: "all 0.1s" }}>+{count}</span>
+        </div>
+      )}
+      {info.daily > 0 && count >= info.stars && (
+        <div style={{ fontSize: 13, color: "#fbbf24", opacity: 0.7, marginBottom: 20 }}>включая бонус дня +{info.daily} ⭐</div>
+      )}
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 32 }}>Нажми чтобы продолжить</div>
+      <style>{`@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
+    </div>
+  );
+}
+
 function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const STORAGE_KEY = `duopar_blocks_${userId || "guest"}`;
 
   const [activeTopicId, setActiveTopicId] = useState(null);
-  const [mode, setMode] = useState(null); // "detail" | "block" | "exam" | "level_exam"
+  const [mode, setMode] = useState(null); // "detail" | "block" | "block_complete" | "exam" | "level_exam"
   const [activeBlockIdx, setActiveBlockIdx] = useState(null);
+  const [blockCompleteInfo, setBlockCompleteInfo] = useState(null); // { blockName, stars, daily }
   const [levelExamLevel, setLevelExamLevel] = useState(null);
   const [completedBlocks, setCompletedBlocks] = useState(() => loadBlocks(STORAGE_KEY));
   const [activeLevel, setActiveLevel] = useState("PH");
@@ -1684,6 +1720,13 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     if (!topic) { setActiveTopicId(null); setMode(null); return null; }
     const blocks = getTopicBlocks(topic);
 
+    if (mode === "block_complete" && blockCompleteInfo) {
+      return <BlockCompleteScreen
+        info={blockCompleteInfo}
+        onContinue={() => { setMode("detail"); setBlockCompleteInfo(null); }}
+      />;
+    }
+
     if (mode === "block" && activeBlockIdx !== null) {
       const block = blocks[activeBlockIdx];
       if (!block || !block.words || block.words.length === 0) { setMode("detail"); return null; }
@@ -1701,10 +1744,12 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             saveBlocks(updated);
             return updated;
           });
+          const alreadyAwarded = isAwarded(`b_${activeTopicId}_${activeBlockIdx}`);
           const daily = checkDailyBonus("lesson");
           awardStarsOnce(3, "+3 ⭐", `b_${activeTopicId}_${activeBlockIdx}`);
           if (daily) awardStars(5, "+5 ⭐ Дневной бонус!");
-          setMode("detail");
+          setBlockCompleteInfo({ blockName: block.name, stars: alreadyAwarded ? 0 : 3, daily: daily ? 5 : 0 });
+          setMode("block_complete");
         }}
       />;
     }
