@@ -1514,15 +1514,17 @@ function loadBlocks(key) {
   } catch { return {}; }
 }
 
-function RewardOverlay({ title, amount, daily, totalAfter, onDone }) {
+function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubtitle, onDone }) {
   const [visible, setVisible] = useState(true);
   const total = amount + daily;
   const [counted, setCounted] = useState(Math.max(0, totalAfter - total));
 
   useEffect(() => {
     playSound("correct");
-    if (total >= 5) setTimeout(() => playSound("correct"), 360);
-    if (total >= 12) setTimeout(() => playSound("correct"), 720);
+    if (!isRepeat) {
+      if (total >= 5) setTimeout(() => playSound("correct"), 360);
+      if (total >= 12) setTimeout(() => playSound("correct"), 720);
+    }
     if (total > 0 && totalAfter > 0) {
       let cur = totalAfter - total;
       const tgt = totalAfter;
@@ -1538,7 +1540,8 @@ function RewardOverlay({ title, amount, daily, totalAfter, onDone }) {
   }, []);
 
   useEffect(() => {
-    const t = setTimeout(() => { setVisible(false); setTimeout(onDone, 350); }, 3200);
+    const dur = isRepeat ? 2200 : 3200;
+    const t = setTimeout(() => { setVisible(false); setTimeout(onDone, 350); }, dur);
     return () => clearTimeout(t);
   }, []);
 
@@ -1550,8 +1553,8 @@ function RewardOverlay({ title, amount, daily, totalAfter, onDone }) {
   return (
     <div onClick={dismiss} style={{ position: "fixed", inset: 0, zIndex: 9999,
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      background: "rgba(0,0,0,0.8)", backdropFilter: "blur(7px)", cursor: "pointer",
-      animation: "rwdIn 0.25s ease" }}>
+      background: isRepeat ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.8)",
+      backdropFilter: "blur(7px)", cursor: "pointer", animation: "rwdIn 0.25s ease" }}>
 
       {Array.from({ length: flyN }).map((_, i) => {
         const angle = (i / flyN) * 360;
@@ -1566,10 +1569,18 @@ function RewardOverlay({ title, amount, daily, totalAfter, onDone }) {
       })}
 
       <div style={{ textAlign: "center", padding: "0 28px" }}>
-        <div style={{ fontSize: 16, fontWeight: 600, color: "rgba(255,255,255,0.55)",
-          marginBottom: 20, animation: "rwdUp 0.4s 0.05s both" }}>{title}</div>
+        <div style={{ fontSize: isRepeat ? 26 : 16, fontWeight: isRepeat ? 800 : 600,
+          color: isRepeat ? "#fff" : "rgba(255,255,255,0.55)",
+          marginBottom: 16, animation: "rwdUp 0.4s 0.05s both" }}>{title}</div>
 
-        {total > 0 ? (
+        {isRepeat ? (
+          <>
+            <div style={{ fontSize: 52, animation: "rwdPop 0.45s 0.1s cubic-bezier(0.34,1.56,0.64,1) both", marginBottom: 18 }}>✨</div>
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", animation: "rwdUp 0.4s 0.4s both" }}>
+              {repeatSubtitle || "Звёздочки за эту часть уже получены"}
+            </div>
+          </>
+        ) : total > 0 ? (
           <div style={{ display: "inline-flex", alignItems: "center", gap: 12,
             background: "linear-gradient(135deg, #92400e, #d97706)",
             borderRadius: 28, padding: "18px 44px",
@@ -1579,25 +1590,25 @@ function RewardOverlay({ title, amount, daily, totalAfter, onDone }) {
             <span style={{ fontSize: 40 }}>⭐</span>
             <span style={{ fontSize: 56, fontWeight: 900, color: "#fff", lineHeight: 1 }}>+{total}</span>
           </div>
-        ) : (
-          <div style={{ fontSize: 52, animation: "rwdPop 0.45s 0.1s cubic-bezier(0.34,1.56,0.64,1) both", marginBottom: 22 }}>✅</div>
-        )}
+        ) : null}
 
-        {daily > 0 && (
+        {!isRepeat && daily > 0 && (
           <div style={{ fontSize: 13, color: "#fbbf24", marginBottom: 14, opacity: 0.8,
             animation: "rwdUp 0.4s 0.5s both" }}>включая +{daily} ⭐ дневной бонус</div>
         )}
 
-        <div style={{ animation: "rwdUp 0.4s 0.7s both", minHeight: 30 }}>
-          {totalAfter > 0 && (
-            <>
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>Всего у тебя: </span>
-              <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24",
-                display: "inline-block",
-                animation: counted < totalAfter ? "none" : "rwdCountPulse 0.3s ease" }}>{counted} ⭐</span>
-            </>
-          )}
-        </div>
+        {!isRepeat && (
+          <div style={{ animation: "rwdUp 0.4s 0.7s both", minHeight: 30, marginTop: total > 0 ? 0 : 8 }}>
+            {totalAfter > 0 && (
+              <>
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>Всего у тебя: </span>
+                <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24",
+                  display: "inline-block",
+                  animation: counted < totalAfter ? "none" : "rwdCountPulse 0.3s ease" }}>{counted} ⭐</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -1684,10 +1695,10 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   }
 
   // Show reward overlay + award stars. withDailyBonus applies only to block completions.
-  function showReward({ title, amount, awardKey, withDailyBonus = false, afterDone }) {
+  function showReward({ title, repeatTitle, repeatSubtitle, amount, awardKey, withDailyBonus = false, afterDone }) {
     const alreadyAwarded = awardKey ? isAwarded(awardKey) : false;
     const actualAmount = alreadyAwarded ? 0 : amount;
-    const hasDaily = withDailyBonus ? checkDailyBonus("lesson") : false;
+    const hasDaily = !alreadyAwarded && withDailyBonus ? checkDailyBonus("lesson") : false;
     const dailyAmt = hasDaily ? 5 : 0;
     const totalAfter = stars + actualAmount + dailyAmt;
 
@@ -1698,7 +1709,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     if (dailyAmt > 0) {
       setStars(prev => { const n = prev + dailyAmt; localStorage.setItem(STARS_KEY, String(n)); return n; });
     }
-    setRewardInfo({ title, amount: actualAmount, daily: dailyAmt, totalAfter, afterDone });
+    setRewardInfo({
+      title: alreadyAwarded ? (repeatTitle || "Gut gemacht!") : title,
+      amount: actualAmount,
+      daily: dailyAmt,
+      totalAfter,
+      isRepeat: alreadyAwarded,
+      repeatSubtitle: alreadyAwarded ? repeatSubtitle : undefined,
+      afterDone,
+    });
   }
 
   // Per-level star stats for earned/max display
@@ -1786,6 +1805,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     const nextLvlLabel = nextLvlIdx < LEVELS.length ? LVL_LABEL[LEVELS[nextLvlIdx]] : null;
     const handlePass = () => showReward({
       title: `Экзамен ${lvlLabel} сдан! 🏆`,
+      repeatSubtitle: "Ты уже сдал этот экзамен — молодец, что повторил!",
       amount: 25,
       awardKey: `lv_${levelExamLevel}`,
       afterDone: () => { passLevelExam(levelExamLevel); setMode(null); },
@@ -1828,6 +1848,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               });
               showReward({
                 title: `«${block.name}» пройдена!`,
+                repeatSubtitle: "Звёздочки уже получены, но повторение укрепляет навык 💪",
                 amount: 3,
                 awardKey: `b_${activeTopicId}_${activeBlockIdx}`,
                 withDailyBonus: true,
@@ -1853,6 +1874,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               if (isEarly) {
                 showReward({
                   title: "Проверка знаний пройдена! 🎯",
+                  repeatSubtitle: "Ты уже проверял знания — закрепление всегда полезно!",
                   amount: 5,
                   awardKey: `ec_${activeTopicId}`,
                   afterDone: () => setMode("detail"),
@@ -1860,6 +1882,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               } else {
                 showReward({
                   title: "Тема пройдена! 🎉",
+                  repeatSubtitle: "Ты уже сдал этот экзамен — отличная закрепление!",
                   amount: 15,
                   awardKey: `e_${activeTopicId}`,
                   afterDone: () => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); },
