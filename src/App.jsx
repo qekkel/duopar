@@ -5136,35 +5136,61 @@ function MapGameScreen({ onBack, session, profile }) {
     );
   }
 
-  // ── HINT MENU MODAL ──
-  const HintMenu = () => !showHintMenu ? null : (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0 0 24px" }}>
-      <div style={{ background: "#1a1530", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "20px 20px 20px 20px", padding: "22px 20px", width: "100%", maxWidth: 420 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>✨ Подсказки</div>
-          <div style={{ fontSize: 14, color: "#fcd34d", fontWeight: 700 }}>⭐ {starsBalance}</div>
-        </div>
-        {[
-          { key: "elim", label: "Убрать неправильный ответ", cost: 5, sub: "Один вариант исчезнет", off: hintUsedThisQ || eliminatedOpts.size > 0 },
-          { key: "rule", label: "Показать правило", cost: 4, sub: qRef.current?.hint ? qRef.current.hint : "Краткая подсказка по вопросу", off: hintUsedThisQ || !!hintRule },
-          { key: "time", label: "+5 секунд", cost: 6, sub: "Добавляет 5 секунд к таймеру", off: false },
-          ...(!onlineModeRef.current ? [{ key: "swap", label: "Заменить вопрос", cost: 7, sub: "Другой вопрос той же сложности", off: false }] : []),
-        ].map(h => {
-          const afford = starsBalance >= h.cost;
-          const dis = h.off || !afford;
-          return (
-            <button key={h.key} onClick={() => !dis && applyHint(h.key, h.cost)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 14px", borderRadius: 14, background: dis ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.06)", border: `1px solid ${dis ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.11)"}`, color: dis ? "rgba(255,255,255,0.25)" : "#fff", marginBottom: 8, cursor: dis ? "default" : "pointer" }}>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{h.label}</div>
-                <div style={{ fontSize: 11, color: dis ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.38)", marginTop: 2 }}>{h.sub}</div>
+  // ── HINT ICONS PANEL (right side, always visible during answering) ──
+  const [hintTooltip, setHintTooltip] = useState(null); // key of hint showing tooltip
+  const hintTooltipTimer = useRef(null);
+
+  const HINT_DEFS = [
+    { key: "elim", icon: "✂️", label: "Убрать вариант", desc: "Один неправильный ответ исчезнет", cost: 5, off: () => hintUsedThisQ || eliminatedOpts.size > 0 },
+    { key: "rule", icon: "💡", label: "Показать правило", desc: qRef.current?.hint || "Краткая подсказка по вопросу", cost: 4, off: () => hintUsedThisQ || !!hintRule },
+    { key: "time", icon: "⏱️", label: "+5 секунд", desc: "Добавит 5 секунд к таймеру", cost: 6, off: () => false },
+    ...(!onlineModeRef.current ? [{ key: "swap", icon: "🔄", label: "Другой вопрос", desc: "Заменить вопрос на новый", cost: 7, off: () => false }] : []),
+  ];
+
+  function showHintTooltip(key) {
+    clearTimeout(hintTooltipTimer.current);
+    setHintTooltip(key);
+    hintTooltipTimer.current = setTimeout(() => setHintTooltip(null), 2200);
+  }
+
+  const HintsPanel = ({ visible }) => !visible ? null : (
+    <div style={{ position: "fixed", right: 8, top: "50%", transform: "translateY(-50%)", zIndex: 99, display: "flex", flexDirection: "column", gap: 7 }}>
+      {HINT_DEFS.map(h => {
+        const isOff = h.off();
+        const afford = starsBalance >= h.cost;
+        const dis = isOff || !afford;
+        const showTip = hintTooltip === h.key;
+        return (
+          <div key={h.key} style={{ position: "relative" }}>
+            {showTip && (
+              <div style={{ position: "absolute", right: 58, top: "50%", transform: "translateY(-50%)", background: "#1e1740", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "8px 12px", whiteSpace: "nowrap", zIndex: 100, boxShadow: "0 4px 16px rgba(0,0,0,0.5)", pointerEvents: "none" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{h.label}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{h.desc}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: afford ? "#fcd34d" : "#ef4444", marginTop: 4 }}>
+                  {h.cost} ⭐{!afford ? " · не хватает" : ""}
+                </div>
               </div>
-              <div style={{ fontSize: 13, color: afford ? "#fcd34d" : "#ef4444", fontWeight: 800, marginLeft: 12 }}>{h.cost} ⭐</div>
+            )}
+            <button
+              onMouseEnter={() => showHintTooltip(h.key)}
+              onMouseLeave={() => { clearTimeout(hintTooltipTimer.current); setHintTooltip(null); }}
+              onClick={() => {
+                if (dis) { showHintTooltip(h.key); return; }
+                if (hintTooltip === h.key) {
+                  clearTimeout(hintTooltipTimer.current);
+                  setHintTooltip(null);
+                  applyHint(h.key, h.cost);
+                } else {
+                  showHintTooltip(h.key);
+                }
+              }}
+              style={{ width: 50, height: 54, borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, border: `1px solid ${dis ? "rgba(255,255,255,0.07)" : showTip ? "rgba(245,158,11,0.6)" : "rgba(245,158,11,0.28)"}`, background: dis ? "rgba(255,255,255,0.03)" : showTip ? "rgba(245,158,11,0.22)" : "rgba(245,158,11,0.1)", cursor: dis ? "not-allowed" : "pointer", opacity: dis ? 0.35 : 1, transition: "all 0.15s" }}>
+              <span style={{ fontSize: 19, lineHeight: 1 }}>{h.icon}</span>
+              <span style={{ fontSize: 9, fontWeight: 800, color: afford ? "#fcd34d" : "#ef4444", letterSpacing: -0.3 }}>{h.cost}⭐</span>
             </button>
-          );
-        })}
-        {starsBalance < 4 && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", marginBottom: 8 }}>Не хватает ⭐ — проходи уроки, чтобы заработать</div>}
-        <button onClick={() => setShowHintMenu(false)} style={{ width: "100%", padding: "11px", borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer" }}>Закрыть</button>
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -5234,7 +5260,7 @@ function MapGameScreen({ onBack, session, profile }) {
     <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
       <style>{ANIM_CSS}</style>
       {showConfetti && <Confetti />}
-      <HintMenu />
+      <HintsPanel visible={pAnswer === null} />
       <ExitModal />
       <ScoreBar />
       <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -5263,11 +5289,6 @@ function MapGameScreen({ onBack, session, profile }) {
       <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{question?.word || question?.prompt}</div>
       {hintRule && <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#fcd34d" }}>💡 {hintRule}</div>}
       <AnswerButtons q={question} ans={pAnswer} onPick={handleAnswer} eliminated={eliminatedOpts} />
-      {pAnswer === null && (
-        <button onClick={() => setShowHintMenu(true)} style={{ marginTop: 10, width: "100%", padding: "10px", borderRadius: 13, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#fcd34d", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-          ✨ Подсказка · {starsBalance} ⭐
-        </button>
-      )}
     </div>
   );
 
