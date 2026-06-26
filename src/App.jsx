@@ -1529,6 +1529,30 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     try { return new Set(JSON.parse(localStorage.getItem(LEVEL_EXAMS_KEY) || "[]")); }
     catch { return new Set(); }
   });
+  const STARS_KEY = `duopar_stars_${userId || "guest"}`;
+  const DAILY_KEY = `duopar_daily_${userId || "guest"}`;
+  const [stars, setStars] = useState(() => parseInt(localStorage.getItem(STARS_KEY) || "0", 10));
+  const [starsAnim, setStarsAnim] = useState(null); // { delta, label }
+
+  function awardStars(delta, label) {
+    setStars(prev => {
+      const n = prev + delta;
+      localStorage.setItem(STARS_KEY, String(n));
+      return n;
+    });
+    setStarsAnim({ delta, label });
+    setTimeout(() => setStarsAnim(null), 2400);
+  }
+  function checkDailyBonus(type) {
+    const today = new Date().toISOString().split("T")[0];
+    try {
+      const d = JSON.parse(localStorage.getItem(DAILY_KEY) || "{}");
+      if (d[type] === today) return false;
+      d[type] = today;
+      localStorage.setItem(DAILY_KEY, JSON.stringify(d));
+      return true;
+    } catch { return false; }
+  }
 
   useEffect(() => {
     if (userId) setCompletedBlocks(loadBlocks(`duopar_blocks_${userId}`));
@@ -1587,7 +1611,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       topic={fakeTopic}
       prebuiltQuestions={questions}
       onBack={() => setMode(null)}
-      onPass={() => passLevelExam(levelExamLevel)}
+      onPass={() => { awardStars(25, "+25 ⭐ Уровень сдан! 🏆"); passLevelExam(levelExamLevel); }}
       levelKey={levelExamLevel}
       nextLvlLabel={nextLvlLabel}
     />;
@@ -1614,13 +1638,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             saveBlocks(updated);
             return updated;
           });
+          const daily = checkDailyBonus("lesson");
+          awardStars(5 + (daily ? 5 : 0), daily ? "+10 ⭐ (+ дневной бонус!)" : "+5 ⭐");
           setMode("detail");
         }}
       />;
     }
 
     if (mode === "exam") {
-      return <TopicExamScreen topic={topic} topicId={activeTopicId} isEarlyCheck={examEarlyCheck} onBack={() => setMode("detail")} onPass={() => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+      return <TopicExamScreen topic={topic} topicId={activeTopicId} isEarlyCheck={examEarlyCheck} onBack={() => setMode("detail")} onPass={() => { awardStars(15, "+15 ⭐ Тема сдана!"); onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
     }
 
 
@@ -1778,7 +1804,19 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
         })}
       </div>
 
-      <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16 }}>{CURRICULUM_LEVELS[lvl].label}</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>{CURRICULUM_LEVELS[lvl].label}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 12px" }}>
+          <span style={{ fontSize: 15 }}>⭐</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d" }}>{stars}</span>
+        </div>
+      </div>
+
+      {starsAnim && (
+        <div style={{ position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: "rgba(245,158,11,0.95)", color: "#1a1000", borderRadius: 20, padding: "10px 22px", fontSize: 15, fontWeight: 800, boxShadow: "0 4px 20px rgba(245,158,11,0.5)", animation: "fadeUp 2.4s ease forwards", pointerEvents: "none", whiteSpace: "nowrap" }}>
+          {starsAnim.label}
+        </div>
+      )}
 
       {/* Locked level banner */}
       {!isLevelUnlocked(lvl) && (
@@ -2259,6 +2297,15 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
   const [multiConfirmed, setMultiConfirmed] = useState(false);
   const [wrong, setWrong] = useState([]);
   const [retryWords, setRetryWords] = useState([]);
+  const [pronounceIdx, setPronounceIdx] = useState(0);
+
+  const regularWords = useMemo(() => words.filter(w => !isPronounceCard(w.de)), [words]);
+  const hasPronounce = audioEnabled && regularWords.length > 0;
+
+  function completePractice() {
+    if (hasPronounce) { setPronounceIdx(0); setPhase("pronounce"); }
+    else onDone();
+  }
 
   // All hooks must be at top level — before any conditional returns
   const optionPool = useMemo(() => {
@@ -2298,7 +2345,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
     } else {
       const retry = [...wrong, ...(!isCorrect ? [practiceCard] : [])];
       if (retry.length > 0) { setRetryWords(retry); setPhase("retry_intro"); }
-      else onDone();
+      else completePractice();
     }
   }
 
@@ -2416,6 +2463,24 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
     );
   }
 
+  if (phase === "pronounce") {
+    const word = regularWords[pronounceIdx];
+    if (!word) { onDone(); return null; }
+    return <PronounceCard
+      card={word}
+      block={block}
+      progress={1}
+      practiceIdx={pronounceIdx}
+      queueLen={regularWords.length}
+      onBack={onBack}
+      onAdvance={() => {
+        const next = pronounceIdx + 1;
+        if (next < regularWords.length) setPronounceIdx(next);
+        else onDone();
+      }}
+    />;
+  }
+
   if (!practiceCard) return null;
   const card = practiceCard;
 
@@ -2503,14 +2568,60 @@ function buildExamQuestions(topic) {
   return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
 }
 
+function buildPHExamQuestions() {
+  const base = [
+    // Letters & reading
+    { q: "Как читается буква Z на немецком?", options: ["как «з»", "как «ц»", "как «с»", "как «й»"], answer: 1, correctText: null },
+    { q: "Буква W в немецком читается как:", options: ["«ш»", "«в»", "«б»", "«ф»"], answer: 1, correctText: null },
+    { q: "Буква V в немецком обычно читается как:", options: ["«в»", "«б»", "«ф»", "«п»"], answer: 2, correctText: null },
+    { q: "Как читается буква J в немецком?", options: ["как «дж»", "как «й»", "как «ж»", "как «г»"], answer: 1, correctText: null },
+    { q: "Буква S перед гласной читается как:", options: ["«с»", "«з»", "«ш»", "«х»"], answer: 1, correctText: null },
+    { q: "Как читается ß (Eszett)?", options: ["«ш»", "«з»", "«с»", "«б»"], answer: 2, correctText: null },
+    { q: "Как называются буквы Ä, Ö, Ü?", options: ["Умлауты", "Лигатуры", "Диграфы", "Ударные"], answer: 0, correctText: null },
+    // Umlauts
+    { q: "Какой умлаут в слове «schön»?", options: ["ä", "ö", "ü", "ß"], answer: 1, correctText: null },
+    { q: "«Müde» значит:", options: ["красивый", "холодный", "усталый", "быстрый"], answer: 2, correctText: null },
+    { q: "«Mädchen» значит:", options: ["мальчик", "девочка", "ребёнок", "женщина"], answer: 1, correctText: null },
+    { q: "Буква ü произносится примерно как:", options: ["«о»", "«а»", "«ю» (без й)", "«э»"], answer: 2, correctText: null },
+    // Diphthongs
+    { q: "Дифтонг «ei» читается как:", options: ["«ее»", "«ай»", "«эй»", "«ой»"], answer: 1, correctText: null },
+    { q: "Дифтонг «eu» и «äu» читаются как:", options: ["«ю»", "«ой»", "«ау»", "«эу»"], answer: 1, correctText: null },
+    { q: "Дифтонг «au» читается как:", options: ["«ао»", "«ау»", "«ой»", "«уа»"], answer: 1, correctText: null },
+    { q: "В каком слове есть дифтонг «ei»?", options: ["heute", "neu", "drei", "Haus"], answer: 2, correctText: null },
+    // Long vs short vowels
+    { q: "В каком слове гласная звучит долго?", options: ["Essen", "Hund", "See", "kalt"], answer: 2, correctText: null },
+    { q: "Что означает «двойная гласная» (aa, ee, oo) в немецком?", options: ["Ударение", "Долгое произношение", "Краткое произношение", "Умлаут"], answer: 1, correctText: null },
+    // Consonant combos
+    { q: "Сочетание «ch» после a, o, u читается как:", options: ["«чх»", "«ш»", "«х» (горловое)", "«к»"], answer: 2, correctText: null },
+    { q: "Сочетание «sch» читается как:", options: ["«сч»", "«с»", "«ш»", "«щ»"], answer: 2, correctText: null },
+    { q: "Сочетание «sp» в начале слова читается как:", options: ["«сп»", "«шп»", "«ст»", "«зп»"], answer: 1, correctText: null },
+    { q: "Сочетание «st» в начале слова читается как:", options: ["«ст»", "«шт»", "«зт»", "«сд»"], answer: 1, correctText: null },
+    { q: "Буква «g» в конце слова читается как:", options: ["«г»", "«к»", "«й»", "«х»"], answer: 1, correctText: null },
+    // Vocab with audio
+    { q: "Послушай и выбери правильное написание:", options: ["Apfel", "Affel", "Appel", "Apfle"], answer: 0, correctText: null, hasAudio: true, audioText: "Apfel" },
+    { q: "Послушай и выбери правильное написание:", options: ["Schule", "Scule", "Schulle", "Szkule"], answer: 0, correctText: null, hasAudio: true, audioText: "Schule" },
+    { q: "Послушай и выбери правильное написание:", options: ["Brot", "Brod", "Broht", "Brott"], answer: 0, correctText: null, hasAudio: true, audioText: "Brot" },
+    { q: "Послушай и выбери правильное написание:", options: ["Straße", "Strase", "Strasse", "Strasa"], answer: 0, correctText: null, hasAudio: true, audioText: "Straße" },
+    // Word translations
+    { q: "«Das Haus» значит:", options: ["дом", "школа", "машина", "дорога"], answer: 0, correctText: null },
+    { q: "«Die Mutter» значит:", options: ["отец", "дочь", "мать", "сестра"], answer: 2, correctText: null },
+    { q: "«Der Vater» значит:", options: ["брат", "отец", "дядя", "сын"], answer: 1, correctText: null },
+    { q: "«Das Wasser» значит:", options: ["молоко", "сок", "вода", "чай"], answer: 2, correctText: null },
+    { q: "«Danke» значит:", options: ["привет", "пока", "спасибо", "пожалуйста"], answer: 2, correctText: null },
+    { q: "«Ja» значит:", options: ["нет", "может быть", "да", "хорошо"], answer: 2, correctText: null },
+    { q: "«Ich» значит:", options: ["ты", "он", "я", "мы"], answer: 2, correctText: null },
+  ];
+  return shuffle(base).slice(0, 16);
+}
+
 function buildLevelExamQuestions(lvl) {
+  if (lvl === "PH") return buildPHExamQuestions();
   const lvlTopics = CURRICULUM.filter(t => t.level === lvl && !t.bonus);
   // Collect all hardcoded exam questions from every topic in the level
   const allHardcoded = shuffle(lvlTopics.flatMap(t => t.exam || []))
     .slice(0, 10)
     .map(q => ({ ...q, correctText: null }));
   // Collect word-translation questions only from topics with real word flashcards
-  const ARTICLES = new Set(["der","die","das","ein","eine","einen","einem","einer","des","dem","den"]);
   const allWords = lvlTopics.flatMap(t => {
     const cards = [];
     (t.cards || []).forEach(card => {
@@ -2676,6 +2787,11 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
       <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
         {questions.map((_, i) => <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i < qi ? "#10b981" : i === qi ? "#f59e0b" : "rgba(255,255,255,0.1)" }} />)}
       </div>
+      {q.hasAudio && q.audioText && (
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+          <AudioButton text={q.audioText} size={48} />
+        </div>
+      )}
       <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", lineHeight: 1.4, marginBottom: 28 }}>{q.q}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {q.options.map((opt, i) => {
