@@ -244,6 +244,7 @@ function isGermanText(text) {
 }
 // Returns true if `de` is a letter/letter-pair (not a word with meaning):
 // "A a", "Ä ä", "ä", "ö", "ü" — pronounce exercise, not guess-translation
+function isSentence(w) { return w?.de ? /[.!?]$/.test(w.de.trim()) : false; }
 function isPronounceCard(de) {
   if (!de) return false;
   const words = de.trim().split(/\s+/);
@@ -1882,7 +1883,6 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   // PRACTICE PHASE
   const card = practiceQueue[practiceIdx];
   const correct = card?.ru;
-  const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
   // useMemo so shuffle doesn't re-run on every render (e.g. when selected changes)
   const options = useMemo(() => {
     if (!card) return [];
@@ -1974,7 +1974,6 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       const results = Array.from(e.results[0]);
       // Pick best alternative by confidence
       const best = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0]);
-      const bestText = normalizeSpeech(best.transcript);
       setLastHeard(best.transcript.trim());
 
       // Strict exact match across all alternatives
@@ -2154,7 +2153,6 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
   const [retryWords, setRetryWords] = useState([]);
 
   // All hooks must be at top level — before any conditional returns
-  const isSentence = w => w?.de ? /[.!?]$/.test(w.de.trim()) : false;
   const optionPool = useMemo(() => {
     const seen = new Set();
     return [...words, ...allWords].filter(f => { if (seen.has(f.ru)) return false; seen.add(f.ru); return true; });
@@ -2179,7 +2177,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled }
     return shuffle([correct, ...shuffle(pool).slice(0, 3).map(f => f.ru)]);
   }, [practiceIdx, practiceQueue]);
 
-  function startPractice() { setPracticeQueue(shuffle(words).map((w, i) => ({ ...w, reversed: i % 2 === 1 }))); setPracticeIdx(0); setSelected(null); setMultiSelected([]); setMultiConfirmed(false); setWrong([]); setPhase("practice"); }
+  function startPractice() { setPracticeQueue(shuffle(words).map((w, i) => ({ ...w, reversed: i % 2 === 1 }))); setPracticeIdx(0); setSelected(null); setMultiSelected([]); setMultiConfirmed(false); setWrong([]); setRetryWords([]); setPhase("practice"); }
 
   function advance(isCorrect) {
     if (!isCorrect) setWrong(w => [...w, practiceCard]);
@@ -2421,12 +2419,11 @@ function buildLevelExamQuestions(lvl) {
     return cards;
   });
   const wordPool = shuffle(allWords);
-  const wordQuestions = wordPool.slice(0, 5).map(card => ({
-    q: `Как переводится «${card.de}»?`,
-    options: shuffle([card.ru, ...shuffle(wordPool.filter(f => f.ru !== card.ru)).slice(0, 3).map(f => f.ru)]),
-    answer: null,
-    correctText: card.ru,
-  }));
+  const wordQuestions = wordPool.slice(0, 5).flatMap(card => {
+    const distractors = shuffle(wordPool.filter(f => f.ru !== card.ru));
+    if (distractors.length < 3) return [];
+    return [{ q: `Как переводится «${card.de}»?`, options: shuffle([card.ru, ...distractors.slice(0, 3).map(f => f.ru)]), answer: null, correctText: card.ru }];
+  });
   return shuffle([...allHardcoded, ...wordQuestions]).slice(0, 14);
 }
 
