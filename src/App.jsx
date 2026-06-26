@@ -3604,11 +3604,10 @@ function MapGameScreen({ onBack, session, profile }) {
   const [roundMsg, setRoundMsg] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // ── BOT MODE TURN-BASED STATE ──
-  const [botModeTurn, setBotModeTurn] = useState("player"); // "player" | "bot"
+  // ── BOT MODE PARALLEL STATE ──
   const [landTimer, setLandTimer] = useState(20);
   const [ansTimer, setAnsTimer] = useState(20);
-  const [botTurnMsg, setBotTurnMsg] = useState(null); // status string during bot turn
+  const [botPickMsg, setBotPickMsg] = useState(null); // "Бот выбирает..." / "Бот выбрал X"
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [gameLog, setGameLog] = useState([]); // last actions log
   const LAND_TIME = 20;
@@ -3628,6 +3627,7 @@ function MapGameScreen({ onBack, session, profile }) {
   const landTimerRef = useRef(null);
   const ansTimerRef = useRef(null);
   const botTurnRef = useRef(null);
+  const pPickDoneRef = useRef(false); // true once player picked or timer expired
 
   useEffect(() => { fetch(GEO_URL).then(r => r.json()).then(d => setGeoFeatures(d.features)); }, []);
   useEffect(() => () => {
@@ -3639,9 +3639,9 @@ function MapGameScreen({ onBack, session, profile }) {
   // ── ONLINE: cleanup channel on unmount ──
   useEffect(() => () => { channelRef.current?.unsubscribe(); }, []);
 
-  // ── BOT MODE: start land timer when game begins ──
+  // ── BOT MODE: start parallel picks when game begins ──
   useEffect(() => {
-    if (phase === "playing" && !onlineModeRef.current) startLandTimer();
+    if (phase === "playing" && !onlineModeRef.current) { startLandTimer(); scheduleBotPick(); }
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function myUsername() { return profile?.username || session?.user?.email?.split("@")[0] || "Игрок"; }
@@ -3677,88 +3677,49 @@ function MapGameScreen({ onBack, session, profile }) {
   function pushLog(entry) { setGameLog(l => [entry, ...l].slice(0, 5)); }
 
   function skipPlayerLandTurn() {
+    stopLandTimer();
     pushLog("⏱ Время вышло — ход пропущен");
-    setBotModeTurn("bot");
-    clearTimeout(botTurnRef.current);
-    botTurnRef.current = setTimeout(runBotTurn, 600);
+    pPickRef.current = "skip"; pPickDoneRef.current = true;
+    setPlayerPick("skip");
+    // If bot already picked → start answering; else wait for bot
+    if (bPickRef.current !== null) proceedToParallelAnswering();
   }
 
   function handleBotModeAnsTimeout() {
-    pAnsRef.current = -1; // mark as timed-out (wrong)
+    pAnsRef.current = -1;
     setPAnswer(-1);
     pushLog("⏱ Время вышло — ответ не засчитан");
+    // resolveParallelRound will fire via useEffect when botDone is also true
+  }
+
+  function scheduleBotPick() {
     clearTimeout(botTurnRef.current);
-    botTurnRef.current = setTimeout(() => resolveBotModePlayerTurn(-1), 800);
+    botTurnRef.current = setTimeout(runBotParallelPick, 1000 + Math.random() * 1200);
   }
 
-  function resolveBotModePlayerTurn(forcedIdx) {
-    stopAnsTimer();
-    const idx = forcedIdx !== undefined ? forcedIdx : pAnsRef.current;
-    const pCorrect = idx !== null && idx !== -1 && idx === qRef.current?.correct;
-    const sid = pPickRef.current;
-    const newTerr = { ...terrRef.current };
-    if (pCorrect && sid) {
-      newTerr[sid] = "player";
-      pushLog(`✅ Ты захватил ${stateName(sid)}`);
-      setShowConfetti(true);
-    } else if (sid) {
-      pushLog(`❌ Не захватил ${stateName(sid)}`);
-    }
-    terrRef.current = newTerr;
-    setTerritories(newTerr);
-    if (checkGameOver(newTerr)) return;
-    setTimeout(() => {
-      setShowConfetti(false);
-      setBotModeTurn("bot");
-      clearTimeout(botTurnRef.current);
-      botTurnRef.current = setTimeout(runBotTurn, 600);
-    }, pCorrect ? 1200 : 600);
-  }
-
-  function runBotTurn() {
+  function runBotParallelPick() {
     const allIds = Object.values(STATE_ID_MAP);
     const available = allIds.filter(id => !terrRef.current[id]);
-    if (!available.length) { startNextPlayerTurn(); return; }
+    if (!available.length) return;
     const land = available[Math.floor(Math.random() * available.length)];
-
-    setBotTurnMsg(`${botName} выбирает землю...`);
-    botTurnRef.current = setTimeout(() => {
-      setBotPick(land); bPickRef.current = land; setBotPickRevealed(true);
-      setBotTurnMsg(`${botName} выбрал ${stateName(land)}`);
-      botTurnRef.current = setTimeout(() => {
-        setBotTurnMsg(`${botName} отвечает...`);
-        botTurnRef.current = setTimeout(() => {
-          const correct = Math.random() < 0.65;
-          const newTerr = { ...terrRef.current };
-          if (correct) {
-            newTerr[land] = "bot";
-            setBotTurnMsg(`${botName} ответил правильно и захватил ${stateName(land)}! 🟡`);
-            pushLog(`🟡 ${botName} захватил ${stateName(land)}`);
-          } else {
-            setBotTurnMsg(`${botName} ошибся. ${stateName(land)} осталась свободной.`);
-            pushLog(`⚪ ${botName} ошибся`);
-          }
-          terrRef.current = newTerr;
-          setTerritories(newTerr);
-          if (checkGameOver(newTerr)) return;
-          botTurnRef.current = setTimeout(() => {
-            setBotTurnMsg(null); setBotPick(null); bPickRef.current = null; setBotPickRevealed(false);
-            startNextPlayerTurn();
-          }, 1400);
-        }, 1200);
-      }, 800);
-    }, 1000);
+    setBotPick(land); bPickRef.current = land; setBotPickRevealed(true);
+    setBotPickMsg(`${botName} выбрал ${stateName(land)}`);
+    if (pPickDoneRef.current) proceedToParallelAnswering();
   }
 
-  function startNextPlayerTurn() {
-    setPlayerPick(null); pPickRef.current = null;
-    setQuestion(null); qRef.current = null;
+  function proceedToParallelAnswering() {
+    stopLandTimer();
+    const q = pickQ(null);
+    setQuestion(q); qRef.current = q;
     setPAnswer(null); pAnsRef.current = null;
     setBotDone(false); setBotOk(null); botOkRef.current = null;
-    setRoundMsg(null); setShowConfetti(false);
-    setRPhase("territory_select");
-    setBotModeTurn("player");
-    startLandTimer();
+    setRPhase("answering");
+    startAnsTimer();
+    clearTimeout(botTurnRef.current);
+    botTurnRef.current = setTimeout(() => {
+      const ok = Math.random() < 0.65;
+      botOkRef.current = ok; setBotOk(ok); setBotDone(true);
+    }, 1500 + Math.random() * 2000);
   }
 
   function forfeitGame() {
@@ -3962,15 +3923,16 @@ function MapGameScreen({ onBack, session, profile }) {
       return;
     }
 
-    // ── BOT MODE: turn-based — player picks unclaimed land, then answers question ──
-    if (botModeTurn !== "player") return;
+    // ── BOT MODE: parallel — player picks their land, bot picks simultaneously ──
+    if (pPickDoneRef.current) return; // already picked
     stopLandTimer();
+    pPickDoneRef.current = true;
     setPlayerPick(sid); pPickRef.current = sid;
-    const q = pickQ(null);
-    setQuestion(q); qRef.current = q;
-    setPAnswer(null); pAnsRef.current = null;
-    setRPhase("answering");
-    startAnsTimer();
+    // If bot already picked → proceed to answering; else wait for bot
+    if (bPickRef.current !== null) {
+      clearTimeout(botTurnRef.current);
+      proceedToParallelAnswering();
+    }
   }
 
   // ── BATTLE (attack enemy territory, best of 3) ──
@@ -4168,10 +4130,8 @@ function MapGameScreen({ onBack, session, profile }) {
     if (onlineModeRef.current) {
       sendOnline("answer", { correct, ms: duelStartRef.current ? Date.now() - duelStartRef.current : null });
     } else {
-      // Bot mode: resolve after short reveal delay
       stopAnsTimer();
-      clearTimeout(botTurnRef.current);
-      botTurnRef.current = setTimeout(() => resolveBotModePlayerTurn(), 900);
+      // resolveParallelRound fires via useEffect when botDone is also true
     }
   }
 
@@ -4184,17 +4144,18 @@ function MapGameScreen({ onBack, session, profile }) {
   function resolveRound() {
     const pCorrect = pAnsRef.current === qRef.current?.correct;
     const bCorrect = botOkRef.current === true;
-    const sid = pPickRef.current, bsid = bPickRef.current;
+    const sid = pPickRef.current !== "skip" ? pPickRef.current : null;
+    const bsid = bPickRef.current;
     const newTerr = { ...terrRef.current };
     const msgs = [];
-    if (pCorrect && sid) { newTerr[sid] = "player"; msgs.push("Ты захватил землю! 🟣"); setShowConfetti(true); }
-    else if (sid) msgs.push("Ты ответил неправильно.");
-    if (bCorrect && bsid) { newTerr[bsid] = "bot"; msgs.push(`${botName} захватил землю! 🟡`); }
-    else if (bsid) msgs.push(`${botName} не захватил землю.`);
+    if (pCorrect && sid) { newTerr[sid] = "player"; msgs.push(`Ты захватил ${stateName(sid)}! 🟣`); setShowConfetti(true); }
+    else if (!sid) msgs.push("⏱ пропущено");
+    else msgs.push(`Не захватил ${stateName(sid)}.`);
+    if (bCorrect && bsid) { newTerr[bsid] = "bot"; msgs.push(`${botName} захватил ${stateName(bsid)}! 🟡`); }
+    else if (bsid) msgs.push(`${botName} ошибся.`);
     terrRef.current = newTerr; setTerritories(newTerr);
     const msg = msgs.join(" · ");
     setRoundMsg(msg); setRPhase("round_result");
-    // host broadcasts result to guest
     if (onlineModeRef.current && myRoleRef.current === "host") {
       sendOnline("round_result", { territories: newTerr, msg, confetti: pCorrect });
     }
@@ -4218,12 +4179,12 @@ function MapGameScreen({ onBack, session, profile }) {
   }
 
   function nextRound() {
-    // check if anything left to play
     if (checkGameOver(terrRef.current)) return;
 
+    pPickDoneRef.current = false;
     setPlayerPick(null); pPickRef.current = null;
     setBotPick(null); bPickRef.current = null;
-    setBotPickRevealed(false);
+    setBotPickRevealed(false); setBotPickMsg(null);
     setIsDuel(false); setIsBattle(false);
     setQuestion(null); qRef.current = null;
     setPAnswer(null); pAnsRef.current = null;
@@ -4235,8 +4196,10 @@ function MapGameScreen({ onBack, session, profile }) {
     setRPhase("territory_select");
     if (onlineModeRef.current) {
       if (myRoleRef.current === "host") sendOnline("next_round", {});
+    } else {
+      startLandTimer();
+      scheduleBotPick();
     }
-    // Bot mode: startNextPlayerTurn() handles the flow — no pre-pick here
   }
 
   function restartGame() {
@@ -4246,7 +4209,7 @@ function MapGameScreen({ onBack, session, profile }) {
     setOnlineSetup("choice"); setMyRole(null); myRoleRef.current = null;
     setRoomCode(""); setJoinInput("");
     channelRef.current?.unsubscribe(); channelRef.current = null;
-    setBotModeTurn("player"); setBotTurnMsg(null); setGameLog([]);
+    setBotPickMsg(null); setGameLog([]);
     setShowExitConfirm(false);
     setPhase("matchmaking"); nextRound();
   }
@@ -4296,7 +4259,7 @@ function MapGameScreen({ onBack, session, profile }) {
   }
   function getStroke(sid) {
     if (sid === playerPick) return "#c4b5fd";
-    if (sid === botPick && rPhase !== "territory_select") return "#fcd34d";
+    if (sid === botPick) return "#fcd34d";
     return "#0f0d1a";
   }
 
@@ -4579,45 +4542,33 @@ function MapGameScreen({ onBack, session, profile }) {
     </div>
   ) : null;
 
-  // ── BOT TURN DISPLAY ──
-  if (phase === "playing" && !onlineModeRef.current && botModeTurn === "bot") return (
-    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
-      <style>{ANIM_CSS}</style>
-      <ExitModal />
-      <ScoreBar />
-      <MapSvg />
-      <div style={{ marginTop: 10, padding: "18px 16px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 14, textAlign: "center", animation: "fadeUp 0.3s ease" }}>
-        <div style={{ fontSize: 28, marginBottom: 8, animation: "pulse 1.2s ease infinite" }}>🤔</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#f59e0b", marginBottom: 4 }}>{botTurnMsg || `${botName} думает...`}</div>
-        {botPick && botPickRevealed && (
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 8 }}>
-            Цель: <span style={{ color: "#fcd34d", fontWeight: 700 }}>{stateName(botPick)}</span>
-          </div>
-        )}
-      </div>
-      {gameLog.length > 0 && (
-        <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12 }}>
-          {gameLog.map((entry, i) => (
-            <div key={i} style={{ fontSize: 12, color: i === 0 ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)", marginBottom: i < gameLog.length - 1 ? 4 : 0 }}>{entry}</div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  // ── BOT MODE TERRITORY SELECT (with land timer) ──
+  // ── BOT MODE TERRITORY SELECT (parallel — both pick simultaneously) ──
   if (phase === "playing" && !onlineModeRef.current && rPhase === "territory_select") return (
     <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
       <style>{ANIM_CSS}</style>
       <ExitModal />
       <ScoreBar />
       <MapSvg />
-      <div style={{ marginTop: 10, padding: "11px 16px", background: "rgba(124,92,252,0.07)", border: "1px solid rgba(124,92,252,0.18)", borderRadius: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 13, color: "#a78bfa" }}>👆 Выбери землю для захвата</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: landTimer <= 5 ? "#ef4444" : "#fff", minWidth: 36, textAlign: "right" }}>{landTimer}с</div>
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        <div style={{ flex: 1, padding: "10px 12px", background: playerPick && playerPick !== "skip" ? "rgba(124,92,252,0.15)" : "rgba(124,92,252,0.07)", border: "1px solid rgba(124,92,252,0.25)", borderRadius: 12 }}>
+          <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, marginBottom: 2 }}>ТЫ</div>
+          <div style={{ fontSize: 12, color: "#fff" }}>
+            {playerPick && playerPick !== "skip" ? `👆 ${stateName(playerPick)}` : playerPick === "skip" ? "⏱ пропущено" : "👆 выбери землю"}
+          </div>
         </div>
-        <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.08)" }}>
+        <div style={{ flex: 1, padding: "10px 12px", background: botPick ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.04)", border: `1px solid ${botPick ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 12 }}>
+          <div style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700, marginBottom: 2 }}>{botName.toUpperCase()}</div>
+          <div style={{ fontSize: 12, color: "#fff" }}>
+            {botPick ? `🟡 ${stateName(botPick)}` : <span style={{ color: "rgba(255,255,255,0.3)", animation: "pulse 1s ease infinite", display: "inline-block" }}>выбирает...</span>}
+          </div>
+        </div>
+      </div>
+      <div style={{ marginTop: 8, padding: "8px 14px", background: "rgba(124,92,252,0.05)", border: "1px solid rgba(124,92,252,0.12)", borderRadius: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Выбери землю для захвата</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: landTimer <= 5 ? "#ef4444" : "rgba(255,255,255,0.6)" }}>{landTimer}с</div>
+        </div>
+        <div style={{ marginTop: 5, height: 2, borderRadius: 2, background: "rgba(255,255,255,0.08)" }}>
           <div style={{ height: "100%", borderRadius: 2, background: landTimer <= 5 ? "#ef4444" : "#7C5CFC", width: `${(landTimer / LAND_TIME) * 100}%`, transition: "width 1s linear, background 0.3s" }} />
         </div>
       </div>
@@ -4631,19 +4582,33 @@ function MapGameScreen({ onBack, session, profile }) {
     </div>
   );
 
-  // ── BOT MODE ANSWERING (with answer timer) ──
+  // ── BOT MODE ANSWERING (parallel — both answer the same question) ──
   if (phase === "playing" && !onlineModeRef.current && rPhase === "answering") return (
     <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
       <style>{ANIM_CSS}</style>
       {showConfetti && <Confetti />}
       <ExitModal />
       <ScoreBar />
-      <div style={{ padding: "10px 14px", background: "rgba(124,92,252,0.08)", border: "1px solid rgba(124,92,252,0.22)", borderRadius: 12, marginBottom: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 12, color: "#a78bfa", fontWeight: 700 }}>🟣 {stateName(playerPick)}</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: ansTimer <= 5 ? "#ef4444" : "#fff" }}>{ansTimer}с</div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <div style={{ flex: 1, padding: "8px 12px", background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.3)", borderRadius: 10 }}>
+          <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700 }}>ЦЕЛЬ — ТЫ</div>
+          <div style={{ fontSize: 12, color: "#fff", marginTop: 2 }}>🟣 {playerPick && playerPick !== "skip" ? stateName(playerPick) : "—"}</div>
         </div>
-        <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.08)" }}>
+        <div style={{ flex: 1, padding: "8px 12px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10 }}>
+          <div style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700 }}>ЦЕЛЬ — {botName.toUpperCase()}</div>
+          <div style={{ fontSize: 12, color: "#fff", marginTop: 2 }}>
+            🟡 {botPick ? stateName(botPick) : "—"}
+            {!botDone && <span style={{ marginLeft: 6, fontSize: 10, color: "rgba(255,255,255,0.3)", animation: "pulse 1s ease infinite", display: "inline-block" }}>отвечает...</span>}
+            {botDone && <span style={{ marginLeft: 6, fontSize: 10, color: botOk ? "#10b981" : "rgba(255,255,255,0.3)" }}>{botOk ? "✓" : "✗"}</span>}
+          </div>
+        </div>
+      </div>
+      <div style={{ padding: "8px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Ответь на вопрос</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: ansTimer <= 5 ? "#ef4444" : "rgba(255,255,255,0.6)" }}>{ansTimer}с</div>
+        </div>
+        <div style={{ marginTop: 5, height: 2, borderRadius: 2, background: "rgba(255,255,255,0.08)" }}>
           <div style={{ height: "100%", borderRadius: 2, background: ansTimer <= 5 ? "#ef4444" : "#7C5CFC", width: `${(ansTimer / ANS_TIME) * 100}%`, transition: "width 1s linear, background 0.3s" }} />
         </div>
       </div>
