@@ -2196,18 +2196,30 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   const [notHeardCount, setNotHeardCount] = useState(0);
   const [lastHeard, setLastHeard] = useState(null);
   const recRef = useRef(null);
+  const audioStreamRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const animRef = useRef(null);
 
-  // Short sounds (≤4 raw chars, or single-syllable): accept ANY detected speech
   const rawTarget = normalizeSpeech(card.audioText || card.de).replace(/\s+/g, "");
   const isShortSound = rawTarget.length <= 4;
 
+  function stopAudioDetect() {
+    cancelAnimationFrame(animRef.current);
+    if (audioStreamRef.current) { audioStreamRef.current.getTracks().forEach(t => t.stop()); audioStreamRef.current = null; }
+    if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => {}); audioCtxRef.current = null; }
+  }
+
   useEffect(() => {
-    return () => { if (recRef.current) { try { recRef.current.abort(); } catch(e) {} } };
+    return () => {
+      if (recRef.current) { try { recRef.current.abort(); } catch(e) {} }
+      stopAudioDetect();
+    };
   }, []);
 
   useEffect(() => {
     setMode("check"); setStatus("idle"); setRetryCount(0); setNotHeardCount(0); setLastHeard(null);
     if (recRef.current) { try { recRef.current.abort(); } catch(e) {} recRef.current = null; }
+    stopAudioDetect();
   }, [card.de]);
 
   const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de, card.audioText]);
@@ -2218,15 +2230,52 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     setTimeout(() => onAdvance(true), 1200);
   }
 
+  function startListeningForSound(acceptFn) {
+    // Amplitude detection via Web Audio API — no speech recognition needed.
+    // Any sound above noise floor within 4s → accept.
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      .then(stream => {
+        audioStreamRef.current = stream;
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtxRef.current = ctx;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 512;
+        ctx.createMediaStreamSource(stream).connect(analyser);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        let done = false;
+
+        const timeout = setTimeout(() => {
+          if (!done) { done = true; stopAudioDetect(); setStatus("not_heard"); }
+        }, 4000);
+
+        function tick() {
+          if (done) return;
+          analyser.getByteFrequencyData(data);
+          const max = Math.max(...data);
+          if (max > 25) {
+            done = true;
+            clearTimeout(timeout);
+            stopAudioDetect();
+            acceptFn();
+          } else {
+            animRef.current = requestAnimationFrame(tick);
+          }
+        }
+        animRef.current = requestAnimationFrame(tick);
+      })
+      .catch(err => {
+        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") setStatus("no_mic");
+        else setMode("self");
+      });
+  }
+
   function startListening() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { setMode("self"); return; }
     setStatus("listening");
 
-    // For single letters/short sounds: just count as done after 1s — recognition
-    // of isolated letter sounds in de-DE is unreliable by design.
     if (isShortSound) {
-      setTimeout(() => accept(null), 1000);
+      startListeningForSound(() => accept(null));
       return;
     }
 
