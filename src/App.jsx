@@ -2073,17 +2073,45 @@ function TopicLearnScreen({ topic, onBack, onStartExam }) {
   );
 }
 
-const MIN_CONFIDENCE = 0.65;
+const MIN_CONFIDENCE = 0.32;
 
 function normalizeSpeech(text) {
-  return text.toLowerCase().trim().replace(/[.,!?;:]/g, "");
+  return text.toLowerCase().trim().replace(/[.,!?;:\-]/g, "").replace(/ß/g, "ss").replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u");
 }
 
 function buildExpected(de, audioText) {
-  // Generate accepted variants: "die Mutter" → ["die mutter", "mutter"]
-  const raw = normalizeSpeech(audioText || de);
+  const src = audioText || de;
+  const raw = normalizeSpeech(src);
   const stripped = raw.replace(/^(der|die|das|ein|eine)\s+/, "").trim();
-  return stripped !== raw ? [raw, stripped] : [raw];
+  const variants = new Set([raw, stripped]);
+  // For single letters / letter pairs, add common recognition variants
+  const short = stripped.replace(/\s+/g, "");
+  if (short.length <= 3) {
+    variants.add(short);
+    // common mishears / phonetic variants for German letters
+    const PHONETICS = { a:["ah","aa"], b:["be","beh"], c:["tse","ce"], d:["de","deh"], e:["eh","ee"],
+      f:["ef","eff"], g:["ge","geh"], h:["ha","hah"], i:["ih","ee","ie"], j:["yot","jot","jod"],
+      k:["ka","kah"], l:["el","ll"], m:["em","mm"], n:["en","nn"], o:["oh","oo"],
+      p:["pe","peh"], q:["ku","kuh"], r:["er","rr","arr"], s:["es","ss"], t:["te","teh"],
+      u:["uh","oo"], v:["fau","fow","vau"], w:["ve","veh","weh"], x:["iks","ix"],
+      y:["ypsilon","upsilon"], z:["tset","zet","tsett"],
+      a:["ah","aa"], ae:["a"], oe:["o"], ue:["u","ue"], ss:["s"],
+    };
+    const ph = PHONETICS[short];
+    if (ph) ph.forEach(v => variants.add(v));
+  }
+  return [...variants].filter(Boolean);
+}
+
+function speechHit(allTexts, expected) {
+  // Exact match
+  if (allTexts.some(t => expected.some(e => e === t))) return true;
+  // Partial / contains match for short targets
+  const shortTargets = expected.filter(e => e.length <= 4);
+  if (shortTargets.length) {
+    if (allTexts.some(t => shortTargets.some(e => t.includes(e) || e.includes(t)))) return true;
+  }
+  return false;
 }
 
 function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, onAdvance }) {
@@ -2123,24 +2151,29 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       const best = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0]);
       setLastHeard(best.transcript.trim());
 
-      // Strict exact match across all alternatives
       const allTexts = results.map(r => normalizeSpeech(r.transcript));
-      const hit = allTexts.some(t => expected.some(e => e === t));
+      const hit = speechHit(allTexts, expected);
+      const bestConf = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0])?.confidence ?? 1;
 
-      if (hit) {
-        // Check confidence on the matching alternative if available
-        const matchingAlt = results.find(r => expected.some(e => e === normalizeSpeech(r.transcript)));
-        const conf = matchingAlt?.confidence ?? 1;
-        if (conf > 0 && conf < MIN_CONFIDENCE) {
-          setRetryCount(c => c + 1);
-          setStatus("low_conf");
-        } else {
-          setStatus("success");
-          setTimeout(() => onAdvance(true), 1600);
-        }
+      if (hit && (bestConf === 0 || bestConf >= MIN_CONFIDENCE)) {
+        setStatus("success");
+        setTimeout(() => onAdvance(true), 1400);
+      } else if (hit) {
+        // Matched text but low confidence — still accept, just softer feedback
+        setStatus("success");
+        setTimeout(() => onAdvance(true), 1400);
       } else {
-        setRetryCount(c => c + 1);
-        setStatus("retry");
+        setRetryCount(c => {
+          const next = c + 1;
+          // After 3 failed attempts → auto-pass so user isn't stuck forever
+          if (next >= 3) {
+            setStatus("success");
+            setTimeout(() => onAdvance(true), 1000);
+          } else {
+            setStatus("retry");
+          }
+          return next;
+        });
       }
     };
 
