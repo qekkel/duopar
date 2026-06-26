@@ -3514,23 +3514,6 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
     setTimeout(advance, 900);
   }
 
-  // Pronounce question: render ExamPronounceQ and skip normal question flow
-  if (q?.type === "pronounce") {
-    return (
-      <div style={{ paddingTop: 40 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0 }}>← Назад</button>
-          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-            <div style={{ height: "100%", borderRadius: 2, background: "#f59e0b", width: `${(qi / total) * 100}%`, transition: "width 0.4s" }} />
-          </div>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{qi + 1}/{total}</span>
-        </div>
-        <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>⚡ Экзамен · {topic.title}</div>
-        <ExamPronounceQ key={qi} card={q.card} onDone={(ok) => { if (ok) { playSound("correct"); setScore(s => s + 1); } advance(); }} />
-      </div>
-    );
-  }
-
   if (finished) {
     const passed = score >= passMark;
     const nearPass = !passed && score >= Math.floor(total * 0.5);
@@ -3617,6 +3600,22 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
             </button>
           </div>
         )}
+      </div>
+    );
+  }
+
+  if (q?.type === "pronounce") {
+    return (
+      <div style={{ paddingTop: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+          <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", padding: 0 }}>← Назад</button>
+          <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+            <div style={{ height: "100%", borderRadius: 2, background: "#f59e0b", width: `${(qi / total) * 100}%`, transition: "width 0.4s" }} />
+          </div>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>{qi + 1}/{total}</span>
+        </div>
+        <div style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>⚡ Экзамен · {topic.title}</div>
+        <ExamPronounceQ key={qi} card={q.card} onDone={(ok) => { if (ok) { playSound("correct"); setScore(s => s + 1); } advance(); }} />
       </div>
     );
   }
