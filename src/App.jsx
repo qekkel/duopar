@@ -1531,8 +1531,38 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   });
   const STARS_KEY = `duopar_stars_${userId || "guest"}`;
   const DAILY_KEY = `duopar_daily_${userId || "guest"}`;
+  const AWARDED_KEY = `duopar_awarded_${userId || "guest"}`;
   const [stars, setStars] = useState(() => parseInt(localStorage.getItem(STARS_KEY) || "0", 10));
+  const [displayStars, setDisplayStars] = useState(() => parseInt(localStorage.getItem(STARS_KEY) || "0", 10));
   const [starsAnim, setStarsAnim] = useState(null); // { delta, label }
+  const countUpRef = useRef(null);
+
+  // Animate star counter up whenever stars increases
+  useEffect(() => {
+    if (displayStars === stars) return;
+    clearInterval(countUpRef.current);
+    const diff = stars - displayStars;
+    if (diff <= 0) { setDisplayStars(stars); return; }
+    const frames = Math.min(diff, 25);
+    const stepSize = Math.ceil(diff / frames);
+    countUpRef.current = setInterval(() => {
+      setDisplayStars(prev => {
+        const next = Math.min(prev + stepSize, stars);
+        if (next >= stars) { clearInterval(countUpRef.current); return stars; }
+        return next;
+      });
+    }, 55);
+    return () => clearInterval(countUpRef.current);
+  }, [stars]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function getAwarded() {
+    try { return JSON.parse(localStorage.getItem(AWARDED_KEY) || "{}"); } catch { return {}; }
+  }
+  function isAwarded(key) { return !!getAwarded()[key]; }
+  function markAwarded(key) {
+    const a = getAwarded(); a[key] = true;
+    localStorage.setItem(AWARDED_KEY, JSON.stringify(a));
+  }
 
   function awardStars(delta, label) {
     setStars(prev => {
@@ -1541,7 +1571,31 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       return n;
     });
     setStarsAnim({ delta, label });
-    setTimeout(() => setStarsAnim(null), 2400);
+    setTimeout(() => setStarsAnim(null), 2800);
+  }
+
+  // One-time award: if already awarded, skip base delta but still allow daily bonus separately
+  function awardStarsOnce(delta, label, awardKey) {
+    if (awardKey && isAwarded(awardKey)) return;
+    if (awardKey) markAwarded(awardKey);
+    awardStars(delta, label);
+  }
+
+  // Per-level star stats for earned/max display
+  function getLevelStarData(lvl) {
+    const topics = CURRICULUM.filter(t => t.level === lvl);
+    const awarded = getAwarded();
+    let earned = 0;
+    let max = 25; // level exam
+    for (const t of topics) {
+      max += 5; // lesson
+      if (t.exam?.length) max += 15; // topic exam
+      // Count as earned if awarded via new system OR via old completedTopics tracking
+      if (awarded[`l_${t.id}`] || completedTopics.has(t.id)) earned += 5;
+      if (awarded[`e_${t.id}`]) earned += 15;
+    }
+    if (awarded[`lv_${lvl}`] || passedLevelExams.has(lvl)) earned += 25;
+    return { earned, max };
   }
   function checkDailyBonus(type) {
     const today = new Date().toISOString().split("T")[0];
@@ -1601,7 +1655,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     const LVL_LABEL = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" };
     const nextLvlIdx = LEVELS.indexOf(levelExamLevel) + 1;
     const nextLvlLabel = nextLvlIdx < LEVELS.length ? LVL_LABEL[LEVELS[nextLvlIdx]] : null;
-    const handlePass = () => { awardStars(25, "+25 ⭐ Уровень сдан! 🏆"); passLevelExam(levelExamLevel); };
+    const handlePass = () => { awardStarsOnce(25, "+25 ⭐ Уровень сдан! 🏆", `lv_${levelExamLevel}`); passLevelExam(levelExamLevel); };
     if (levelExamLevel === "PH") {
       return <PHLevelExamScreen onBack={() => setMode(null)} onPass={handlePass} nextLvlLabel={nextLvlLabel} />;
     }
@@ -1640,14 +1694,15 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             return updated;
           });
           const daily = checkDailyBonus("lesson");
-          awardStars(5 + (daily ? 5 : 0), daily ? "+10 ⭐ (+ дневной бонус!)" : "+5 ⭐");
+          awardStarsOnce(5, "+5 ⭐ Урок пройден!", `l_${activeTopicId}`);
+          if (daily) awardStars(5, "+5 ⭐ Дневной бонус!");
           setMode("detail");
         }}
       />;
     }
 
     if (mode === "exam") {
-      return <TopicExamScreen topic={topic} topicId={activeTopicId} isEarlyCheck={examEarlyCheck} onBack={() => setMode("detail")} onPass={() => { awardStars(15, "+15 ⭐ Тема сдана!"); onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
+      return <TopicExamScreen topic={topic} topicId={activeTopicId} isEarlyCheck={examEarlyCheck} onBack={() => setMode("detail")} onPass={() => { awardStarsOnce(15, "+15 ⭐ Тема сдана! 🎉", `e_${activeTopicId}`); onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }} />;
     }
 
 
@@ -1805,19 +1860,32 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
         })}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>{CURRICULUM_LEVELS[lvl].label}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 12px" }}>
-          <span style={{ fontSize: 15 }}>⭐</span>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d" }}>{stars}</span>
-        </div>
-      </div>
+      {(() => {
+        const { earned, max } = getLevelStarData(lvl);
+        return (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>{CURRICULUM_LEVELS[lvl].label}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 12px" }}>
+              <span style={{ fontSize: 15, transition: "transform 0.15s", ...(displayStars !== stars ? { transform: "scale(1.3)" } : {}) }}>⭐</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d" }}>{earned}</span>
+              <span style={{ fontSize: 11, color: "rgba(245,158,11,0.45)", fontWeight: 600 }}>/ {max}</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {starsAnim && (
-        <div style={{ position: "fixed", top: 80, left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: "rgba(245,158,11,0.95)", color: "#1a1000", borderRadius: 20, padding: "10px 22px", fontSize: 15, fontWeight: 800, boxShadow: "0 4px 20px rgba(245,158,11,0.5)", animation: "fadeUp 2.4s ease forwards", pointerEvents: "none", whiteSpace: "nowrap" }}>
-          {starsAnim.label}
+        <div style={{ position: "fixed", top: 72, left: "50%", transform: "translateX(-50%)", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, pointerEvents: "none" }}>
+          <div style={{ background: "linear-gradient(135deg,#f59e0b,#fcd34d)", color: "#1a1000", borderRadius: 24, padding: "12px 28px", fontSize: 17, fontWeight: 900, boxShadow: "0 6px 24px rgba(245,158,11,0.55)", animation: "starsPopup 2.8s ease forwards", whiteSpace: "nowrap" }}>
+            {starsAnim.label}
+          </div>
+          <div style={{ fontSize: 22, animation: "starSpin 2.8s ease forwards", transformOrigin: "center" }}>✨</div>
         </div>
       )}
+      <style>{`
+        @keyframes starsPopup { 0%{opacity:0;transform:translateX(-50%) translateY(10px) scale(0.85)} 15%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.05)} 25%{transform:translateX(-50%) translateY(0) scale(1)} 75%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} 100%{opacity:0;transform:translateX(-50%) translateY(-16px) scale(0.9)} }
+        @keyframes starSpin { 0%{opacity:0;transform:scale(0) rotate(-90deg)} 20%{opacity:1;transform:scale(1.3) rotate(10deg)} 40%{transform:scale(1) rotate(0)} 80%{opacity:1} 100%{opacity:0} }
+      `}</style>
 
       {/* Locked level banner */}
       {!isLevelUnlocked(lvl) && (
@@ -4134,6 +4202,7 @@ function MapGameScreen({ onBack, session, profile }) {
   const [botCat, setBotCat] = useState(null);
   const [autoPickTerr, setAutoPickTerr] = useState(null); // territory being auto-selected (blink)
   const [roundMsg, setRoundMsg] = useState(null);
+  const [roundContext, setRoundContext] = useState("normal"); // "normal"|"duel"|"player_attack"|"bot_attack"
   const [showConfetti, setShowConfetti] = useState(false);
 
   // ── BOT MODE PARALLEL STATE ──
@@ -4161,6 +4230,9 @@ function MapGameScreen({ onBack, session, profile }) {
   const botTurnRef = useRef(null);
   const pPickDoneRef = useRef(false); // true once player picked or timer expired
   const usedQIdsRef = useRef(new Set());
+  const duelTypeRef = useRef("neutral_duel"); // "neutral_duel" | "player_attack" | "bot_attack"
+  const contestedSidRef = useRef(null);       // territory being fought over in a duel
+  const gameOverRef = useRef(false);          // true once the game is finished
 
   // ── HINT / STARS STATE ──
   const _uid = session?.user?.id || "guest";
@@ -4286,32 +4358,68 @@ function MapGameScreen({ onBack, session, profile }) {
   }
 
   function runBotParallelPick() {
+    if (gameOverRef.current) return;
     const allIds = Object.values(STATE_ID_MAP);
-    const available = allIds.filter(id => !terrRef.current[id]);
-    if (!available.length) return;
+    const neutral = allIds.filter(id => !terrRef.current[id]);
+    const playerOwned = allIds.filter(id => terrRef.current[id] === "player");
+    // Prefer neutral; if none left, bot attacks player territory
+    const available = neutral.length ? neutral : playerOwned;
+    if (!available.length) { checkGameOver(terrRef.current); return; }
     const land = available[Math.floor(Math.random() * available.length)];
     setBotPick(land); bPickRef.current = land; setBotPickRevealed(true);
-    setBotPickMsg(`${botName} выбрал ${stateName(land)}`);
+    const isAttack = terrRef.current[land] === "player";
+    setBotPickMsg(isAttack ? `${botName} атакует ${stateName(land)}!` : `${botName} выбрал ${stateName(land)}`);
     if (pPickDoneRef.current) proceedToParallelAnswering();
   }
 
   function proceedToParallelAnswering() {
+    if (gameOverRef.current) return;
     stopLandTimer();
-    // Brief pause to show both picks on the map before moving to question
+    const pSid = pPickRef.current;
+    const bSid = bPickRef.current;
+    const pValid = pSid && pSid !== "skip";
+    const bValid = bSid && bSid !== "skip";
+
+    // Determine scenario BEFORE showing the reveal screen
+    let ctx = "normal";
+    if (pValid && bValid && pSid === bSid && !terrRef.current[pSid]) {
+      ctx = "duel"; // both picked same neutral → duel
+    } else if (pValid && terrRef.current[pSid] === "bot") {
+      ctx = "player_attack"; // player attacks bot territory
+    } else if (bValid && terrRef.current[bSid] === "player") {
+      ctx = "bot_attack"; // bot attacks player territory
+    }
+    setRoundContext(ctx);
     setRPhase("picks_revealed");
     clearTimeout(botTurnRef.current);
+
     botTurnRef.current = setTimeout(() => {
-      const q = pickQ(null);
-      setQuestion(q); qRef.current = q;
-      setPAnswer(null); pAnsRef.current = null;
-      setEliminatedOpts(new Set()); setHintRule(null); setHintUsedThisQ(false); setShowHintMenu(false);
-      setBotDone(false); setBotOk(null); botOkRef.current = null;
-      setRPhase("answering");
-      startAnsTimer();
-      botTurnRef.current = setTimeout(() => {
-        const ok = Math.random() < 0.65;
-        botOkRef.current = ok; setBotOk(ok); setBotDone(true);
-      }, 1500 + Math.random() * 2000);
+      setEliminatedOpts(new Set()); setHintRule(null); setHintUsedThisQ(false);
+      if (ctx === "duel") {
+        duelTypeRef.current = "neutral_duel";
+        contestedSidRef.current = pSid;
+        startDuel();
+      } else if (ctx === "player_attack") {
+        duelTypeRef.current = "player_attack";
+        contestedSidRef.current = pSid;
+        startDuel();
+      } else if (ctx === "bot_attack") {
+        duelTypeRef.current = "bot_attack";
+        contestedSidRef.current = bSid;
+        startDuel();
+      } else {
+        // Normal parallel answering: each picks different neutral territory
+        const q = pickQ(null);
+        setQuestion(q); qRef.current = q;
+        setPAnswer(null); pAnsRef.current = null;
+        setBotDone(false); setBotOk(null); botOkRef.current = null;
+        setRPhase("answering");
+        startAnsTimer();
+        botTurnRef.current = setTimeout(() => {
+          const ok = Math.random() < 0.65;
+          botOkRef.current = ok; setBotOk(ok); setBotDone(true);
+        }, 1500 + Math.random() * 2000);
+      }
     }, 1600);
   }
 
@@ -4607,8 +4715,9 @@ function MapGameScreen({ onBack, session, profile }) {
     loadBattleQuestion(nextR);
   }
 
-  // ── DUEL (both picked same unclaimed territory) ──
-  function startDuel(sid) {
+  // ── DUEL: used for neutral_duel, player_attack, bot_attack ──
+  // contestedSidRef and duelTypeRef must be set before calling
+  function startDuel() {
     const q = pickQ(null);
     setQuestion(q); qRef.current = q;
     setPAnswer(null); pAnsRef.current = null;
@@ -4669,13 +4778,51 @@ function MapGameScreen({ onBack, session, profile }) {
     clearTimeout(botDuelRef.current); clearInterval(duelIvRef.current);
     const pCorrect = pIdx !== null && pIdx === qRef.current?.correct;
     const bCorrect = botOkRef.current === true;
-    const sid = pPickRef.current;
+    const sid = contestedSidRef.current;
     const newTerr = { ...terrRef.current };
     let msg;
-    if (pCorrect) { newTerr[sid] = "player"; msg = bCorrect ? "Оба правы, но ты быстрее! 🏆" : "Правильно! Земля твоя! 🏆"; setShowConfetti(true); }
-    else if (bCorrect) { newTerr[sid] = "bot"; msg = `${botName} ответил правильно и захватил землю!`; }
-    else { msg = "Никто не ответил правильно — земля осталась свободной."; }
-    terrRef.current = newTerr; setTerritories(newTerr); setRoundMsg(msg); setRPhase("round_result");
+
+    if (duelTypeRef.current === "neutral_duel") {
+      if (pCorrect) {
+        newTerr[sid] = "player";
+        msg = bCorrect ? `Оба правы — ты быстрее! ${stateName(sid)} твоя! 🏆` : `Правильно! ${stateName(sid)} твоя! 🏆`;
+        setShowConfetti(true);
+      } else if (bCorrect) {
+        newTerr[sid] = "bot";
+        msg = `${botName} выиграл дуэль! ${stateName(sid)} захвачена.`;
+      } else {
+        msg = `Никто не ответил — ${stateName(sid)} осталась свободной.`;
+      }
+    } else if (duelTypeRef.current === "player_attack") {
+      // Defender (bot) wins on tie — attacker must win outright
+      if (pCorrect && !bCorrect) {
+        newTerr[sid] = "player";
+        msg = `Атака успешна! ${stateName(sid)} теперь твоя! 🏆`;
+        setShowConfetti(true);
+      } else {
+        msg = `${botName} защитил ${stateName(sid)}!`;
+      }
+    } else if (duelTypeRef.current === "bot_attack") {
+      // Defender (player) wins on tie
+      if (bCorrect && !pCorrect) {
+        newTerr[sid] = "bot";
+        msg = `${botName} захватил ${stateName(sid)}!`;
+      } else {
+        msg = pCorrect ? `Ты отбил атаку на ${stateName(sid)}! 🛡️` : `Ты удержал ${stateName(sid)}! 🛡️`;
+        if (pCorrect) setShowConfetti(true);
+      }
+    }
+
+    terrRef.current = newTerr; setTerritories(newTerr);
+    // In attack scenarios, also apply the non-contested pick if it was neutral
+    if (duelTypeRef.current === "bot_attack") {
+      const pSid = pPickRef.current;
+      if (pSid && pSid !== "skip" && !terrRef.current[pSid]) {
+        // Bot attacked, but player's own pick was a neutral territory
+        // Player already defending — don't reward neutral pick this round
+      }
+    }
+    setRoundMsg(msg); setRPhase("round_result");
     checkGameOver(newTerr);
   }
 
@@ -4768,9 +4915,12 @@ function MapGameScreen({ onBack, session, profile }) {
   }
 
   function checkGameOver(terr) {
+    if (gameOverRef.current) return true;
     const allIds = Object.values(STATE_ID_MAP);
     const unclaimed = allIds.filter(id => !terr[id]);
     if (unclaimed.length === 0) {
+      gameOverRef.current = true;
+      stopLandTimer(); stopAnsTimer(); clearTimeout(botTurnRef.current);
       const ps = Object.values(terr).filter(v => v === "player").length;
       const bs = Object.values(terr).filter(v => v === "bot").length;
       const result = ps > bs ? "win" : ps < bs ? "loss" : "draw";
@@ -4786,7 +4936,7 @@ function MapGameScreen({ onBack, session, profile }) {
   }
 
   function nextRound() {
-    if (checkGameOver(terrRef.current)) return;
+    if (gameOverRef.current || checkGameOver(terrRef.current)) return;
 
     pPickDoneRef.current = false;
     setPlayerPick(null); pPickRef.current = null;
@@ -4798,7 +4948,8 @@ function MapGameScreen({ onBack, session, profile }) {
     setBotDone(false); setBotOk(null); botOkRef.current = null;
     setBattleScore({ player: 0, bot: 0 }); battleScoreRef.current = { player: 0, bot: 0 };
     setBattleRound(0); battleRoundRef.current = 0;
-    setRoundMsg(null); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
+    setRoundMsg(null); setRoundContext("normal"); setDuelSecs(10); setDuelPlayerMs(null); setDuelBotMs(null); setShowConfetti(false);
+    duelTypeRef.current = "neutral_duel"; contestedSidRef.current = null;
     setTopicTurn(t => t === "player" ? "bot" : "player"); setPlayerCat(null); setBotCat(null); setAvailableCats([]);
     setRPhase("territory_select");
     if (onlineModeRef.current) {
@@ -4812,6 +4963,8 @@ function MapGameScreen({ onBack, session, profile }) {
   function restartGame() {
     stopLandTimer(); stopAnsTimer(); clearTimeout(botTurnRef.current);
     usedQIdsRef.current.clear();
+    gameOverRef.current = false;
+    duelTypeRef.current = "neutral_duel"; contestedSidRef.current = null;
     terrRef.current = {}; setTerritories({});
     setOnlineMode(false); onlineModeRef.current = false;
     setOnlineSetup("choice"); setMyRole(null); myRoleRef.current = null;
@@ -5260,31 +5413,42 @@ function MapGameScreen({ onBack, session, profile }) {
   );
 
   // ── PICKS REVEALED (brief pause showing both selections before question) ──
-  if (phase === "playing" && !onlineModeRef.current && rPhase === "picks_revealed") return (
-    <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
-      <style>{ANIM_CSS}</style>
-      <ExitModal />
-      <ScoreBar />
-      <MapSvg />
-      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-        <div style={{ flex: 1, padding: "12px 14px", background: "rgba(124,92,252,0.18)", border: "2px solid rgba(124,92,252,0.55)", borderRadius: 12, animation: "pulse 0.8s ease 2" }}>
-          <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, marginBottom: 3 }}>ТЫ ВЫБРАЛ</div>
-          <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
-            👆 {playerPick && playerPick !== "skip" ? stateName(playerPick) : "—"}
+  if (phase === "playing" && !onlineModeRef.current && rPhase === "picks_revealed") {
+    const ctxLabel = roundContext === "duel"
+      ? { icon: "⚔️", text: "Спорная территория — дуэль!", color: "#f87171", border: "rgba(248,113,113,0.5)" }
+      : roundContext === "player_attack"
+      ? { icon: "⚔️", text: "Ты атакуешь землю соперника!", color: "#fbbf24", border: "rgba(251,191,36,0.5)" }
+      : roundContext === "bot_attack"
+      ? { icon: "🛡️", text: "Соперник атакует твою землю. Защищайся!", color: "#f87171", border: "rgba(248,113,113,0.5)" }
+      : { icon: "▶️", text: "Сейчас будет вопрос…", color: "rgba(255,255,255,0.45)", border: "rgba(255,255,255,0.1)" };
+    return (
+      <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
+        <style>{ANIM_CSS}</style>
+        <ExitModal />
+        <ScoreBar />
+        <MapSvg />
+        <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+          <div style={{ flex: 1, padding: "12px 14px", background: "rgba(124,92,252,0.18)", border: "2px solid rgba(124,92,252,0.55)", borderRadius: 12 }}>
+            <div style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, marginBottom: 3 }}>ТЫ ВЫБРАЛ</div>
+            <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
+              {playerPick && playerPick !== "skip" ? `👆 ${stateName(playerPick)}` : "⏱ пропущено"}
+            </div>
+          </div>
+          <div style={{ flex: 1, padding: "12px 14px", background: "rgba(245,158,11,0.18)", border: "2px solid rgba(245,158,11,0.55)", borderRadius: 12 }}>
+            <div style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700, marginBottom: 3 }}>{botName.toUpperCase()} ВЫБРАЛ</div>
+            <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
+              🟡 {botPick ? stateName(botPick) : "—"}
+            </div>
           </div>
         </div>
-        <div style={{ flex: 1, padding: "12px 14px", background: "rgba(245,158,11,0.18)", border: "2px solid rgba(245,158,11,0.55)", borderRadius: 12, animation: "pulse 0.8s ease 2" }}>
-          <div style={{ fontSize: 10, color: "#f59e0b", fontWeight: 700, marginBottom: 3 }}>{botName.toUpperCase()} ВЫБРАЛ</div>
-          <div style={{ fontSize: 14, color: "#fff", fontWeight: 700 }}>
-            🟡 {botPick ? stateName(botPick) : "—"}
+        <div style={{ marginTop: 10, padding: "12px 16px", background: roundContext === "normal" ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.3)", border: `2px solid ${ctxLabel.border}`, borderRadius: 12, textAlign: "center" }}>
+          <div style={{ fontSize: 14, fontWeight: roundContext !== "normal" ? 800 : 400, color: ctxLabel.color }}>
+            {ctxLabel.icon} {ctxLabel.text}
           </div>
         </div>
       </div>
-      <div style={{ marginTop: 10, padding: "10px 14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, textAlign: "center" }}>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>Сейчас будет вопрос…</div>
-      </div>
-    </div>
-  );
+    );
+  }
 
   // ── BOT MODE ANSWERING (parallel — both answer the same question) ──
   if (phase === "playing" && !onlineModeRef.current && rPhase === "answering") return (
@@ -5391,8 +5555,12 @@ function MapGameScreen({ onBack, session, profile }) {
       <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 14, padding: "10px 14px", marginBottom: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <div style={{ fontSize: 10, color: "#f87171", fontWeight: 700, letterSpacing: 1 }}>⚡ ДУЭЛЬ ЗА {stateName(playerPick).toUpperCase()}</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Ответь быстрее {botName}!</div>
+            {duelTypeRef.current === "bot_attack"
+              ? <><div style={{ fontSize: 10, color: "#f87171", fontWeight: 700, letterSpacing: 1 }}>🛡️ ЗАЩИТА {stateName(contestedSidRef.current || playerPick || "").toUpperCase()}</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Соперник атакует твою землю!</div></>
+              : duelTypeRef.current === "player_attack"
+              ? <><div style={{ fontSize: 10, color: "#fbbf24", fontWeight: 700, letterSpacing: 1 }}>⚔️ АТАКА НА {stateName(contestedSidRef.current || playerPick || "").toUpperCase()}</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Победи, чтобы захватить землю!</div></>
+              : <><div style={{ fontSize: 10, color: "#f87171", fontWeight: 700, letterSpacing: 1 }}>⚔️ ДУЭЛЬ ЗА {stateName(contestedSidRef.current || playerPick || "").toUpperCase()}</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Ответь быстрее {botName}!</div></>
+            }
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, color: duelSecs <= 3 ? "#ef4444" : "#fff", transition: "color 0.3s", minWidth: 40, textAlign: "right" }}>{duelSecs}с</div>
         </div>
