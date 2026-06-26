@@ -3360,8 +3360,9 @@ function buildLevelExamQuestions(lvl) {
 }
 
 function ExamPronounceQ({ card, onDone }) {
-  const [status, setStatus] = useState("idle"); // idle | listening | success | fail
+  const [status, setStatus] = useState("idle"); // idle | listening | success | not_heard | retry
   const [barHeights, setBarHeights] = useState([4,7,12,9,5,10,4]);
+  const [retryCount, setRetryCount] = useState(0);
   const recRef = useRef(null); const recRuRef = useRef(null);
   const vizStreamRef = useRef(null); const vizCtxRef = useRef(null); const vizAnimRef = useRef(null);
 
@@ -3401,15 +3402,17 @@ function ExamPronounceQ({ card, onDone }) {
     }).catch(() => {});
   }
 
+  function accept(ok) { stopAll(); stopVizLocal(); setStatus("success"); playSound("correct"); setTimeout(() => onDone(ok), 1000); }
+
   function listen() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { done(true); return; }
+    if (!SR) { accept(true); return; }
     setStatus("listening"); startVizLocal();
     let finished = false, errCount = 0;
-    function finish(ok) {
-      if (finished) return; finished = true; stopAll(); stopVizLocal();
-      setStatus(ok ? "success" : "fail");
-      setTimeout(() => onDone(ok), 900);
+    function onHit() { if (finished) return; finished = true; accept(true); }
+    function onMiss() {
+      if (finished) return; errCount++;
+      if (errCount >= 2) { finished = true; stopAll(); stopVizLocal(); setStatus("not_heard"); }
     }
     function makeRec(lang) {
       const rec = new SR(); rec.lang = lang; rec.interimResults = true; rec.maxAlternatives = 5;
@@ -3420,37 +3423,45 @@ function ExamPronounceQ({ card, onDone }) {
         const hit = lang === "de-DE"
           ? speechHit(texts.map(t => normalizeSpeech(t)), expected)
           : texts.some(t => ruLetterHit(t, letter));
-        if (hit) finish(true);
-        else if (item.isFinal) { errCount++; if (errCount >= 2) finish(false); }
+        if (hit) onHit();
+        else if (item.isFinal) onMiss();
       };
-      rec.onerror = () => { errCount++; if (errCount >= 2) finish(false); };
-      rec.onend = () => { if (!finished) { errCount++; if (errCount >= 2) finish(false); } };
+      rec.onerror = () => onMiss();
+      rec.onend = () => { if (!finished) onMiss(); };
       return rec;
     }
     recRef.current = makeRec("de-DE"); recRuRef.current = makeRec("ru-RU");
     recRef.current.start(); recRuRef.current.start();
   }
 
-  function done(ok) { stopAll(); stopVizLocal(); setStatus(ok ? "success" : "fail"); setTimeout(() => onDone(ok), 800); }
+  const showRetryBtn = status === "not_heard" || status === "retry";
 
   return (
     <div style={{ textAlign: "center", padding: "20px 0" }}>
       <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>Произнеси букву вслух:</div>
       <div style={{ fontSize: 96, fontWeight: 800, color: "#fff", letterSpacing: 8, marginBottom: 20 }}>{card.de}</div>
       <AudioButton text={letter} size={32} style={{ margin: "0 auto 20px" }} />
+
       {status === "listening" && (
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, height: 44, marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, height: 44, marginBottom: 20 }}>
           {barHeights.map((h, i) => (
             <div key={i} style={{ width: 5, borderRadius: 3, background: h > 10 ? "#a78bfa" : "rgba(167,139,250,0.35)", height: `${h}px`, transition: "height 0.05s ease-out" }} />
           ))}
         </div>
       )}
-      {status === "success" && <div style={{ color: "#10b981", fontWeight: 700, fontSize: 18, marginBottom: 16 }}>✓ Отлично!</div>}
-      {status === "fail" && <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, marginBottom: 16 }}>Идём дальше</div>}
-      {status === "idle" && (
+      {status === "success" && <div style={{ color: "#10b981", fontWeight: 700, fontSize: 18, marginBottom: 20 }}>✓ Отлично!</div>}
+      {status === "not_heard" && <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, marginBottom: 16 }}>Не уловил звук. Попробуй ещё раз.</div>}
+
+      {status !== "listening" && status !== "success" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={listen} style={{ padding: "14px 24px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎙️ Произнести</button>
-          <button onClick={() => done(true)} style={{ padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "none", fontSize: 13, cursor: "pointer" }}>✓ Я произнёс/произнесла</button>
+          <button onClick={() => { setRetryCount(c => c + 1); listen(); }}
+            style={{ padding: "14px 24px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
+            🎙️ {showRetryBtn ? "Попробовать ещё раз" : "Произнести"}
+          </button>
+          <button onClick={() => accept(true)}
+            style={{ padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "none", fontSize: 13, cursor: "pointer" }}>
+            ✓ Я произнёс/произнесла
+          </button>
         </div>
       )}
     </div>
