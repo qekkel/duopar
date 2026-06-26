@@ -2772,6 +2772,93 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   );
 }
 
+// Inline pronunciation widget used inside intro cards (for regular German words, not letter cards)
+function WordPronounceInline({ card, onDone }) {
+  const [status, setStatus] = useState("idle"); // idle | listening | success | not_heard
+  const [barHeights, setBarHeights] = useState([4, 7, 12, 9, 5, 10, 4]);
+  const recRef = useRef(null);
+  const vizStreamRef = useRef(null); const vizCtxRef = useRef(null); const vizAnimRef = useRef(null);
+  const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de]);
+
+  useEffect(() => () => { stopAll(); stopVizW(); }, []);
+
+  function stopAll() {
+    if (recRef.current) { try { recRef.current.abort(); } catch (e) {} recRef.current = null; }
+  }
+  function stopVizW() {
+    cancelAnimationFrame(vizAnimRef.current);
+    if (vizStreamRef.current) { vizStreamRef.current.getTracks().forEach(t => t.stop()); vizStreamRef.current = null; }
+    if (vizCtxRef.current) { vizCtxRef.current.close().catch(() => {}); vizCtxRef.current = null; }
+    setBarHeights([4, 7, 12, 9, 5, 10, 4]);
+  }
+  function startVizW() {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+      vizStreamRef.current = stream;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      vizCtxRef.current = ctx;
+      const analyser = ctx.createAnalyser(); analyser.fftSize = 128;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      function tick() {
+        analyser.getByteFrequencyData(data);
+        const N = 7, bucket = Math.floor(data.length / N);
+        setBarHeights(Array.from({ length: N }, (_, i) => {
+          const avg = data.slice(i * bucket, (i + 1) * bucket).reduce((s, v) => s + v, 0) / bucket;
+          return Math.max(4, Math.min(38, avg * 0.45));
+        }));
+        vizAnimRef.current = requestAnimationFrame(tick);
+      }
+      vizAnimRef.current = requestAnimationFrame(tick);
+    }).catch(() => {});
+  }
+
+  function listen() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { accept(); return; }
+    setStatus("listening"); startVizW();
+    let done = false, errCount = 0;
+    function onHit() { if (done) return; done = true; stopAll(); stopVizW(); setStatus("success"); playSound("correct"); setTimeout(onDone, 900); }
+    function onMiss() { if (done) return; errCount++; if (errCount >= 2) { done = true; stopAll(); stopVizW(); setStatus("not_heard"); } }
+    const rec = new SR(); rec.lang = "de-DE"; rec.interimResults = true; rec.maxAlternatives = 5;
+    rec.onresult = (e) => {
+      if (done) return;
+      const item = e.results[e.results.length - 1];
+      const texts = Array.from(item).map(r => r.transcript.trim());
+      if (speechHit(texts.map(t => normalizeSpeech(t)), expected)) onHit();
+      else if (item.isFinal) onMiss();
+    };
+    rec.onerror = () => onMiss();
+    rec.onend = () => { if (!done) onMiss(); };
+    recRef.current = rec; rec.start();
+  }
+
+  function accept() { stopAll(); stopVizW(); setStatus("success"); setTimeout(onDone, 600); }
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      {status === "listening" && (
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, height: 38, marginBottom: 12 }}>
+          {barHeights.map((h, i) => (
+            <div key={i} style={{ width: 5, borderRadius: 3, background: h > 10 ? "#a78bfa" : "rgba(167,139,250,0.3)", height: `${h}px`, transition: "height 0.05s ease-out" }} />
+          ))}
+        </div>
+      )}
+      {status === "success" && <div style={{ textAlign: "center", color: "#10b981", fontWeight: 700, fontSize: 15, marginBottom: 10 }}>✓ Отлично!</div>}
+      {status === "not_heard" && <div style={{ textAlign: "center", color: "rgba(255,255,255,0.38)", fontSize: 13, marginBottom: 10 }}>Не уловил. Попробуй ещё.</div>}
+      {status !== "listening" && status !== "success" && (
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={listen} style={{ flex: 2, padding: "11px 0", borderRadius: 12, background: status === "not_heard" ? "rgba(124,92,252,0.35)" : "#7C5CFC", color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+            🎙️ {status === "not_heard" ? "Попробовать ещё" : "Произнести"}
+          </button>
+          <button onClick={accept} style={{ flex: 1, padding: "11px 0", borderRadius: 12, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.38)", border: "1px solid rgba(255,255,255,0.07)", fontSize: 12, cursor: "pointer" }}>
+            ✓ Произнёс
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, topicId }) {
   const words = block.words;
   const [phase, setPhase] = useState(block.tip ? "tip" : "intro");
@@ -2780,21 +2867,33 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
   // Guard: track which introIdx was last auto-played to prevent StrictMode double-fire
   const lastAutoPlayedIdx = useRef(-1);
 
-  // Auto-play the main German element once per card in intro phase.
-  // Uses card.audioText (e.g. "A" for letter pair "A a", "der Apfel" for word cards).
-  // Never plays card.ru, example words, or the raw displayText "A a".
+  // Auto-play the first card in current group once per introIdx change
   useEffect(() => {
     if (phase !== "intro" || !audioEnabled) return;
-    const card = words[introIdx];
-    if (!card) return;
+    const group = wordGroups[introIdx];
+    if (!group || !group[0]) return;
+    const card = group[0];
     const text = card.audioText;
     if (!text || !isGermanText(text)) return;
-    // Skip if already played this index (protects against StrictMode double-invoke)
     if (lastAutoPlayedIdx.current === introIdx) return;
     lastAutoPlayedIdx.current = introIdx;
     const t = setTimeout(() => speakDE(text, card.audioUrl || null), 200);
     return () => clearTimeout(t);
   }, [introIdx, phase]);
+
+  // Pairs mode: show 2 consecutive words on one screen (e.g. alt/älter, kalt/Kälte)
+  const isPairsMode = audioEnabled && /парах|парами|парой/i.test(block.name || "");
+  const wordGroups = useMemo(() => {
+    if (!isPairsMode) return words.map(w => [w]);
+    const g = [];
+    for (let i = 0; i < words.length; i += 2) g.push(words.slice(i, i + 2));
+    return g;
+  }, [words, isPairsMode]);
+
+  // Track which intro groups the user has confirmed pronunciation for
+  const [introPronounced, setIntroPronounced] = useState(() => new Set());
+  // Reset pronunciation state per group when navigating
+  const [introPronounceKey, setIntroPronounceKey] = useState(0);
 
   const [practiceQueue, setPracticeQueue] = useState(() => shuffle(words));
   const [practiceIdx, setPracticeIdx] = useState(0);
@@ -2803,15 +2902,9 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
   const [multiConfirmed, setMultiConfirmed] = useState(false);
   const [wrong, setWrong] = useState([]);
   const [retryWords, setRetryWords] = useState([]);
-  const [pronounceIdx, setPronounceIdx] = useState(0);
 
-  const regularWords = useMemo(() => words.filter(w => !isPronounceCard(w.de)), [words]);
-  const hasPronounce = audioEnabled && regularWords.length > 0;
-
-  function completePractice() {
-    if (hasPronounce) { setPronounceIdx(0); setPhase("pronounce"); }
-    else onDone();
-  }
+  // Pronunciation is now inline in intro — no separate pronounce phase needed
+  function completePractice() { onDone(); }
 
   // All hooks must be at top level — before any conditional returns
   const optionPool = useMemo(() => {
@@ -2882,7 +2975,7 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
     setTimeout(() => advance(isCorrect), 1200);
   }
 
-  const progress = phase === "intro" ? introIdx / words.length / 2 : 0.5 + practiceIdx / practiceQueue.length / 2;
+  const progress = phase === "intro" ? introIdx / wordGroups.length / 2 : 0.5 + practiceIdx / practiceQueue.length / 2;
 
   if (phase === "tip") {
     return (
@@ -2925,8 +3018,48 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
   }
 
   if (phase === "intro") {
-    const card = words[introIdx];
-    const isLast = introIdx === words.length - 1;
+    const group = wordGroups[introIdx];
+    const isLast = introIdx === wordGroups.length - 1;
+    const groupLabel = isPairsMode ? "Пара" : "Слово";
+    const groupCount = wordGroups.length;
+    const groupDone = introPronounced.has(introIdx);
+
+    // Does any card in this group need pronunciation?
+    const groupNeedsPronounce = audioEnabled && group.some(c => !isPronounceCard(c.de));
+
+    const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", gold: "#f59e0b", golden: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelgrau: "#374151", dunkelblau: "#1e3a8a", hellblau: "#93c5fd", hellbraun: "#c4956a", dunkelgrün: "#166534", olivgrün: "#6b7c3f" };
+
+    function renderWordCard(card, idx) {
+      const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, "");
+      const colorHex = COLOR_MAP[deKey];
+      const fSize = card.de.length > 14 ? 26 : card.de.length > 10 ? 34 : 42;
+      return (
+        <div key={idx} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "24px 22px 20px", textAlign: "center", marginBottom: isPairsMode ? 8 : 14 }}>
+          {colorHex && <div style={{ width: 44, height: 44, borderRadius: "50%", background: colorHex, margin: "0 auto 14px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 16px ${colorHex}88` }} />}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ fontSize: fSize, fontWeight: 900, color: "#fff", wordBreak: "break-word" }}>{card.de}</div>
+            {audioEnabled && <AudioButton text={card.audioText} audioUrl={card.audioUrl} size={30} />}
+          </div>
+          <div style={{ width: 28, height: 2, background: "rgba(255,255,255,0.1)", margin: "0 auto 16px" }} />
+          {audioEnabled && card.ru && !/[а-яёА-ЯЁ]/.test(card.ru) ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: 1 }}>Пример:</span>
+                <span style={{ fontSize: 22, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</span>
+                <AudioButton text={card.ru} size={24} />
+              </div>
+              {card.exampleTranslation && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{card.exampleTranslation}</div>}
+            </div>
+          ) : (
+            <div style={{ fontSize: 26, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
+          )}
+        </div>
+      );
+    }
+
+    // Which card to pronounce: last non-letter card in group
+    const pronounceCard = [...group].reverse().find(c => !isPronounceCard(c.de));
+
     return (
       <div style={{ paddingTop: 40 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
@@ -2939,58 +3072,37 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
           <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" }}>📚 {block.name}</div>
           <button onClick={startPractice} style={{ background: "none", border: "none", color: "rgba(124,92,252,0.6)", fontSize: 12, cursor: "pointer", padding: 0 }}>Проверить →</button>
         </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 20 }}>Слово {introIdx + 1} из {words.length}</div>
-        {(() => { const COLOR_MAP = { rot: "#e53e3e", blau: "#3b82f6", grün: "#22c55e", gelb: "#eab308", orange: "#f97316", lila: "#a855f7", violett: "#8b5cf6", rosa: "#ec4899", schwarz: "#111", weiß: "#f8fafc", grau: "#6b7280", braun: "#92400e", gold: "#f59e0b", golden: "#f59e0b", silber: "#9ca3af", türkis: "#06b6d4", hellgrün: "#86efac", dunkelrot: "#7f1d1d", hellgrau: "#d1d5db", dunkelgrau: "#374151", dunkelblau: "#1e3a8a", hellblau: "#93c5fd", hellbraun: "#c4956a", dunkelgrün: "#166534", olivgrün: "#6b7c3f" }; const deKey = card.de.toLowerCase().replace(/^(der|die|das)\s+/, ""); const colorHex = COLOR_MAP[deKey]; return (
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "36px 28px 28px", textAlign: "center", marginBottom: 16, position: "relative" }}>
-          {colorHex && <div style={{ width: 52, height: 52, borderRadius: "50%", background: colorHex, margin: "0 auto 18px", border: colorHex === "#f8fafc" ? "2px solid rgba(255,255,255,0.3)" : "none", boxShadow: `0 0 18px ${colorHex}88` }} />}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 22 }}>
-            <div style={{ fontSize: card.de && card.de.length > 14 ? 28 : card.de && card.de.length > 10 ? 36 : 44, fontWeight: 900, color: "#fff", wordBreak: "break-word", overflowWrap: "break-word" }}>{card.de}</div>
-            {audioEnabled && <AudioButton text={card.audioText} audioUrl={card.audioUrl} size={32} />}
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 16 }}>{groupLabel} {introIdx + 1} из {groupCount}</div>
+
+        {group.map((c, i) => renderWordCard(c, i))}
+
+        {/* Inline pronunciation — show for the target card until done */}
+        {groupNeedsPronounce && !groupDone && pronounceCard && (
+          <WordPronounceInline
+            key={introPronounceKey}
+            card={pronounceCard}
+            onDone={() => {
+              setIntroPronounced(s => new Set([...s, introIdx]));
+            }}
+          />
+        )}
+
+        {/* Navigation — shown when pronunciation done or not needed */}
+        {(!groupNeedsPronounce || groupDone) && (
+          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+            {introIdx > 0 && (
+              <button onClick={() => { setIntroIdx(i => i - 1); setIntroPronounceKey(k => k + 1); }}
+                style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>←</button>
+            )}
+            {!isLast
+              ? <button onClick={() => { setIntroIdx(i => i + 1); setIntroPronounceKey(k => k + 1); }}
+                  style={{ flex: 3, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Следующее →</button>
+              : <button onClick={startPractice}
+                  style={{ flex: 3, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎯 Проверить себя!</button>}
           </div>
-          <div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
-          {audioEnabled && card.ru && !/[а-яёА-ЯЁ]/.test(card.ru) ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>Пример:</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: "#a78bfa" }}>{card.ru}</div>
-                <AudioButton text={card.ru} size={26} />
-              </div>
-              {card.exampleTranslation && (
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.28)", fontStyle: "italic" }}>{card.exampleTranslation}</div>
-              )}
-            </div>
-          ) : (
-            <div style={{ fontSize: 28, fontWeight: 700, color: "#a78bfa" }}>{card.ru ? card.ru.charAt(0).toUpperCase() + card.ru.slice(1) : card.ru}</div>
-          )}
-          {card.note && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 10 }}>{card.note}</div>}
-        </div>); })()}
-        <div style={{ display: "flex", gap: 10 }}>
-          {introIdx > 0 && <button onClick={() => setIntroIdx(i => i - 1)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 14, cursor: "pointer" }}>←</button>}
-          {!isLast
-            ? <button onClick={() => setIntroIdx(i => i + 1)} style={{ flex: 3, padding: "14px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Следующее →</button>
-            : <button onClick={startPractice} style={{ flex: 3, padding: "14px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>🎯 Проверить себя!</button>}
-        </div>
+        )}
       </div>
     );
-  }
-
-  if (phase === "pronounce") {
-    const word = regularWords[pronounceIdx];
-    if (!word) { onDone(); return null; }
-    return <PronounceCard
-      card={word}
-      block={block}
-      progress={regularWords.length > 1 ? pronounceIdx / regularWords.length : 0}
-      practiceIdx={pronounceIdx}
-      queueLen={regularWords.length}
-      topicId={topicId}
-      onBack={onBack}
-      onAdvance={() => {
-        const next = pronounceIdx + 1;
-        if (next < regularWords.length) setPronounceIdx(next);
-        else onDone();
-      }}
-    />;
   }
 
   if (!practiceCard) return null;
