@@ -2246,6 +2246,9 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     setMode("check"); setStatus("idle"); setRetryCount(0); setNotHeardCount(0); setLastHeard(null);
     stopAllRec();
     stopAudioDetect();
+    // Auto-play pronunciation when card opens
+    const t = setTimeout(() => _speakTTS(card.audioText || card.de), 400);
+    return () => clearTimeout(t);
   }, [card.de]);
 
   const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de, card.audioText]);
@@ -2454,19 +2457,23 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         )}
 
         {status === "listening" && (
-          <div style={{ marginTop: 20, color: "#a78bfa", fontWeight: 600, fontSize: 15 }}>🎙️ Слушаю...</div>
-        )}
-        {status === "success" && (
-          <div style={{ marginTop: 20, color: "#10b981", fontWeight: 700, fontSize: 16 }}>
-            ✓ Отлично! {lastHeard ? <>Услышал: <em>{lastHeard}</em></> : "Засчитано."}
+          <div style={{ marginTop: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 3, height: 36 }}>
+            {[0,1,2,3,4,5,6].map(i => (
+              <div key={i} style={{
+                width: 4, borderRadius: 2, background: "#a78bfa",
+                animation: `micWave 0.9s ease-in-out ${i * 0.1}s infinite alternate`,
+                height: `${12 + (i % 3) * 10}px`,
+              }} />
+            ))}
+            <style>{`@keyframes micWave { from { transform: scaleY(0.3); } to { transform: scaleY(1); } }`}</style>
           </div>
         )}
+        {status === "success" && (
+          <div style={{ marginTop: 20, color: "#10b981", fontWeight: 700, fontSize: 16 }}>✓ Отлично!</div>
+        )}
         {status === "retry" && (
-          <div style={{ marginTop: 20, fontSize: 14 }}>
-            <div style={{ color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>
-              Услышал: <em style={{ color: "#f59e0b" }}>{lastHeard}</em>
-            </div>
-            <div style={{ color: "#f59e0b" }}>Нужно: {displayTarget}. Послушай ещё раз и попробуй.</div>
+          <div style={{ marginTop: 20, fontSize: 14, color: "#f59e0b" }}>
+            Попробуй ещё раз.
           </div>
         )}
         {status === "not_heard" && (
