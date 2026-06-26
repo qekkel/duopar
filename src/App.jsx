@@ -2257,16 +2257,16 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       if (e.error === "not-allowed" || e.error === "permission-denied") {
         setStatus("no_mic");
       } else if (e.error === "no-speech") {
-        setNotHeardCount(c => {
-          const next = c + 1;
-          if (isShortSound && next >= 2) {
-            // Short sounds: auto-pass after 2 "no-speech" events
-            accept(null);
-          } else {
+        if (isShortSound) {
+          // For letters/short sounds: no-speech → just show fallback, don't block
+          setStatus("not_heard");
+        } else {
+          setNotHeardCount(c => {
+            const next = c + 1;
             setStatus("not_heard");
-          }
-          return next;
-        });
+            return next;
+          });
+        }
       } else {
         setMode("self"); setStatus("idle");
       }
@@ -2336,9 +2336,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         )}
         {status === "not_heard" && (
           <div style={{ marginTop: 20, fontSize: 14, color: "rgba(255,255,255,0.45)" }}>
-            {isShortSound
-              ? "Короткие звуки сложно уловить. Произнеси вслух и нажми «Я произнёс/произнесла»."
-              : "Не уловил звук. Попробуй ещё раз или нажми «Я произнёс/произнесла»."}
+            Не уловил звук. Попробуй ещё раз или нажми «Я произнёс/произнесла».
           </div>
         )}
         {status === "no_mic" && (
@@ -2349,11 +2347,6 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         {mode === "self" && status === "idle" && (
           <div style={{ marginTop: 20, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
             Послушай и повтори про себя или шёпотом.
-          </div>
-        )}
-        {isShortSound && status === "idle" && mode === "check" && (
-          <div style={{ marginTop: 14, fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>
-            Нажми «Произнести», скажи звук вслух, или нажми «Я произнёс/произнесла» — и идём дальше.
           </div>
         )}
       </div>
