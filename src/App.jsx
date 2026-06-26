@@ -2274,37 +2274,52 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     if (!SR) { setMode("self"); return; }
     setStatus("listening");
 
-    if (isShortSound) {
-      startListeningForSound(() => accept(null));
-      return;
-    }
-
     const rec = new SR();
     recRef.current = rec;
     rec.lang = "de-DE";
-    rec.interimResults = false;
     rec.maxAlternatives = 5;
+    // interimResults for short sounds: catches "ha"/"ef"/"be" before no-speech fires
+    rec.interimResults = isShortSound;
 
     rec.onresult = (e) => {
-      recRef.current = null;
-      const results = Array.from(e.results[0]);
+      const resultItem = e.results[e.results.length - 1];
+      const isFinal = resultItem.isFinal;
+      const results = Array.from(resultItem);
       const best = results.reduce((a, b) => (b.confidence > a.confidence ? b : a), results[0]);
       const heard = best.transcript.trim();
-
       const allTexts = results.map(r => normalizeSpeech(r.transcript));
       const hit = speechHit(allTexts, expected);
+
+      if (isShortSound) {
+        // For letters: accept on any interim/final result that matches phonetically.
+        // Even if it's "Hallo" for H → "hallo".includes("ha") → hit.
+        if (hit) {
+          recRef.current = null;
+          try { rec.stop(); } catch(e) {}
+          accept(heard);
+        } else if (isFinal) {
+          // Final result but no match → show what was heard, offer retry
+          recRef.current = null;
+          setLastHeard(heard);
+          setRetryCount(c => {
+            const next = c + 1;
+            if (next >= 2) { accept(heard); } else { setStatus("retry"); }
+            return next;
+          });
+        }
+        // interim + no match → keep listening
+        return;
+      }
+
+      if (!isFinal) return;
+      recRef.current = null;
       if (hit) {
         accept(heard);
       } else {
         setLastHeard(heard);
         setRetryCount(c => {
           const next = c + 1;
-          // Letters/short sounds: auto-pass after 2 misses; words after 3
-          if (next >= (isShortSound ? 2 : 3)) {
-            accept(heard);
-          } else {
-            setStatus("retry");
-          }
+          if (next >= 3) { accept(heard); } else { setStatus("retry"); }
           return next;
         });
       }
@@ -2315,17 +2330,9 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       if (e.error === "not-allowed" || e.error === "permission-denied") {
         setStatus("no_mic");
       } else if (e.error === "no-speech") {
-        if (isShortSound) {
-          // For letters: single sounds like "ha","ef" don't register as German speech.
-          // User clearly tried → accept immediately.
-          accept(null);
-        } else {
-          setNotHeardCount(c => {
-            const next = c + 1;
-            setStatus("not_heard");
-            return next;
-          });
-        }
+        // For letters no-speech means the user was silent (not that sound wasn't recognized).
+        // Show retry, don't auto-accept — they need to actually say something.
+        setNotHeardCount(c => { setStatus("not_heard"); return c + 1; });
       } else {
         setMode("self"); setStatus("idle");
       }
