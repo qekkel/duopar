@@ -1599,19 +1599,20 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   // Level exam has no activeTopicId — handle it before the per-topic branch
   if (mode === "level_exam") {
     const LVL_LABEL = { PH: "A1-1", A1: "A1-2", PR: "A1-3", A2: "A1-4", A3: "A1-5", A4: "A1" };
-    const lvlLabel = LVL_LABEL[levelExamLevel] || levelExamLevel;
     const nextLvlIdx = LEVELS.indexOf(levelExamLevel) + 1;
     const nextLvlLabel = nextLvlIdx < LEVELS.length ? LVL_LABEL[LEVELS[nextLvlIdx]] : null;
+    const handlePass = () => { awardStars(25, "+25 ⭐ Уровень сдан! 🏆"); passLevelExam(levelExamLevel); };
+    if (levelExamLevel === "PH") {
+      return <PHLevelExamScreen onBack={() => setMode(null)} onPass={handlePass} nextLvlLabel={nextLvlLabel} />;
+    }
+    const lvlLabel = LVL_LABEL[levelExamLevel] || levelExamLevel;
     const fakeTopic = { title: `Экзамен ${lvlLabel}`, cards: [], exam: [] };
     const questions = buildLevelExamQuestions(levelExamLevel);
-    if (!questions || questions.length === 0) {
-      console.error(`[duopar] buildLevelExamQuestions("${levelExamLevel}") returned no questions — check topic.exam arrays for level ${levelExamLevel}`);
-    }
     return <TopicExamScreen
       topic={fakeTopic}
       prebuiltQuestions={questions}
       onBack={() => setMode(null)}
-      onPass={() => { awardStars(25, "+25 ⭐ Уровень сдан! 🏆"); passLevelExam(levelExamLevel); }}
+      onPass={handlePass}
       levelKey={levelExamLevel}
       nextLvlLabel={nextLvlLabel}
     />;
@@ -2568,54 +2569,328 @@ function buildExamQuestions(topic) {
   return shuffle([...wordQuestions, ...hardcoded]).slice(0, 8);
 }
 
-function buildPHExamQuestions() {
-  const base = [
-    // Letters & reading
-    { q: "Как читается буква Z на немецком?", options: ["как «з»", "как «ц»", "как «с»", "как «й»"], answer: 1, correctText: null },
-    { q: "Буква W в немецком читается как:", options: ["«ш»", "«в»", "«б»", "«ф»"], answer: 1, correctText: null },
-    { q: "Буква V в немецком обычно читается как:", options: ["«в»", "«б»", "«ф»", "«п»"], answer: 2, correctText: null },
-    { q: "Как читается буква J в немецком?", options: ["как «дж»", "как «й»", "как «ж»", "как «г»"], answer: 1, correctText: null },
-    { q: "Буква S перед гласной читается как:", options: ["«с»", "«з»", "«ш»", "«х»"], answer: 1, correctText: null },
-    { q: "Как читается ß (Eszett)?", options: ["«ш»", "«з»", "«с»", "«б»"], answer: 2, correctText: null },
-    { q: "Как называются буквы Ä, Ö, Ü?", options: ["Умлауты", "Лигатуры", "Диграфы", "Ударные"], answer: 0, correctText: null },
-    // Umlauts
-    { q: "Какой умлаут в слове «schön»?", options: ["ä", "ö", "ü", "ß"], answer: 1, correctText: null },
-    { q: "«Müde» значит:", options: ["красивый", "холодный", "усталый", "быстрый"], answer: 2, correctText: null },
-    { q: "«Mädchen» значит:", options: ["мальчик", "девочка", "ребёнок", "женщина"], answer: 1, correctText: null },
-    { q: "Буква ü произносится примерно как:", options: ["«о»", "«а»", "«ю» (без й)", "«э»"], answer: 2, correctText: null },
-    // Diphthongs
-    { q: "Дифтонг «ei» читается как:", options: ["«ее»", "«ай»", "«эй»", "«ой»"], answer: 1, correctText: null },
-    { q: "Дифтонг «eu» и «äu» читаются как:", options: ["«ю»", "«ой»", "«ау»", "«эу»"], answer: 1, correctText: null },
-    { q: "Дифтонг «au» читается как:", options: ["«ао»", "«ау»", "«ой»", "«уа»"], answer: 1, correctText: null },
-    { q: "В каком слове есть дифтонг «ei»?", options: ["heute", "neu", "drei", "Haus"], answer: 2, correctText: null },
-    // Long vs short vowels
-    { q: "В каком слове гласная звучит долго?", options: ["Essen", "Hund", "See", "kalt"], answer: 2, correctText: null },
-    { q: "Что означает «двойная гласная» (aa, ee, oo) в немецком?", options: ["Ударение", "Долгое произношение", "Краткое произношение", "Умлаут"], answer: 1, correctText: null },
-    // Consonant combos
-    { q: "Сочетание «ch» после a, o, u читается как:", options: ["«чх»", "«ш»", "«х» (горловое)", "«к»"], answer: 2, correctText: null },
-    { q: "Сочетание «sch» читается как:", options: ["«сч»", "«с»", "«ш»", "«щ»"], answer: 2, correctText: null },
-    { q: "Сочетание «sp» в начале слова читается как:", options: ["«сп»", "«шп»", "«ст»", "«зп»"], answer: 1, correctText: null },
-    { q: "Сочетание «st» в начале слова читается как:", options: ["«ст»", "«шт»", "«зт»", "«сд»"], answer: 1, correctText: null },
-    { q: "Буква «g» в конце слова читается как:", options: ["«г»", "«к»", "«й»", "«х»"], answer: 1, correctText: null },
-    // Vocab with audio
-    { q: "Послушай и выбери правильное написание:", options: ["Apfel", "Affel", "Appel", "Apfle"], answer: 0, correctText: null, hasAudio: true, audioText: "Apfel" },
-    { q: "Послушай и выбери правильное написание:", options: ["Schule", "Scule", "Schulle", "Szkule"], answer: 0, correctText: null, hasAudio: true, audioText: "Schule" },
-    { q: "Послушай и выбери правильное написание:", options: ["Brot", "Brod", "Broht", "Brott"], answer: 0, correctText: null, hasAudio: true, audioText: "Brot" },
-    { q: "Послушай и выбери правильное написание:", options: ["Straße", "Strase", "Strasse", "Strasa"], answer: 0, correctText: null, hasAudio: true, audioText: "Straße" },
-    // Word translations
-    { q: "«Das Haus» значит:", options: ["дом", "школа", "машина", "дорога"], answer: 0, correctText: null },
-    { q: "«Die Mutter» значит:", options: ["отец", "дочь", "мать", "сестра"], answer: 2, correctText: null },
-    { q: "«Der Vater» значит:", options: ["брат", "отец", "дядя", "сын"], answer: 1, correctText: null },
-    { q: "«Das Wasser» значит:", options: ["молоко", "сок", "вода", "чай"], answer: 2, correctText: null },
-    { q: "«Danke» значит:", options: ["привет", "пока", "спасибо", "пожалуйста"], answer: 2, correctText: null },
-    { q: "«Ja» значит:", options: ["нет", "может быть", "да", "хорошо"], answer: 2, correctText: null },
-    { q: "«Ich» значит:", options: ["ты", "он", "я", "мы"], answer: 2, correctText: null },
+// ── PH LEVEL EXAM — rich interactive exam ────────────────────────
+
+function buildRichPHExamQuestions() {
+  const choicePool = shuffle([
+    { type: "choice", topic: "letters", q: "Буква W в немецком читается как:", options: ["«ш»", "«в»", "«б»", "«ф»"], answer: 1 },
+    { type: "choice", topic: "letters", q: "Буква Z в немецком читается как:", options: ["«з»", "«ц»", "«с»", "«й»"], answer: 1 },
+    { type: "choice", topic: "letters", q: "Буква J в немецком читается как:", options: ["«дж»", "«й»", "«ж»", "«г»"], answer: 1 },
+    { type: "choice", topic: "letters", q: "Буква V обычно читается как:", options: ["«в»", "«б»", "«ф»", "«п»"], answer: 2 },
+    { type: "choice", topic: "letters", q: "S в начале слова перед гласной читается как:", options: ["«с»", "«з»", "«ш»", "«х»"], answer: 1 },
+    { type: "choice", topic: "letters", q: "ß (Eszett) читается как:", options: ["«ш»", "«з»", "«сс»", "«б»"], answer: 2 },
+    { type: "choice", topic: "umlauts", q: "«Müde» значит:", options: ["красивый", "холодный", "усталый", "быстрый"], answer: 2 },
+    { type: "choice", topic: "umlauts", q: "«Mädchen» значит:", options: ["мальчик", "девочка", "ребёнок", "женщина"], answer: 1 },
+    { type: "choice", topic: "umlauts", q: "«schön» значит:", options: ["скучный", "старый", "красивый", "странный"], answer: 2 },
+    { type: "choice", topic: "vowels", q: "В каком слове гласная звучит долго?", options: ["Essen", "Hund", "See", "kalt"], answer: 2 },
+    { type: "choice", topic: "vowels", q: "Двойная гласная (aa, ee) означает:", options: ["Ударение", "Долгое произношение", "Краткое произношение", "Умлаут"], answer: 1 },
+    { type: "choice", topic: "diphthongs", q: "Дифтонг «ei» читается как:", options: ["«ее»", "«ай»", "«эй»", "«ой»"], answer: 1 },
+    { type: "choice", topic: "diphthongs", q: "Дифтонг «eu» / «äu» читается как:", options: ["«ю»", "«ой»", "«ау»", "«эу»"], answer: 1 },
+    { type: "choice", topic: "diphthongs", q: "В каком слове есть дифтонг «au»?", options: ["heute", "drei", "Haus", "bei"], answer: 2 },
+    { type: "choice", topic: "consonants", q: "Сочетание «sch» читается как:", options: ["«сч»", "«с»", "«ш»", "«щ»"], answer: 2 },
+    { type: "choice", topic: "consonants", q: "Сочетание «sp» в начале слова читается как:", options: ["«сп»", "«шп»", "«зп»", "«цп»"], answer: 1 },
+    { type: "choice", topic: "consonants", q: "Буква «g» в конце слова произносится как:", options: ["«г»", "«к»", "«й»", "«х»"], answer: 1 },
+    { type: "choice", topic: "consonants", q: "Сочетание «ch» после a/o/u читается как:", options: ["«ш»", "«к»", "«х» (горловое)", "«чх»"], answer: 2 },
+  ]);
+
+  const audioPool = shuffle([
+    { type: "audio_choice", topic: "umlauts", q: "Послушай и выбери правильное написание:", audioText: "Mädchen", options: ["Madchen", "Mädchen", "Mödchen", "Mudchen"], answer: 1 },
+    { type: "audio_choice", topic: "letters", q: "Послушай и выбери правильное написание:", audioText: "Straße", options: ["Strase", "Strasse", "Straße", "Straßa"], answer: 2 },
+    { type: "audio_choice", topic: "consonants", q: "Послушай и выбери правильное написание:", audioText: "Schule", options: ["Scule", "Schulle", "Skhule", "Schule"], answer: 3 },
+    { type: "audio_choice", topic: "diphthongs", q: "Послушай и выбери правильное написание:", audioText: "heute", options: ["hoyte", "häute", "heite", "heute"], answer: 3 },
+    { type: "audio_choice", topic: "diphthongs", q: "Послушай и выбери правильное написание:", audioText: "drei", options: ["drai", "drey", "drei", "droi"], answer: 2 },
+    { type: "audio_choice", topic: "vocabulary", q: "Послушай и выбери правильное написание:", audioText: "Schüler", options: ["Shuler", "Schüler", "Schueler", "Schuler"], answer: 1 },
+    { type: "audio_choice", topic: "vocabulary", q: "Послушай и выбери правильное написание:", audioText: "Brot", options: ["Brod", "Broht", "Brott", "Brot"], answer: 3 },
+  ]);
+
+  const errorPool = shuffle([
+    { type: "find_error", topic: "letters", q: "В какой паре буква прочитана НЕВЕРНО?", options: ["W — «в»", "V — «ф»", "Z — «зет»", "J — «й»"], answer: 2 },
+    { type: "find_error", topic: "consonants", q: "Какое буквосочетание прочитано НЕВЕРНО?", options: ["sch — «ш»", "ch — «х»", "sp — «сп»", "st — «шт»"], answer: 2 },
+    { type: "find_error", topic: "diphthongs", q: "Какой дифтонг прочитан НЕВЕРНО?", options: ["ei — «ай»", "au — «ау»", "eu — «ею»", "ie — «ии»"], answer: 2 },
+    { type: "find_error", topic: "umlauts", q: "Какое слово с умлаутом переведено НЕВЕРНО?", options: ["müde — усталый", "schön — красивый", "älter — моложе", "Mädchen — девочка"], answer: 2 },
+  ]);
+
+  const pairsPool = shuffle([
+    { type: "pairs", topic: "consonants", q: "Соедини буквосочетание с его звуком:", pairs: [["sch", "«ш»"], ["ch", "«х»"], ["sp", "«шп»"], ["st", "«шт»"]] },
+    { type: "pairs", topic: "diphthongs", q: "Соедини дифтонг с его звуком:", pairs: [["ei", "«ай»"], ["au", "«ау»"], ["eu", "«ой»"], ["ie", "«ии»"]] },
+    { type: "pairs", topic: "umlauts", q: "Соедини умлаут с примером слова:", pairs: [["ä", "Mädchen"], ["ö", "schön"], ["ü", "müde"], ["ß", "Straße"]] },
+    { type: "pairs", topic: "vocabulary", q: "Соедини немецкое слово с переводом:", pairs: [["Brot", "хлеб"], ["Wasser", "вода"], ["Mutter", "мать"], ["Haus", "дом"]] },
+  ]);
+
+  const sortPool = [
+    { type: "sort", topic: "diphthongs", q: "Раздели слова по дифтонгам:", groups: ["ei", "eu / äu", "au"],
+      words: [
+        { word: "drei", group: "ei" }, { word: "heute", group: "eu / äu" }, { word: "Haus", group: "au" },
+        { word: "bei", group: "ei" }, { word: "neu", group: "eu / äu" }, { word: "blau", group: "au" },
+      ],
+    },
   ];
-  return shuffle(base).slice(0, 16);
+
+  const flipPool = [
+    { type: "flip", topic: "vocabulary", q: "Переверни карточки — вспомни перевод:", cards: [
+      { de: "der Apfel", ru: "яблоко" }, { de: "das Brot", ru: "хлеб" }, { de: "die Mutter", ru: "мать" },
+      { de: "das Wasser", ru: "вода" }, { de: "die Schule", ru: "школа" }, { de: "die Straße", ru: "улица" },
+    ]},
+  ];
+
+  const pronouncePool = shuffle([
+    { type: "pronunciation", topic: "umlauts", word: "schön", translation: "красивый" },
+    { type: "pronunciation", topic: "diphthongs", word: "heute", translation: "сегодня" },
+    { type: "pronunciation", topic: "letters", word: "Mädchen", translation: "девочка" },
+    { type: "pronunciation", topic: "consonants", word: "Straße", translation: "улица" },
+  ]);
+
+  return [
+    ...choicePool.slice(0, 5),
+    ...audioPool.slice(0, 3),
+    ...errorPool.slice(0, 2),
+    ...pairsPool.slice(0, 2),
+    ...sortPool,
+    ...flipPool,
+    ...pronouncePool.slice(0, 2),
+  ];
 }
 
+// sub-components for PHLevelExamScreen
+function ChoiceExamQ({ q, onAdvance }) {
+  const [selected, setSelected] = useState(null);
+  return (
+    <div>
+      {q.type === "audio_choice" && q.audioText && (
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "rgba(124,92,252,0.1)", border: "1px solid rgba(124,92,252,0.2)", borderRadius: 16, padding: "16px 28px" }}>
+            <AudioButton text={q.audioText} size={52} />
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Нажми для прослушивания</div>
+          </div>
+        </div>
+      )}
+      {q.type === "find_error" && (
+        <div style={{ fontSize: 11, color: "#ef4444", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>⚠ Найди ошибку</div>
+      )}
+      <div style={{ fontSize: 19, fontWeight: 700, color: "#fff", lineHeight: 1.4, marginBottom: 24 }}>{q.q}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {q.options.map((opt, i) => {
+          let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "rgba(255,255,255,0.85)", icon = null;
+          if (selected !== null) {
+            if (i === q.answer) { bg = "rgba(16,185,129,0.25)"; border = "#10b981"; color = "#10b981"; icon = "✓"; }
+            else if (opt === selected) { bg = "rgba(239,68,68,0.25)"; border = "#ef4444"; color = "#ef4444"; icon = "✗"; }
+            else color = "rgba(255,255,255,0.2)";
+          }
+          return (
+            <button key={i} onClick={() => { if (selected !== null) return; setSelected(opt); setTimeout(() => onAdvance(i === q.answer), 900); }}
+              style={{ padding: "15px 18px", borderRadius: 14, background: bg, border: `1px solid ${border}`, color, fontSize: 15, textAlign: "left", cursor: selected !== null ? "default" : "pointer", fontWeight: 500, display: "flex", justifyContent: "space-between", alignItems: "center", transition: "all 0.2s" }}>
+              <span>{opt}</span>{icon && <span style={{ fontSize: 18, fontWeight: 800 }}>{icon}</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PairExamQ({ q, onAdvance }) {
+  const [rights] = useState(() => shuffle(q.pairs.map(p => p[1])));
+  const [leftSel, setLeftSel] = useState(null);
+  const [matched, setMatched] = useState(new Set());
+  const [wrongFlash, setWrongFlash] = useState(null);
+  const rightToLeft = {};
+  q.pairs.forEach(([, r], i) => { rightToLeft[r] = i; });
+  function isRightMatched(ri) { return matched.has(rightToLeft[rights[ri]]); }
+  function handleRight(ri) {
+    if (leftSel === null || isRightMatched(ri)) return;
+    if (rightToLeft[rights[ri]] === leftSel) {
+      const nm = new Set(matched); nm.add(leftSel); setMatched(nm); setLeftSel(null); setWrongFlash(null);
+      if (nm.size === q.pairs.length) { playSound("correct"); setTimeout(() => onAdvance(true), 700); }
+      else playSound("correct");
+    } else {
+      setWrongFlash([leftSel, ri]); playSound("wrong");
+      setTimeout(() => { setLeftSel(null); setWrongFlash(null); }, 800);
+    }
+  }
+  return (
+    <div>
+      <div style={{ fontSize: 19, fontWeight: 700, color: "#fff", marginBottom: 24 }}>{q.q}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {q.pairs.map(([l], li) => {
+            const isM = matched.has(li), isSel = leftSel === li, isW = wrongFlash && wrongFlash[0] === li;
+            return <button key={li} onClick={() => !isM && setLeftSel(li)} style={{ padding: "14px 10px", borderRadius: 12, fontSize: 14, fontWeight: 700, textAlign: "center", background: isM ? "rgba(16,185,129,0.2)" : isW ? "rgba(239,68,68,0.15)" : isSel ? "rgba(124,92,252,0.25)" : "rgba(255,255,255,0.05)", border: `1px solid ${isM ? "#10b981" : isW ? "#ef4444" : isSel ? "#7C5CFC" : "rgba(255,255,255,0.1)"}`, color: isM ? "#10b981" : isW ? "#ef4444" : isSel ? "#a78bfa" : "rgba(255,255,255,0.85)", cursor: isM ? "default" : "pointer", transition: "all 0.15s" }}>{isM ? "✓" : l}</button>;
+          })}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {rights.map((r, ri) => {
+            const isM = isRightMatched(ri), isW = wrongFlash && wrongFlash[1] === ri;
+            return <button key={ri} onClick={() => handleRight(ri)} style={{ padding: "14px 10px", borderRadius: 12, fontSize: 13, fontWeight: 600, textAlign: "center", background: isM ? "rgba(16,185,129,0.2)" : isW ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)", border: `1px solid ${isM ? "#10b981" : isW ? "#ef4444" : "rgba(255,255,255,0.1)"}`, color: isM ? "#10b981" : isW ? "#ef4444" : "rgba(255,255,255,0.85)", cursor: isM ? "default" : "pointer", transition: "all 0.15s" }}>{isM ? "✓" : r}</button>;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortExamQ({ q, onAdvance }) {
+  const [assign, setAssign] = useState({});
+  const [checked, setChecked] = useState(false);
+  const [results, setResults] = useState(null);
+  const allDone = q.words.every((_, i) => assign[i] !== undefined);
+  function check() {
+    const correct = q.words.filter((w, i) => assign[i] === w.group).length;
+    setResults({ correct, total: q.words.length }); setChecked(true);
+    playSound(correct >= q.words.length * 0.7 ? "correct" : "wrong");
+  }
+  return (
+    <div>
+      <div style={{ fontSize: 19, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{q.q}</div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        {q.groups.map(g => <div key={g} style={{ padding: "5px 12px", borderRadius: 20, background: "rgba(124,92,252,0.15)", border: "1px solid rgba(124,92,252,0.25)", fontSize: 12, color: "#a78bfa", fontWeight: 700 }}>{g}</div>)}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+        {q.words.map((w, i) => {
+          const a = assign[i], ok = checked && a === w.group, bad = checked && a !== w.group;
+          return (
+            <div key={i} style={{ padding: "11px 14px", borderRadius: 12, background: ok ? "rgba(16,185,129,0.1)" : bad ? "rgba(239,68,68,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${ok ? "rgba(16,185,129,0.3)" : bad ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.08)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <span style={{ fontWeight: 700, color: ok ? "#10b981" : bad ? "#ef4444" : "#fff", fontSize: 15 }}>{w.word}</span>
+              <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                {checked
+                  ? <span style={{ fontSize: 12, color: ok ? "#10b981" : "#ef4444", fontWeight: 700 }}>{ok ? "✓ " + a : "✗ " + a + " → " + w.group}</span>
+                  : q.groups.map(g => <button key={g} onClick={() => setAssign(prev => ({ ...prev, [i]: g }))} style={{ padding: "4px 9px", borderRadius: 8, background: a === g ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.05)", border: `1px solid ${a === g ? "#7C5CFC" : "rgba(255,255,255,0.1)"}`, color: a === g ? "#a78bfa" : "rgba(255,255,255,0.5)", fontSize: 11, fontWeight: a === g ? 700 : 400, cursor: "pointer" }}>{g}</button>)
+                }
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {!checked
+        ? <button onClick={check} disabled={!allDone} style={{ width: "100%", padding: "15px", borderRadius: 16, background: allDone ? "#7C5CFC" : "rgba(255,255,255,0.06)", color: allDone ? "#fff" : "rgba(255,255,255,0.3)", border: "none", fontSize: 15, fontWeight: 700, cursor: allDone ? "pointer" : "default" }}>Проверить</button>
+        : <div>
+            <div style={{ textAlign: "center", fontSize: 16, fontWeight: 800, color: results.correct >= results.total * 0.7 ? "#10b981" : "#f59e0b", marginBottom: 14 }}>{results.correct} из {results.total} верно</div>
+            <button onClick={() => onAdvance(results.correct >= results.total * 0.7)} style={{ width: "100%", padding: "15px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Далее →</button>
+          </div>
+      }
+    </div>
+  );
+}
+
+function FlipExamQ({ q, onAdvance }) {
+  const [idx, setIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [known, setKnown] = useState(0);
+  const card = q.cards[idx];
+  const isLast = idx === q.cards.length - 1;
+  function handleKnown(k) {
+    const nk = known + (k ? 1 : 0);
+    if (isLast) { playSound(nk >= q.cards.length * 0.6 ? "correct" : "wrong"); setTimeout(() => onAdvance(nk >= q.cards.length * 0.6), 400); }
+    else { setKnown(nk); setIdx(i => i + 1); setFlipped(false); }
+  }
+  return (
+    <div>
+      <div style={{ fontSize: 19, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{q.q}</div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 20 }}>Карточка {idx + 1} из {q.cards.length}</div>
+      <div onClick={() => !flipped && setFlipped(true)} style={{ background: flipped ? "rgba(16,185,129,0.08)" : "rgba(255,255,255,0.05)", border: `1px solid ${flipped ? "rgba(16,185,129,0.25)" : "rgba(255,255,255,0.1)"}`, borderRadius: 20, padding: "36px 28px", textAlign: "center", cursor: flipped ? "default" : "pointer", minHeight: 130, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 20, transition: "all 0.25s" }}>
+        <div style={{ fontSize: 26, fontWeight: 800, color: "#fff" }}>{card.de}</div>
+        {flipped ? <><div style={{ width: 32, height: 2, background: "rgba(255,255,255,0.12)" }} /><div style={{ fontSize: 20, fontWeight: 600, color: "#10b981" }}>{card.ru}</div></> : <div style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginTop: 4 }}>Нажми, чтобы перевернуть</div>}
+      </div>
+      {flipped
+        ? <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => handleKnown(false)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>✗ Не знал</button>
+            <button onClick={() => handleKnown(true)} style={{ flex: 1, padding: "14px", borderRadius: 14, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", color: "#10b981", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>✓ Знал!</button>
+          </div>
+        : <div style={{ height: 50 }} />
+      }
+    </div>
+  );
+}
+
+function PronounceExamQ({ q, onAdvance }) {
+  const card = useMemo(() => ({ de: q.word, ru: q.translation, audioText: q.word }), [q.word]);
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: "#a78bfa", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 16 }}>🎤 Произношение</div>
+      <PronounceCard card={card} block={{ name: q.word }} progress={0.5} practiceIdx={0} queueLen={1} onBack={() => onAdvance(false)} onAdvance={(ok) => onAdvance(ok !== false)} />
+    </div>
+  );
+}
+
+function PHLevelExamScreen({ onBack, onPass, nextLvlLabel }) {
+  const TOPIC_LABELS = { letters: "Буквы и алфавит", umlauts: "Умлауты", diphthongs: "Дифтонги", consonants: "Согласные и сочетания", vowels: "Гласные звуки", vocabulary: "Словарный запас" };
+  const [questions] = useState(() => buildRichPHExamQuestions());
+  const [qi, setQi] = useState(0);
+  const [qKey, setQKey] = useState(0);
+  const [score, setScore] = useState(0);
+  const [topicScores, setTopicScores] = useState({});
+  const [finished, setFinished] = useState(false);
+  const q = questions[qi];
+  const total = questions.length;
+  const passMark = Math.ceil(total * 0.7);
+
+  function advance(isCorrect) {
+    setTopicScores(prev => { const t = prev[q.topic] || { correct: 0, total: 0 }; return { ...prev, [q.topic]: { correct: t.correct + (isCorrect ? 1 : 0), total: t.total + 1 } }; });
+    if (isCorrect) setScore(s => s + 1);
+    setTimeout(() => { if (qi + 1 < total) { setQi(i => i + 1); setQKey(k => k + 1); } else setFinished(true); }, isCorrect ? 500 : 700);
+  }
+  function restart() { setQi(0); setQKey(k => k + 1); setScore(0); setTopicScores({}); setFinished(false); }
+
+  if (finished) {
+    const pct = Math.round((score / total) * 100);
+    const passed = score >= passMark;
+    const weakTopics = Object.entries(topicScores).filter(([, v]) => v.correct / v.total < 0.6).map(([k]) => k);
+    return (
+      <div style={{ paddingTop: 50, paddingBottom: 32 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: 60, marginBottom: 12 }}>{passed ? "🏆" : pct >= 50 ? "😅" : "📚"}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>{passed ? "Экзамен A1-1 сдан!" : pct >= 50 ? "Почти получилось!" : "Нужно повторить"}</div>
+          <div style={{ fontSize: 40, fontWeight: 900, color: passed ? "#10b981" : "#f59e0b", marginBottom: 4 }}>{pct}%</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>{score} из {total} правильно · нужно {passMark}+</div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "16px", marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Результат по темам</div>
+          {Object.entries(topicScores).map(([topic, { correct, total: t }]) => {
+            const tp = Math.round((correct / t) * 100);
+            const col = tp >= 80 ? "#10b981" : tp >= 60 ? "#f59e0b" : "#ef4444";
+            return (
+              <div key={topic} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{TOPIC_LABELS[topic] || topic}</div>
+                <div style={{ fontSize: 13, color: col, fontWeight: 700, minWidth: 32, textAlign: "right" }}>{tp}%</div>
+                <div style={{ width: 56, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2 }}><div style={{ width: `${tp}%`, height: "100%", background: col, borderRadius: 2 }} /></div>
+              </div>
+            );
+          })}
+        </div>
+        {weakTopics.length > 0 && (
+          <div style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: "12px 16px", marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: "#ef4444", fontWeight: 700, marginBottom: 6 }}>Повтори эти темы:</div>
+            {weakTopics.map(t => <div key={t} style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 3 }}>• {TOPIC_LABELS[t] || t}</div>)}
+          </div>
+        )}
+        {passed && nextLvlLabel && <div style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.06))", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 14, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#10b981", fontWeight: 600 }}>🔓 Открыт блок {nextLvlLabel}</div>}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {passed && nextLvlLabel && <button onClick={onPass} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#10b981", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Перейти к {nextLvlLabel} →</button>}
+          <button onClick={restart} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>Пройти заново</button>
+          <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.45)", border: "none", fontSize: 14, cursor: "pointer" }}>← Вернуться к курсу</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ paddingTop: 30 }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer", marginBottom: 16, padding: 0 }}>← Назад</button>
+      <div style={{ display: "flex", gap: 3, marginBottom: 6 }}>
+        {questions.map((_, i) => <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < qi ? "#10b981" : i === qi ? "#f59e0b" : "rgba(255,255,255,0.08)" }} />)}
+      </div>
+      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", marginBottom: 22 }}>{qi + 1} / {total} · {TOPIC_LABELS[q.topic] || q.topic}</div>
+      {(q.type === "choice" || q.type === "audio_choice" || q.type === "find_error") && <ChoiceExamQ key={qKey} q={q} onAdvance={advance} />}
+      {q.type === "pairs" && <PairExamQ key={qKey} q={q} onAdvance={advance} />}
+      {q.type === "sort" && <SortExamQ key={qKey} q={q} onAdvance={advance} />}
+      {q.type === "flip" && <FlipExamQ key={qKey} q={q} onAdvance={advance} />}
+      {q.type === "pronunciation" && <PronounceExamQ key={qKey} q={q} onAdvance={advance} />}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+
 function buildLevelExamQuestions(lvl) {
-  if (lvl === "PH") return buildPHExamQuestions();
   const lvlTopics = CURRICULUM.filter(t => t.level === lvl && !t.bonus);
   // Collect all hardcoded exam questions from every topic in the level
   const allHardcoded = shuffle(lvlTopics.flatMap(t => t.exam || []))
@@ -3854,6 +4129,58 @@ function MapGameScreen({ onBack, session, profile }) {
   const pPickDoneRef = useRef(false); // true once player picked or timer expired
   const usedQIdsRef = useRef(new Set());
 
+  // ── HINT / STARS STATE ──
+  const _uid = session?.user?.id || "guest";
+  const _starsKey = `duopar_stars_${_uid}`;
+  const _dailyKey = `duopar_daily_${_uid}`;
+  const [starsBalance, setStarsBalance] = useState(() => parseInt(localStorage.getItem(_starsKey) || "0", 10));
+  const [showHintMenu, setShowHintMenu] = useState(false);
+  const [eliminatedOpts, setEliminatedOpts] = useState(new Set());
+  const [hintRule, setHintRule] = useState(null);
+  const [hintUsedThisQ, setHintUsedThisQ] = useState(false);
+  const [gameBonusEarned, setGameBonusEarned] = useState(0);
+
+  function spendStars(n) {
+    const cur = parseInt(localStorage.getItem(_starsKey) || "0", 10);
+    if (cur < n) return false;
+    const nv = cur - n;
+    localStorage.setItem(_starsKey, String(nv));
+    setStarsBalance(nv);
+    return true;
+  }
+  function checkGameDailyBonus() {
+    const today = new Date().toISOString().split("T")[0];
+    try {
+      const d = JSON.parse(localStorage.getItem(_dailyKey) || "{}");
+      if (d.game === today) return 0;
+      d.game = today;
+      localStorage.setItem(_dailyKey, JSON.stringify(d));
+      const cur = parseInt(localStorage.getItem(_starsKey) || "0", 10);
+      const nv = cur + 5;
+      localStorage.setItem(_starsKey, String(nv));
+      setStarsBalance(nv);
+      return 5;
+    } catch { return 0; }
+  }
+  function applyHint(key, cost) {
+    if (!spendStars(cost)) return;
+    setShowHintMenu(false);
+    if (key !== "time") setHintUsedThisQ(true);
+    if (key === "elim") {
+      const q = qRef.current;
+      if (!q) return;
+      const wrong = q.options.map((_, i) => i).filter(i => i !== q.correct && !eliminatedOpts.has(i));
+      if (wrong.length) setEliminatedOpts(prev => new Set([...prev, wrong[Math.floor(Math.random() * wrong.length)]]));
+    } else if (key === "rule") {
+      setHintRule(qRef.current?.hint || "Обрати внимание на правило чтения этого звука.");
+    } else if (key === "time") {
+      setAnsTimer(t => Math.min(t + 5, ANS_TIME + 10));
+    } else if (key === "swap" && !onlineModeRef.current) {
+      const nq = pickQ(null); setQuestion(nq); qRef.current = nq;
+      setEliminatedOpts(new Set()); setHintRule(null); setHintUsedThisQ(false);
+    }
+  }
+
   useEffect(() => { fetch(GEO_URL).then(r => r.json()).then(d => setGeoFeatures(d.features)); }, []);
   useEffect(() => () => {
     clearTimeout(botDuelRef.current); clearInterval(duelIvRef.current);
@@ -3940,6 +4267,7 @@ function MapGameScreen({ onBack, session, profile }) {
     const q = pickQ(null);
     setQuestion(q); qRef.current = q;
     setPAnswer(null); pAnsRef.current = null;
+    setEliminatedOpts(new Set()); setHintRule(null); setHintUsedThisQ(false); setShowHintMenu(false);
     setBotDone(false); setBotOk(null); botOkRef.current = null;
     setRPhase("answering");
     startAnsTimer();
@@ -4412,6 +4740,8 @@ function MapGameScreen({ onBack, session, profile }) {
       if (session?.user?.id) {
         supabase.rpc("increment_map_stat", { uid: session.user.id, result }).catch(() => {});
       }
+      const bonus = checkGameDailyBonus();
+      setGameBonusEarned(bonus);
       setTimeout(() => { setShowConfetti(false); setPhase("gameover"); }, 1800);
       return true;
     }
@@ -4679,6 +5009,15 @@ function MapGameScreen({ onBack, session, profile }) {
 
         <div style={{ height: 20 }} />
 
+        {gameBonusEarned > 0 && (
+          <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 14, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 22 }}>⭐</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#fcd34d" }}>+{gameBonusEarned} ⭐ Бонус за первую игру дня!</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>Всего: {starsBalance} ⭐</div>
+            </div>
+          </div>
+        )}
         <button onClick={restartGame} style={{ width: "100%", background: pw ? "linear-gradient(135deg,#7C5CFC,#a78bfa)" : "#7C5CFC", color: "#fff", border: "none", borderRadius: 14, padding: "15px", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 10 }}>
           {pw ? "Играть снова 🎉" : "Взять реванш 💪"}
         </button>
@@ -4738,11 +5077,13 @@ function MapGameScreen({ onBack, session, profile }) {
   );
 
   // ── ANSWER BUTTONS ──
-  function AnswerButtons({ q, ans, onPick }) {
+  function AnswerButtons({ q, ans, onPick, eliminated = null }) {
     if (!q) return null;
+    const elim = eliminated || new Set();
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {q.options.map((opt, i) => {
+          if (elim.has(i) && ans === null) return null;
           let bg = "rgba(255,255,255,0.05)", border = "rgba(255,255,255,0.1)", color = "#fff";
           if (ans !== null) {
             if (i === q.correct) { bg = "rgba(16,185,129,0.18)"; border = "#10b981"; color = "#10b981"; }
@@ -4761,6 +5102,38 @@ function MapGameScreen({ onBack, session, profile }) {
       </div>
     );
   }
+
+  // ── HINT MENU MODAL ──
+  const HintMenu = () => !showHintMenu ? null : (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0 0 24px" }}>
+      <div style={{ background: "#1a1530", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "20px 20px 20px 20px", padding: "22px 20px", width: "100%", maxWidth: 420 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>✨ Подсказки</div>
+          <div style={{ fontSize: 14, color: "#fcd34d", fontWeight: 700 }}>⭐ {starsBalance}</div>
+        </div>
+        {[
+          { key: "elim", label: "Убрать неправильный ответ", cost: 5, sub: "Один вариант исчезнет", off: hintUsedThisQ || eliminatedOpts.size > 0 },
+          { key: "rule", label: "Показать правило", cost: 4, sub: qRef.current?.hint ? qRef.current.hint : "Краткая подсказка по вопросу", off: hintUsedThisQ || !!hintRule },
+          { key: "time", label: "+5 секунд", cost: 6, sub: "Добавляет 5 секунд к таймеру", off: false },
+          ...(!onlineModeRef.current ? [{ key: "swap", label: "Заменить вопрос", cost: 7, sub: "Другой вопрос той же сложности", off: false }] : []),
+        ].map(h => {
+          const afford = starsBalance >= h.cost;
+          const dis = h.off || !afford;
+          return (
+            <button key={h.key} onClick={() => !dis && applyHint(h.key, h.cost)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 14px", borderRadius: 14, background: dis ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.06)", border: `1px solid ${dis ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.11)"}`, color: dis ? "rgba(255,255,255,0.25)" : "#fff", marginBottom: 8, cursor: dis ? "default" : "pointer" }}>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{h.label}</div>
+                <div style={{ fontSize: 11, color: dis ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.38)", marginTop: 2 }}>{h.sub}</div>
+              </div>
+              <div style={{ fontSize: 13, color: afford ? "#fcd34d" : "#ef4444", fontWeight: 800, marginLeft: 12 }}>{h.cost} ⭐</div>
+            </button>
+          );
+        })}
+        {starsBalance < 4 && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center", marginBottom: 8 }}>Не хватает ⭐ — проходи уроки, чтобы заработать</div>}
+        <button onClick={() => setShowHintMenu(false)} style={{ width: "100%", padding: "11px", borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 13, cursor: "pointer" }}>Закрыть</button>
+      </div>
+    </div>
+  );
 
   // ── EXIT CONFIRMATION MODAL ──
   const ExitModal = () => showExitConfirm ? (
@@ -4828,6 +5201,7 @@ function MapGameScreen({ onBack, session, profile }) {
     <div style={{ paddingTop: 16, animation: "fadeUp 0.3s ease" }}>
       <style>{ANIM_CSS}</style>
       {showConfetti && <Confetti />}
+      <HintMenu />
       <ExitModal />
       <ScoreBar />
       <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -4854,7 +5228,13 @@ function MapGameScreen({ onBack, session, profile }) {
         </div>
       </div>
       <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", marginBottom: 14 }}>{question?.word || question?.prompt}</div>
-      <AnswerButtons q={question} ans={pAnswer} onPick={handleAnswer} />
+      {hintRule && <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 12, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#fcd34d" }}>💡 {hintRule}</div>}
+      <AnswerButtons q={question} ans={pAnswer} onPick={handleAnswer} eliminated={eliminatedOpts} />
+      {pAnswer === null && (
+        <button onClick={() => setShowHintMenu(true)} style={{ marginTop: 10, width: "100%", padding: "10px", borderRadius: 13, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#fcd34d", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+          ✨ Подсказка · {starsBalance} ⭐
+        </button>
+      )}
     </div>
   );
 
