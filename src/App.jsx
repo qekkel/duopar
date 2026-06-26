@@ -2221,11 +2221,15 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   const [retryCount, setRetryCount] = useState(0);
   const [notHeardCount, setNotHeardCount] = useState(0);
   const [lastHeard, setLastHeard] = useState(null);
+  const [barHeights, setBarHeights] = useState([4,7,12,9,5,10,4]);
   const recRef = useRef(null);
   const recRuRef = useRef(null);
   const audioStreamRef = useRef(null);
   const audioCtxRef = useRef(null);
   const animRef = useRef(null);
+  const vizStreamRef = useRef(null);
+  const vizCtxRef = useRef(null);
+  const vizAnimRef = useRef(null);
 
   const rawTarget = normalizeSpeech(card.audioText || card.de).replace(/\s+/g, "");
   const isShortSound = rawTarget.length <= 4;
@@ -2236,11 +2240,44 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     if (audioCtxRef.current) { audioCtxRef.current.close().catch(() => {}); audioCtxRef.current = null; }
   }
 
+  function startViz() {
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+      vizStreamRef.current = stream;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      vizCtxRef.current = ctx;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 128;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const N = 7;
+      function tick() {
+        analyser.getByteFrequencyData(data);
+        const bucket = Math.floor(data.length / N);
+        const heights = Array.from({ length: N }, (_, i) => {
+          const slice = data.slice(i * bucket, (i + 1) * bucket);
+          const avg = slice.reduce((s, v) => s + v, 0) / slice.length;
+          return Math.max(4, Math.min(38, avg * 0.45));
+        });
+        setBarHeights(heights);
+        vizAnimRef.current = requestAnimationFrame(tick);
+      }
+      vizAnimRef.current = requestAnimationFrame(tick);
+    }).catch(() => {});
+  }
+
+  function stopViz() {
+    cancelAnimationFrame(vizAnimRef.current);
+    if (vizStreamRef.current) { vizStreamRef.current.getTracks().forEach(t => t.stop()); vizStreamRef.current = null; }
+    if (vizCtxRef.current) { vizCtxRef.current.close().catch(() => {}); vizCtxRef.current = null; }
+    setBarHeights([4,7,12,9,5,10,4]);
+  }
+
   useEffect(() => {
     return () => {
       if (recRef.current) { try { recRef.current.abort(); } catch(e) {} }
       if (recRuRef.current) { try { recRuRef.current.abort(); } catch(e) {} }
       stopAudioDetect();
+      stopViz();
     };
   }, []);
 
@@ -2261,6 +2298,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   const expected = useMemo(() => buildExpected(card.de, card.audioText), [card.de, card.audioText]);
 
   function accept(heard) {
+    stopViz();
     setLastHeard(heard || null);
     setStatus("success");
     setTimeout(() => onAdvance(true), 1200);
@@ -2309,6 +2347,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { setMode("self"); return; }
     setStatus("listening");
+    startViz();
 
     // For letter sounds: run de-DE + ru-RU recognizers in parallel.
     // Russian STT reliably hears "эм","ха","эф" etc. that de-DE ignores.
@@ -2328,9 +2367,9 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         if (done) return;
         errCount++;
         if (errCount >= 2) {
-          // Both recognizers returned no result
           done = true;
           stopAllRec();
+          stopViz();
           setLastHeard(heard || null);
           setRetryCount(c => {
             const next = c + 1;
@@ -2362,7 +2401,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         rec.onerror = (e) => {
           if (done) return;
           if (e.error === "not-allowed" || e.error === "permission-denied") {
-            done = true; stopAllRec(); setStatus("no_mic");
+            done = true; stopAllRec(); stopViz(); setStatus("no_mic");
           } else {
             onMiss(null);
           }
@@ -2427,6 +2466,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
 
   function stopListening() {
     stopAllRec();
+    stopViz();
     setStatus("idle");
   }
 
@@ -2464,15 +2504,15 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
         )}
 
         {status === "listening" && (
-          <div style={{ marginTop: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 3, height: 36 }}>
-            {[0,1,2,3,4,5,6].map(i => (
+          <div style={{ marginTop: 20, display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 4, height: 44 }}>
+            {barHeights.map((h, i) => (
               <div key={i} style={{
-                width: 4, borderRadius: 2, background: "#a78bfa",
-                animation: `micWave 0.9s ease-in-out ${i * 0.1}s infinite alternate`,
-                height: `${12 + (i % 3) * 10}px`,
+                width: 5, borderRadius: 3,
+                background: h > 10 ? "#a78bfa" : "rgba(167,139,250,0.35)",
+                height: `${h}px`,
+                transition: "height 0.05s ease-out",
               }} />
             ))}
-            <style>{`@keyframes micWave { from { transform: scaleY(0.3); } to { transform: scaleY(1); } }`}</style>
           </div>
         )}
         {status === "success" && (
