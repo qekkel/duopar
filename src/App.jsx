@@ -4061,52 +4061,51 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, compute
       }
       const continueLabel = nextLvlLabel ? `Далее: ${nextLvlLabel} →` : "Продолжить →";
       const { starsEarned, totalBalance, blockInfo, isRepeat, score: resultScore, total: resultTotal } = examResult;
+      const displayScore = resultScore ?? finalScoreRef.current;
+      const displayTotal = resultTotal ?? total;
       return (
         <div style={{
-          position: "fixed", inset: 0, zIndex: 9998,
-          background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)",
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998,
+          background: "rgba(10,8,20,0.96)",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          padding: "24px", animation: "rwdIn 0.25s ease"
+          padding: "24px"
         }}>
           <div style={{ width: "100%", maxWidth: 360, textAlign: "center" }}>
             {isRepeat ? (
               <>
-                <div style={{ fontSize: 56, marginBottom: 14, animation: "rwdPop 0.45s 0.1s cubic-bezier(0.34,1.56,0.64,1) both" }}>✨</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8, animation: "rwdUp 0.4s 0.05s both" }}>Gut gemacht!</div>
-                <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", marginBottom: 6, animation: "rwdUp 0.4s 0.15s both" }}>Экзамен повторён</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 40, animation: "rwdUp 0.4s 0.25s both" }}>Награда уже получена</div>
+                <div style={{ fontSize: 56, marginBottom: 14 }}>✨</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Gut gemacht!</div>
+                <div style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", marginBottom: 6 }}>Экзамен повторён</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", marginBottom: 40 }}>Награда уже получена</div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 56, marginBottom: 10, animation: "rwdPop 0.5s 0.05s cubic-bezier(0.34,1.56,0.64,1) both" }}>🏆</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6, animation: "rwdUp 0.4s 0.1s both" }}>Отличная работа!</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 6, animation: "rwdUp 0.4s 0.15s both" }}>Экзамен сдан!</div>
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 22, animation: "rwdUp 0.4s 0.2s both" }}>Правильно: {resultScore ?? finalScoreRef.current} из {resultTotal ?? total}</div>
+                <div style={{ fontSize: 56, marginBottom: 10 }}>🏆</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Отличная работа!</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginBottom: 6 }}>Экзамен сдан!</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>Правильно: {displayScore} из {displayTotal}</div>
                 {starsEarned > 0 && (
                   <div style={{
                     display: "inline-flex", alignItems: "center", gap: 10,
                     background: "linear-gradient(135deg, #92400e, #d97706)", borderRadius: 28,
                     padding: "14px 40px", marginBottom: 18,
-                    boxShadow: "0 0 60px rgba(251,191,36,0.5), 0 8px 32px rgba(0,0,0,0.4)",
-                    animation: "rwdPop 0.55s 0.3s cubic-bezier(0.34,1.56,0.64,1) both"
+                    boxShadow: "0 0 60px rgba(251,191,36,0.45), 0 8px 32px rgba(0,0,0,0.4)"
                   }}>
                     <span style={{ fontSize: 32 }}>⭐</span>
                     <span style={{ fontSize: 48, fontWeight: 900, color: "#fff", lineHeight: 1 }}>+{starsEarned}</span>
                   </div>
                 )}
                 {totalBalance > 0 && (
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fbbf24", marginBottom: 6, animation: "rwdUp 0.4s 0.6s both" }}>
-                    Баланс: {totalBalance} ⭐
-                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fbbf24", marginBottom: 6 }}>Баланс: {totalBalance} ⭐</div>
                 )}
                 {blockInfo && (
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 36, animation: "rwdUp 0.4s 0.7s both" }}>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginBottom: 36 }}>
                     В блоке {blockInfo.label}: {blockInfo.earned} / {blockInfo.max} ⭐
                   </div>
                 )}
               </>
             )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, animation: "rwdUp 0.4s 0.5s both" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <button onClick={() => onComplete ? onComplete() : onBack()} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
                 {continueLabel}
               </button>
@@ -4115,11 +4114,6 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, compute
               </button>
             </div>
           </div>
-          <style>{`
-            @keyframes rwdIn { from{opacity:0} to{opacity:1} }
-            @keyframes rwdPop { from{transform:scale(0.3);opacity:0} to{transform:scale(1);opacity:1} }
-            @keyframes rwdUp { from{transform:translateY(14px);opacity:0} to{transform:translateY(0);opacity:1} }
-          `}</style>
         </div>
       );
     }
