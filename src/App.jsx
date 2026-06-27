@@ -1661,6 +1661,66 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
   );
 }
 
+// Fixed top-right star balance badge — visible on all screens, updates via CustomEvent
+function GlobalStarBadge({ userId }) {
+  const STARS_KEY = `duopar_stars_${userId || "guest"}`;
+  const init = () => parseInt(localStorage.getItem(STARS_KEY) || "0", 10);
+  const [display, setDisplay] = useState(init);
+  const [target, setTarget] = useState(init);
+  const [pop, setPop] = useState(false);
+  const ivRef = useRef(null);
+
+  useEffect(() => {
+    function onStarsChange(e) {
+      const newVal = e.detail?.stars ?? init();
+      setTarget(newVal);
+      setPop(true);
+      setTimeout(() => setPop(false), 600);
+    }
+    window.addEventListener("duopar_stars_change", onStarsChange);
+    return () => window.removeEventListener("duopar_stars_change", onStarsChange);
+  }, [userId]);
+
+  useEffect(() => {
+    if (display === target) return;
+    clearInterval(ivRef.current);
+    ivRef.current = setInterval(() => {
+      setDisplay(c => {
+        if (c === target) { clearInterval(ivRef.current); return c; }
+        const step = Math.max(1, Math.ceil(Math.abs(target - c) / 6));
+        const next = target > c ? Math.min(c + step, target) : Math.max(c - step, target);
+        if (next === target) clearInterval(ivRef.current);
+        return next;
+      });
+    }, 55);
+    return () => clearInterval(ivRef.current);
+  }, [target]);
+
+  if (!userId || display === 0) return null;
+
+  return (
+    <div style={{
+      position: "fixed", top: 14, right: 16, zIndex: 1100,
+      display: "flex", alignItems: "center", gap: 5,
+      background: "rgba(15,13,26,0.85)",
+      border: "1px solid rgba(245,158,11,0.35)",
+      borderRadius: 20, padding: "6px 13px",
+      backdropFilter: "blur(10px)",
+      boxShadow: pop ? "0 0 18px rgba(245,158,11,0.5)" : "0 2px 8px rgba(0,0,0,0.4)",
+      transition: "box-shadow 0.3s ease",
+      pointerEvents: "none",
+    }}>
+      <span style={{
+        fontSize: 15,
+        display: "inline-block",
+        transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+        transform: pop ? "scale(1.4)" : "scale(1)",
+      }}>⭐</span>
+      <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d", minWidth: 16, textAlign: "center" }}>{display}</span>
+    </div>
+  );
+}
+
 function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   const STORAGE_KEY = `duopar_blocks_${userId || "guest"}`;
 
@@ -1764,6 +1824,10 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     if (dailyAmt > 0) {
       setStars(prev => { const n = prev + dailyAmt; localStorage.setItem(STARS_KEY, String(n)); return n; });
       syncToServer();
+    }
+    // Notify GlobalStarBadge (fixed top-right) about the new balance
+    if (actualAmount > 0 || dailyAmt > 0) {
+      window.dispatchEvent(new CustomEvent("duopar_stars_change", { detail: { stars: totalAfter } }));
     }
     // Compute block progress AFTER markAwarded so getLevelStarData sees updated state
     const blockInfo = showLvl ? (() => {
@@ -2126,16 +2190,11 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <div style={{ fontSize: 12, color: lvlColor, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>{CURRICULUM_LEVELS[lvl].label}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              {/* Level block progress */}
-              <div style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "3px 9px" }}>
+              {/* Level block progress only — total balance shown in GlobalStarBadge (top-right) */}
+              <div style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "4px 10px" }}>
                 <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>в блоке</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#fcd34d" }}>{earned}/{max}</span>
-              </div>
-              {/* Total star balance */}
-              <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 12px" }}>
-                <span style={{ fontSize: 11, color: "rgba(245,158,11,0.5)", fontWeight: 600 }}>баланс</span>
-                <span style={{ fontSize: 15, transition: "transform 0.15s", ...(displayStars !== stars ? { transform: "scale(1.3)" } : {}) }}>⭐</span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d" }}>{displayStars}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fcd34d" }}>{earned}</span>
+                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>/ {max}</span>
               </div>
             </div>
           </div>
@@ -6628,6 +6687,9 @@ export default function DuoPar() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", padding: "0 0 40px", fontFamily: "'Inter', system-ui, sans-serif" }}>
+      {/* Global star balance — fixed top-right, visible on all screens */}
+      {session?.user?.id && <GlobalStarBadge userId={session.user.id} />}
+
       <div style={{ width: "100%", maxWidth: 420, padding: "0 20px" }}>
 
         {/* LEVEL PICKER */}
