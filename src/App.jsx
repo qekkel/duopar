@@ -1661,8 +1661,11 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
   );
 }
 
-// Fixed top-right star balance badge — visible on all screens, updates via CustomEvent
-function GlobalStarBadge({ userId }) {
+// Persistent top bar: username + language level (left) + star balance (right)
+// Visible on all screens; star balance updates via "duopar_stars_change" CustomEvent.
+const LEVEL_BADGE_COLOR = { A0: "#10b981", A1: "#7C5CFC", A2: "#f59e0b", B1: "#3b82f6", B2: "#8b5cf6", C1: "#ec4899" };
+
+function UserTopBar({ userId, username, langLevel }) {
   const STARS_KEY = `duopar_stars_${userId || "guest"}`;
   const init = () => parseInt(localStorage.getItem(STARS_KEY) || "0", 10);
   const [display, setDisplay] = useState(init);
@@ -1696,27 +1699,48 @@ function GlobalStarBadge({ userId }) {
     return () => clearInterval(ivRef.current);
   }, [target]);
 
-  if (!userId || display === 0) return null;
+  if (!userId) return null;
+
+  const lvlColor = LEVEL_BADGE_COLOR[langLevel] || "#7C5CFC";
+  const name = username || "Ученик";
 
   return (
     <div style={{
-      position: "fixed", top: 14, right: 16, zIndex: 1100,
-      display: "flex", alignItems: "center", gap: 5,
-      background: "rgba(15,13,26,0.85)",
-      border: "1px solid rgba(245,158,11,0.35)",
-      borderRadius: 20, padding: "6px 13px",
-      backdropFilter: "blur(10px)",
-      boxShadow: pop ? "0 0 18px rgba(245,158,11,0.5)" : "0 2px 8px rgba(0,0,0,0.4)",
-      transition: "box-shadow 0.3s ease",
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 1100, height: 48,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      background: "rgba(15,13,26,0.88)",
+      borderBottom: "1px solid rgba(255,255,255,0.07)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
       pointerEvents: "none",
     }}>
-      <span style={{
-        fontSize: 15,
-        display: "inline-block",
-        transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
-        transform: pop ? "scale(1.4)" : "scale(1)",
-      }}>⭐</span>
-      <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d", minWidth: 16, textAlign: "center" }}>{display}</span>
+      {/* inner container matches app width */}
+      <div style={{ width: "100%", maxWidth: 420, padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* Left: username + level badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>{name}</span>
+          {langLevel && (
+            <span style={{
+              fontSize: 10, fontWeight: 800, letterSpacing: 0.5,
+              color: lvlColor, background: `${lvlColor}22`,
+              border: `1px solid ${lvlColor}55`,
+              borderRadius: 8, padding: "2px 7px",
+            }}>{langLevel}</span>
+          )}
+        </div>
+        {/* Right: star balance */}
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{
+            fontSize: 15, display: "inline-block",
+            transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+            transform: pop ? "scale(1.45)" : "scale(1)",
+          }}>⭐</span>
+          <span style={{
+            fontSize: 14, fontWeight: 800, color: "#fcd34d", minWidth: 18, textAlign: "right",
+            transition: "color 0.2s",
+          }}>{display}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -6685,12 +6709,15 @@ export default function DuoPar() {
     </div>
   );
 
+  const topBarUsername = profile?.username || (session?.user?.email ? session.user.email.split("@")[0] : "Ученик");
+  const topBarLangLevel = profile?.lang_level || null;
+
   return (
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", padding: "0 0 40px", fontFamily: "'Inter', system-ui, sans-serif" }}>
-      {/* Global star balance — fixed top-right, visible on all screens */}
-      {session?.user?.id && <GlobalStarBadge userId={session.user.id} />}
+      {/* Persistent top bar: username + level + star balance */}
+      <UserTopBar userId={session?.user?.id} username={topBarUsername} langLevel={topBarLangLevel} />
 
-      <div style={{ width: "100%", maxWidth: 420, padding: "0 20px" }}>
+      <div style={{ width: "100%", maxWidth: 420, padding: "50px 20px 0" }}>
 
         {/* LEVEL PICKER */}
         {screen === "onboarding" && (
@@ -6718,7 +6745,7 @@ export default function DuoPar() {
 
         {/* LOBBY */}
         {screen === "lobby" && !needsPlacement && (
-          <div style={{ paddingTop: 60 }}>
+          <div style={{ paddingTop: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
               <XPBar xp={profile?.xp || 0} username={profile?.username || (session?.user?.email ? session.user.email.split("@")[0] : "Игрок")} langLevel={profile?.lang_level} />
               <button onClick={() => setScreen("profile")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, width: 40, height: 40, fontSize: 18, cursor: "pointer", marginLeft: 12, flexShrink: 0 }}>
