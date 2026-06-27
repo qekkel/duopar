@@ -2029,9 +2029,24 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       awardKey: `lv_${levelExamLevel}`,
       afterDone: () => { passLevelExam(levelExamLevel); setMode(null); },
     });
+    const lvlExamComputeReward = () => {
+      const key = `lv_${levelExamLevel}`;
+      const alreadyAwarded = isAwarded(key);
+      const actualAmount = alreadyAwarded ? 0 : 25;
+      if (!alreadyAwarded) {
+        markAwarded(key);
+        setStars(prev => { const n = prev + actualAmount; localStorage.setItem(STARS_KEY, String(n)); return n; });
+        syncToServer();
+        window.dispatchEvent(new CustomEvent("duopar_stars_change", { detail: { stars: stars + actualAmount } }));
+      }
+      const totalBalance = stars + actualAmount;
+      const { earned, max } = getLevelStarData(levelExamLevel);
+      const label = CURRICULUM_LEVELS[levelExamLevel]?.label?.split(" · ")[0] || levelExamLevel;
+      return { starsEarned: actualAmount, totalBalance, blockInfo: { label, earned, max }, isRepeat: alreadyAwarded };
+    };
     const lvlScreen = levelExamLevel === "PH"
       ? <PHLevelExamScreen onBack={() => setMode(null)} onPass={handlePass} nextLvlLabel={nextLvlLabel} />
-      : <TopicExamScreen topic={{ title: `Экзамен ${lvlLabel}`, cards: [], exam: [] }} prebuiltQuestions={buildLevelExamQuestions(levelExamLevel)} onBack={() => setMode(null)} onPass={handlePass} levelKey={levelExamLevel} nextLvlLabel={nextLvlLabel} />;
+      : <TopicExamScreen topic={{ title: `Экзамен ${lvlLabel}`, cards: [], exam: [] }} prebuiltQuestions={buildLevelExamQuestions(levelExamLevel)} onBack={() => setMode(null)} computeReward={lvlExamComputeReward} onComplete={() => { passLevelExam(levelExamLevel); setMode(null); }} levelKey={levelExamLevel} nextLvlLabel={nextLvlLabel} />;
     return (
       <>
         {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
@@ -2090,26 +2105,25 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             topicId={activeTopicId}
             isEarlyCheck={isEarly}
             onBack={() => setMode("detail")}
-            onPass={() => {
-              if (isEarly) {
-                showReward({
-                  title: "Проверка знаний пройдена! 🎯",
-                  repeatSubtitle: "Ты уже проверял знания — закрепление всегда полезно!",
-                  amount: 5,
-                  awardKey: `ec_${activeTopicId}`,
-                  showLvl: true,
-                  afterDone: () => setMode("detail"),
-                });
-              } else {
-                showReward({
-                  title: "Тема пройдена! 🎉",
-                  repeatSubtitle: "Ты уже сдал этот экзамен — отличная закрепление!",
-                  amount: 15,
-                  awardKey: `e_${activeTopicId}`,
-                  showLvl: true,
-                  afterDone: () => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); },
-                });
+            computeReward={() => {
+              const key = isEarly ? `ec_${activeTopicId}` : `e_${activeTopicId}`;
+              const amount = isEarly ? 5 : 15;
+              const alreadyAwarded = isAwarded(key);
+              const actualAmount = alreadyAwarded ? 0 : amount;
+              if (!alreadyAwarded) {
+                markAwarded(key);
+                setStars(prev => { const n = prev + actualAmount; localStorage.setItem(STARS_KEY, String(n)); return n; });
+                syncToServer();
+                window.dispatchEvent(new CustomEvent("duopar_stars_change", { detail: { stars: stars + actualAmount } }));
               }
+              const totalBalance = stars + actualAmount;
+              const { earned, max } = getLevelStarData(lvl);
+              const label = CURRICULUM_LEVELS[lvl]?.label?.split(" · ")[0] || lvl;
+              return { starsEarned: actualAmount, totalBalance, blockInfo: { label, earned, max }, isRepeat: alreadyAwarded };
+            }}
+            onComplete={() => {
+              if (isEarly) { setMode("detail"); }
+              else { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }
             }}
           />
         </>
@@ -3967,7 +3981,8 @@ function ExamPronounceQ({ card, onDone }) {
   );
 }
 
-function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuiltQuestions, levelKey, nextLvlLabel }) {
+function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, computeReward, onComplete, prebuiltQuestions, levelKey, nextLvlLabel }) {
+  const [examResult, setExamResult] = useState(null);
   const [questions] = useState(() => {
     const qs = prebuiltQuestions ?? buildExamQuestions(topic);
     if (!qs || qs.length === 0) {
@@ -4007,7 +4022,11 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
       setFinished(true);
       if (finalScore >= passMark && !onPassCalledRef.current) {
         onPassCalledRef.current = true;
-        setTimeout(onPass, 400);
+        if (computeReward) {
+          setTimeout(() => setExamResult(computeReward({ score: finalScore, total })), 200);
+        } else if (onPass) {
+          setTimeout(onPass, 400);
+        }
       }
     }
   }
@@ -4024,11 +4043,56 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, prebuil
 
   if (finished) {
     const passed = score >= passMark;
-    // Passed → onPass() already called from advance() → RewardOverlay will appear
     if (passed) {
+      if (!examResult) {
+        return (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+            <div style={{ fontSize: 64 }}>🏆</div>
+          </div>
+        );
+      }
+      const continueLabel = nextLvlLabel ? `Далее: ${nextLvlLabel} →` : "Продолжить →";
       return (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <div style={{ fontSize: 64 }}>🎉</div>
+        <div style={{ paddingTop: 60, padding: "60px 24px 40px", textAlign: "center" }}>
+          {examResult.isRepeat ? (
+            <>
+              <div style={{ fontSize: 52, marginBottom: 14 }}>✨</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Gut gemacht!</div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>Экзамен повторён</div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", marginBottom: 36 }}>Награда уже получена</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: 52, marginBottom: 14 }}>🏆</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Экзамен сдан!</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.45)", marginBottom: 22 }}>Правильно: {score} из {total}</div>
+              {examResult.starsEarned > 0 && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 10,
+                  background: "linear-gradient(135deg, #92400e, #d97706)", borderRadius: 28,
+                  padding: "14px 36px", boxShadow: "0 0 50px rgba(251,191,36,0.45)",
+                  marginBottom: 20 }}>
+                  <span style={{ fontSize: 28 }}>⭐</span>
+                  <span style={{ fontSize: 40, fontWeight: 900, color: "#fff", lineHeight: 1 }}>+{examResult.starsEarned}</span>
+                </div>
+              )}
+              {examResult.totalBalance > 0 && (
+                <div style={{ fontSize: 15, color: "#fbbf24", fontWeight: 700, marginBottom: 6 }}>Баланс: {examResult.totalBalance} ⭐</div>
+              )}
+              {examResult.blockInfo && (
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 36 }}>
+                  В блоке {examResult.blockInfo.label}: {examResult.blockInfo.earned} / {examResult.blockInfo.max} ⭐
+                </div>
+              )}
+            </>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button onClick={() => onComplete ? onComplete() : onBack()} style={{ width: "100%", padding: "16px", borderRadius: 16, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+              {continueLabel}
+            </button>
+            <button onClick={onBack} style={{ width: "100%", padding: "14px", borderRadius: 16, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "none", fontSize: 14, cursor: "pointer" }}>
+              Вернуться к блоку
+            </button>
+          </div>
         </div>
       );
     }
