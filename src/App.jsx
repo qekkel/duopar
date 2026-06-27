@@ -2658,6 +2658,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
   const recRuRef = useRef(null);
   const audioStreamRef = useRef(null);
   const advancedRef = useRef(false);
+  const advTimerRef = useRef(null);
   const audioCtxRef = useRef(null);
   const animRef = useRef(null);
   const vizStreamRef = useRef(null);
@@ -2709,6 +2710,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     return () => {
       if (recRef.current) { try { recRef.current.abort(); } catch(e) {} }
       if (recRuRef.current) { try { recRuRef.current.abort(); } catch(e) {} }
+      clearTimeout(advTimerRef.current);
       stopAudioDetect();
       stopViz();
     };
@@ -2745,7 +2747,7 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
     }
     setLastHeard(heard || null);
     setStatus("success");
-    setTimeout(() => onAdvance(true), 1200);
+    advTimerRef.current = setTimeout(() => onAdvance(true), 1200);
   }
 
   function startListeningForSound(acceptFn) {
@@ -3365,7 +3367,8 @@ function TopicBlockLearnScreen({ block, allWords, onBack, onDone, audioEnabled, 
 
   // Letter / sound card → pronounce exercise (no guess-translation for "A a", "ä", etc.)
   if (audioEnabled && isPronounceCard(card.de)) {
-    return <PronounceCard card={card} block={block} progress={progress} practiceIdx={practiceIdx} queueLen={practiceQueue.length} topicId={topicId} onBack={onBack} onAdvance={advance} />;
+    // key=practiceIdx forces remount on each card → resets advancedRef and all state
+    return <PronounceCard key={practiceIdx} card={card} block={block} progress={progress} practiceIdx={practiceIdx} queueLen={practiceQueue.length} topicId={topicId} onBack={onBack} onAdvance={advance} />;
   }
 
   return (
