@@ -2985,23 +2985,27 @@ function PronounceCard({ card, block, progress, practiceIdx, queueLen, onBack, o
       </div>
 
       {mode === "check" && status !== "success" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {status === "listening" ? (
             <button onClick={stopListening} style={{ padding: "16px", borderRadius: 14, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.35)", color: "#ef4444", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
               ⏹ Остановить
             </button>
           ) : (
             <>
-              <button onClick={startListening} style={{ padding: "17px", borderRadius: 16, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,92,252,0.4)" }}>
-                🎙️ {retryCount > 0 || status === "not_heard" ? "Попробовать ещё раз" : "Произнести"}
-              </button>
-              {showFallback && (
-                <button onClick={() => accept(null)} style={{ padding: "14px", borderRadius: 14, background: isShortSound && status === "idle" ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.05)", border: `1px solid ${isShortSound && status === "idle" ? "rgba(124,92,252,0.25)" : "rgba(255,255,255,0.12)"}`, color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-                  ✓ Я произнёс/произнесла
+              {/* Main action row: [Произнести] [✓ Я произнёс] side by side */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={startListening} style={{ flex: 3, padding: "15px 10px", borderRadius: 14, background: "linear-gradient(135deg,#7C5CFC,#a78bfa)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(124,92,252,0.35)" }}>
+                  🎙️ {retryCount > 0 || status === "not_heard" ? "Ещё раз" : "Произнести"}
                 </button>
-              )}
+                {showFallback && (
+                  <button onClick={() => accept(null)} style={{ flex: 2, padding: "15px 8px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)", color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    ✓ Я произнёс
+                  </button>
+                )}
+              </div>
+              {/* Tertiary option — understated, below */}
               {status !== "no_mic" && (
-                <button onClick={() => { setMode("self"); setStatus("idle"); setLastHeard(null); }} style={{ padding: "10px", background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 13, cursor: "pointer" }}>
+                <button onClick={() => { setMode("self"); setStatus("idle"); setLastHeard(null); }} style={{ padding: "8px", background: "none", border: "none", color: "rgba(255,255,255,0.28)", fontSize: 12, cursor: "pointer" }}>
                   Сейчас не могу говорить
                 </button>
               )}
@@ -3945,14 +3949,14 @@ function ExamPronounceQ({ card, onDone }) {
       {status === "not_heard" && <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, marginBottom: 16 }}>Не уловил звук. Попробуй ещё раз.</div>}
 
       {status !== "listening" && status !== "success" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => { setRetryCount(c => c + 1); listen(); }}
-            style={{ padding: "14px 24px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
-            🎙️ {showRetryBtn ? "Попробовать ещё раз" : "Произнести"}
+            style={{ flex: 3, padding: "14px 10px", borderRadius: 14, background: "#7C5CFC", color: "#fff", border: "none", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 16px rgba(124,92,252,0.35)" }}>
+            🎙️ {showRetryBtn ? "Ещё раз" : "Произнести"}
           </button>
           <button onClick={() => accept(true)}
-            style={{ padding: "12px", borderRadius: 14, background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "none", fontSize: 13, cursor: "pointer" }}>
-            ✓ Я произнёс/произнесла
+            style={{ flex: 2, padding: "14px 8px", borderRadius: 14, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.14)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            ✓ Я произнёс
           </button>
         </div>
       )}
