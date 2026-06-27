@@ -2039,6 +2039,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
         syncToServer();
         window.dispatchEvent(new CustomEvent("duopar_stars_change", { detail: { stars: stars + actualAmount } }));
       }
+      // Always mark level as passed here — so either button (Continue or Back) triggers it
+      passLevelExam(levelExamLevel);
       const totalBalance = stars + actualAmount;
       const { earned, max } = getLevelStarData(levelExamLevel);
       const label = CURRICULUM_LEVELS[levelExamLevel]?.label?.split(" · ")[0] || levelExamLevel;
@@ -2046,7 +2048,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
     };
     const lvlScreen = levelExamLevel === "PH"
       ? <PHLevelExamScreen onBack={() => setMode(null)} onPass={handlePass} nextLvlLabel={nextLvlLabel} />
-      : <TopicExamScreen topic={{ title: `Экзамен ${lvlLabel}`, cards: [], exam: [] }} prebuiltQuestions={buildLevelExamQuestions(levelExamLevel)} onBack={() => setMode(null)} computeReward={lvlExamComputeReward} onComplete={() => { passLevelExam(levelExamLevel); setMode(null); }} levelKey={levelExamLevel} nextLvlLabel={nextLvlLabel} />;
+      : <TopicExamScreen topic={{ title: `Экзамен ${lvlLabel}`, cards: [], exam: [] }} prebuiltQuestions={buildLevelExamQuestions(levelExamLevel)} onBack={() => setMode(null)} computeReward={lvlExamComputeReward} onComplete={() => setMode(null)} levelKey={levelExamLevel} nextLvlLabel={nextLvlLabel} />;
     return (
       <>
         {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
@@ -2116,6 +2118,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                 syncToServer();
                 window.dispatchEvent(new CustomEvent("duopar_stars_change", { detail: { stars: stars + actualAmount } }));
               }
+              // Mark topic done here so either button triggers it, not just "Continue"
+              if (!isEarly) onTopicDone(activeTopicId);
               const totalBalance = stars + actualAmount;
               const { earned, max } = getLevelStarData(lvl);
               const label = CURRICULUM_LEVELS[lvl]?.label?.split(" · ")[0] || lvl;
@@ -2123,7 +2127,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
             }}
             onComplete={() => {
               if (isEarly) { setMode("detail"); }
-              else { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); }
+              else { setMode(null); setActiveTopicId(null); }
             }}
           />
         </>
@@ -4032,11 +4036,19 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, compute
     if (fs < passMark) return;
     onPassCalledRef.current = true;
     if (computeReward) {
-      setExamResult(computeReward({ score: fs, total }));
+      try {
+        const result = computeReward({ score: fs, total });
+        setExamResult(result ?? { starsEarned: 0, totalBalance: 0, blockInfo: null, isRepeat: false, score: fs, total });
+      } catch (e) {
+        console.error("[duopar] computeReward failed:", e);
+        setExamResult({ starsEarned: 0, totalBalance: 0, blockInfo: null, isRepeat: false, score: fs, total });
+      }
     } else if (onPass) {
       setTimeout(onPass, 400);
+    } else {
+      setExamResult({ starsEarned: 0, totalBalance: 0, blockInfo: null, isRepeat: false, score: fs, total });
     }
-  }, [finished]);
+  }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function pick(opt, idx) {
     if (selected !== null) return;
@@ -4060,7 +4072,7 @@ function TopicExamScreen({ topic, topicId, isEarlyCheck, onBack, onPass, compute
         );
       }
       const continueLabel = nextLvlLabel ? `Далее: ${nextLvlLabel} →` : "Продолжить →";
-      const { starsEarned, totalBalance, blockInfo, isRepeat, score: resultScore, total: resultTotal } = examResult;
+      const { starsEarned = 0, totalBalance = 0, blockInfo = null, isRepeat = false, score: resultScore, total: resultTotal } = examResult;
       const displayScore = resultScore ?? finalScoreRef.current;
       const displayTotal = resultTotal ?? total;
       return (
