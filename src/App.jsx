@@ -1514,7 +1514,7 @@ function loadBlocks(key) {
   } catch { return {}; }
 }
 
-function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubtitle, onDone }) {
+function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubtitle, onDone, blockInfo }) {
   const total = amount + daily;
   const [counted, setCounted] = useState(Math.max(0, totalAfter - total));
   // "showing" → playing normally; "fastClosing" → accelerated exit; "gone" → unmounted
@@ -1619,14 +1619,24 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
         )}
 
         {!isRepeat && (
-          <div style={{ animation: "rwdUp 0.4s 0.7s both", minHeight: 30, marginTop: total > 0 ? 0 : 8 }}>
+          <div style={{ animation: "rwdUp 0.4s 0.7s both", marginTop: total > 0 ? 0 : 8 }}>
             {totalAfter > 0 && (
-              <>
-                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>Всего у тебя: </span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24",
-                  display: "inline-block",
-                  animation: counted < totalAfter ? "none" : "rwdCountPulse 0.3s ease" }}>{counted} ⭐</span>
-              </>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                <div>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.35)" }}>Баланс: </span>
+                  <span style={{ fontSize: 22, fontWeight: 800, color: "#fbbf24",
+                    display: "inline-block",
+                    animation: counted < totalAfter ? "none" : "rwdCountPulse 0.3s ease" }}>{counted} ⭐</span>
+                </div>
+                {blockInfo && (
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center", gap: 4 }}>
+                    <span>В блоке {blockInfo.label}:</span>
+                    <span style={{ color: "#fcd34d", fontWeight: 700 }}>{blockInfo.earned}</span>
+                    <span>/</span>
+                    <span>{blockInfo.max} ⭐</span>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -1738,7 +1748,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   }
 
   // Show reward overlay + award stars. withDailyBonus applies only to block completions.
-  function showReward({ title, repeatTitle, repeatSubtitle, amount, awardKey, withDailyBonus = false, afterDone }) {
+  // Pass showLvl=true to include block progress in the overlay.
+  function showReward({ title, repeatTitle, repeatSubtitle, amount, awardKey, withDailyBonus = false, afterDone, showLvl = false }) {
     const alreadyAwarded = awardKey ? isAwarded(awardKey) : false;
     const actualAmount = alreadyAwarded ? 0 : amount;
     const hasDaily = !alreadyAwarded && withDailyBonus ? checkDailyBonus("lesson") : false;
@@ -1754,6 +1765,12 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       setStars(prev => { const n = prev + dailyAmt; localStorage.setItem(STARS_KEY, String(n)); return n; });
       syncToServer();
     }
+    // Compute block progress AFTER markAwarded so getLevelStarData sees updated state
+    const blockInfo = showLvl ? (() => {
+      const { earned, max } = getLevelStarData(lvl);
+      const label = CURRICULUM_LEVELS[lvl]?.label?.split(" · ")[0] || lvl;
+      return { earned, max, label };
+    })() : null;
     setRewardInfo({
       title: alreadyAwarded ? (repeatTitle || "Gut gemacht!") : title,
       amount: actualAmount,
@@ -1762,6 +1779,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
       isRepeat: alreadyAwarded,
       repeatSubtitle: alreadyAwarded ? repeatSubtitle : undefined,
       afterDone,
+      blockInfo,
     });
   }
 
@@ -1899,6 +1917,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                 amount: 3,
                 awardKey: `b_${activeTopicId}_${activeBlockIdx}`,
                 withDailyBonus: true,
+                showLvl: true,
                 afterDone: () => setMode("detail"),
               });
             }}
@@ -1924,6 +1943,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                   repeatSubtitle: "Ты уже проверял знания — закрепление всегда полезно!",
                   amount: 5,
                   awardKey: `ec_${activeTopicId}`,
+                  showLvl: true,
                   afterDone: () => setMode("detail"),
                 });
               } else {
@@ -1932,6 +1952,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                   repeatSubtitle: "Ты уже сдал этот экзамен — отличная закрепление!",
                   amount: 15,
                   awardKey: `e_${activeTopicId}`,
+                  showLvl: true,
                   afterDone: () => { onTopicDone(activeTopicId); setMode(null); setActiveTopicId(null); },
                 });
               }
@@ -2112,6 +2133,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               </div>
               {/* Total star balance */}
               <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 12px" }}>
+                <span style={{ fontSize: 11, color: "rgba(245,158,11,0.5)", fontWeight: 600 }}>баланс</span>
                 <span style={{ fontSize: 15, transition: "transform 0.15s", ...(displayStars !== stars ? { transform: "scale(1.3)" } : {}) }}>⭐</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: "#fcd34d" }}>{displayStars}</span>
               </div>
