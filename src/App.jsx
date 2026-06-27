@@ -6842,12 +6842,6 @@ export default function DuoPar() {
         {/* LOBBY */}
         {screen === "lobby" && !needsPlacement && (
           <div style={{ paddingTop: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-              <XPBar xp={profile?.xp || 0} username={profile?.username || (session?.user?.email ? session.user.email.split("@")[0] : "Игрок")} langLevel={profile?.lang_level} />
-              <button onClick={() => setScreen("profile")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, width: 40, height: 40, fontSize: 18, cursor: "pointer", marginLeft: 12, flexShrink: 0 }}>
-                🧑‍💻
-              </button>
-            </div>
 
             <div style={{ marginBottom: 32 }}>
               <div style={{ fontSize: 11, letterSpacing: 3, color: "#7C5CFC", fontWeight: 600, marginBottom: 12, textTransform: "uppercase" }}>DuoPar · Deutsch</div>
