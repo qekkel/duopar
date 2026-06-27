@@ -2064,7 +2064,7 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
 
     if (mode === "block" && activeBlockIdx !== null) {
       const block = blocks[activeBlockIdx];
-      if (!block || !block.words || block.words.length === 0) { setMode("detail"); return null; }
+      if (!block || !block.words || block.words.length === 0) { setMode("detail"); setActiveBlockIdx(null); return null; }
       return (
         <>
           {rewardInfo && <RewardOverlay {...rewardInfo} onDone={() => { const cb = rewardInfo.afterDone; setRewardInfo(null); if (cb) cb(); }} />}
@@ -2121,8 +2121,9 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
               // Mark topic done here so either button triggers it, not just "Continue"
               if (!isEarly) onTopicDone(activeTopicId);
               const totalBalance = stars + actualAmount;
-              const { earned, max } = getLevelStarData(lvl);
-              const label = CURRICULUM_LEVELS[lvl]?.label?.split(" · ")[0] || lvl;
+              const topicLvl = topic.level;
+              const { earned, max } = getLevelStarData(topicLvl);
+              const label = CURRICULUM_LEVELS[topicLvl]?.label?.split(" · ")[0] || topicLvl;
               return { starsEarned: actualAmount, totalBalance, blockInfo: { label, earned, max }, isRepeat: alreadyAwarded, score: args?.score, total: args?.total };
             }}
             onComplete={() => {
@@ -5124,7 +5125,7 @@ function ProfileScreen({ profile, session, onUpdate, onBack, onRetakeTest }) {
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Настройки аккаунта</div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Email</span>
-          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{session.user.email}</span>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{session?.user?.email || "—"}</span>
         </div>
       </div>
 
