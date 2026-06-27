@@ -6623,6 +6623,7 @@ export default function DuoPar() {
   const [xpEarned, setXpEarned] = useState(0);
   const [animState, setAnimState] = useState(null); // "shake" | "pop"
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showStarInfo, setShowStarInfo] = useState(false);
 
   // Inject keyframe animations once
   useEffect(() => {
@@ -6799,7 +6800,6 @@ export default function DuoPar() {
 
   const topBarUsername = profile?.username || (session?.user?.email ? session.user.email.split("@")[0] : "Ученик");
   const topBarLangLevel = profile?.lang_level || null;
-  const [showStarInfo, setShowStarInfo] = useState(false);
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", padding: "0 0 40px", fontFamily: "'Inter', system-ui, sans-serif" }}>
