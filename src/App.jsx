@@ -1665,7 +1665,7 @@ function RewardOverlay({ title, amount, daily, totalAfter, isRepeat, repeatSubti
 // Visible on all screens; star balance updates via "duopar_stars_change" CustomEvent.
 const LEVEL_BADGE_COLOR = { A0: "#10b981", A1: "#7C5CFC", A2: "#f59e0b", B1: "#3b82f6", B2: "#8b5cf6", C1: "#ec4899" };
 
-function UserTopBar({ userId, username, langLevel }) {
+function UserTopBar({ userId, username, langLevel, onProfileClick, onStarsClick }) {
   const STARS_KEY = `duopar_stars_${userId || "guest"}`;
   const init = () => parseInt(localStorage.getItem(STARS_KEY) || "0", 10);
   const [display, setDisplay] = useState(init);
@@ -1712,12 +1712,13 @@ function UserTopBar({ userId, username, langLevel }) {
       borderBottom: "1px solid rgba(255,255,255,0.07)",
       backdropFilter: "blur(12px)",
       WebkitBackdropFilter: "blur(12px)",
-      pointerEvents: "none",
     }}>
-      {/* inner container matches app width */}
       <div style={{ width: "100%", maxWidth: 420, padding: "0 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        {/* Left: username + level badge */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Left: username + level badge — clickable → profile */}
+        <button onClick={onProfileClick} style={{
+          background: "none", border: "none", padding: "6px 10px 6px 0", cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>{name}</span>
           {langLevel && (
             <span style={{
@@ -1727,9 +1728,12 @@ function UserTopBar({ userId, username, langLevel }) {
               borderRadius: 8, padding: "2px 7px",
             }}>{langLevel}</span>
           )}
-        </div>
-        {/* Right: star balance */}
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        </button>
+        {/* Right: star balance — clickable → star shop/info */}
+        <button onClick={onStarsClick} style={{
+          background: "none", border: "none", padding: "6px 0 6px 10px", cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 5,
+        }}>
           <span style={{
             fontSize: 15, display: "inline-block",
             transition: "transform 0.25s cubic-bezier(0.34,1.56,0.64,1)",
@@ -1737,8 +1741,51 @@ function UserTopBar({ userId, username, langLevel }) {
           }}>⭐</span>
           <span style={{
             fontSize: 14, fontWeight: 800, color: "#fcd34d", minWidth: 18, textAlign: "right",
-            transition: "color 0.2s",
           }}>{display}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Simple star-info modal shown when user taps ⭐ in UserTopBar
+function StarInfoModal({ onClose }) {
+  return (
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 1200,
+      background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-end", justifyContent: "center",
+      animation: "fadeIn 0.2s ease",
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        width: "100%", maxWidth: 420, background: "#1a1730",
+        borderRadius: "24px 24px 0 0", padding: "24px 24px 36px",
+        border: "1px solid rgba(245,158,11,0.2)",
+        animation: "slideUp 0.3s cubic-bezier(0.34,1.3,0.64,1)",
+      }}>
+        <style>{`@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>⭐ Звёздочки</div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "none", color: "rgba(255,255,255,0.5)", borderRadius: 20, width: 32, height: 32, fontSize: 16, cursor: "pointer" }}>✕</button>
+        </div>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.6, marginBottom: 20 }}>
+          Звёздочки — твоя валюта в DuoPar. Зарабатывай за прохождение тем, проверок и экзаменов. Трать на подсказки и бусты.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {[
+            { icon: "❌", label: "Убрать один неправильный ответ", cost: "2 ⭐" },
+            { icon: "📖", label: "Показать правило", cost: "1 ⭐" },
+            { icon: "🔊", label: "Прослушать слово ещё раз", cost: "1 ⭐" },
+            { icon: "🛡️", label: "Защитить землю в игре", cost: "5 ⭐" },
+          ].map(({ icon, label, cost }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: 14 }}>
+              <span style={{ fontSize: 20 }}>{icon}</span>
+              <span style={{ flex: 1, fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{label}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#fcd34d" }}>{cost}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 16, fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center" }}>
+          Магазин подсказок скоро появится
         </div>
       </div>
     </div>
@@ -1872,6 +1919,25 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
   }
 
   // Per-level star stats for earned/max display
+  function getTopicStarData(topic) {
+    const awarded = getAwarded();
+    const blocks = getTopicBlocks(topic);
+    const numBlocks = blocks.length || 1;
+    let earned = 0;
+    let max = numBlocks * 3;
+    if (topic.exam?.length) { max += 5; max += 15; }
+    for (let i = 0; i < numBlocks; i++) {
+      if (awarded[`b_${topic.id}_${i}`]) earned += 3;
+    }
+    // legacy fallback
+    if (!Object.keys(awarded).some(k => k.startsWith(`b_${topic.id}_`)) && completedTopics.includes(topic.id)) {
+      earned += numBlocks * 3;
+    }
+    if (awarded[`ec_${topic.id}`]) earned += 5;
+    if (awarded[`e_${topic.id}`]) earned += 15;
+    return { earned, max };
+  }
+
   function getLevelStarData(lvl) {
     const topics = CURRICULUM.filter(t => t.level === lvl);
     const awarded = getAwarded();
@@ -2238,16 +2304,26 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
         @keyframes starSpin { 0%{opacity:0;transform:scale(0) rotate(-90deg)} 20%{opacity:1;transform:scale(1.3) rotate(10deg)} 40%{transform:scale(1) rotate(0)} 80%{opacity:1} 100%{opacity:0} }
       `}</style>
 
-      {/* Locked level banner */}
-      {!isLevelUnlocked(lvl) && (
-        <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 14, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 22 }}>🔒</span>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>Блок ещё заблокирован</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>Завершите предыдущий блок, чтобы открыть уроки</div>
+      {/* Locked level banner — shows which block to complete first */}
+      {!isLevelUnlocked(lvl) && (() => {
+        const prevIdx = LEVELS.indexOf(lvl) - 1;
+        const prevLvl = prevIdx >= 0 ? LEVELS[prevIdx] : null;
+        const prevLabel = prevLvl ? (CURRICULUM_LEVELS[prevLvl]?.short || prevLvl) : null;
+        const curLabel = CURRICULUM_LEVELS[lvl]?.short || lvl;
+        return (
+          <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 14, background: "rgba(255,59,48,0.06)", border: "1px solid rgba(255,59,48,0.2)", display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 22 }}>🔒</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>Блок {curLabel} заблокирован</div>
+              {prevLabel && (
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>
+                  Пройди экзамен {prevLabel} или все темы блока, чтобы открыть этот блок
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {topics.map((topic, idx) => {
@@ -2258,6 +2334,8 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
           const blocksTotal = blocks.length;
           const blocksDone = done.size;
           const inProgress = blocksDone > 0 && !examDone;
+          const { earned: tEarned, max: tMax } = getTopicStarData(topic);
+          const allStarsGot = tEarned >= tMax;
           return (
             <button key={topic.id} onClick={() => { if (levelUnlocked) { setActiveTopicId(topic.id); setMode("detail"); } }}
               style={{ opacity: levelUnlocked ? 1 : 0.45, cursor: levelUnlocked ? "pointer" : "default", background: examDone ? "rgba(16,185,129,0.08)" : topic.bonus && !examDone ? "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(251,191,36,0.06))" : inProgress ? "rgba(124,92,252,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${examDone ? "rgba(16,185,129,0.3)" : topic.bonus && !examDone ? "rgba(245,158,11,0.45)" : inProgress ? "rgba(124,92,252,0.3)" : "rgba(255,255,255,0.1)"}`, borderRadius: 18, padding: "16px 18px", textAlign: "left", width: "100%", boxShadow: topic.bonus && !examDone ? "0 0 12px rgba(245,158,11,0.15)" : "none" }}>
@@ -2271,7 +2349,17 @@ function CurriculumScreen({ onBack, completedTopics, onTopicDone, userId }) {
                     {examDone ? "Проверка пройдена ✓" : inProgress ? `${blocksDone} из ${blocksTotal} частей` : blocksTotal === 0 ? `Тест · ${(topic.exam || []).length} вопросов` : `${blocksTotal} ${blocksTotal === 1 ? "часть" : blocksTotal < 5 ? "части" : "частей"}`}
                   </div>
                 </div>
-                <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 14 }}>→</div>
+                {/* Star progress badge per topic */}
+                <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                  {allStarsGot
+                    ? <span style={{ fontSize: 11, color: "#fcd34d", fontWeight: 700 }}>⭐ {tMax}</span>
+                    : <>
+                        <span style={{ fontSize: 11 }}>⭐</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: tEarned > 0 ? "#fcd34d" : "rgba(255,255,255,0.2)" }}>{tEarned}</span>
+                        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>/{tMax}</span>
+                      </>
+                  }
+                </div>
               </div>
               {blocksTotal > 0 && (
                 <div style={{ display: "flex", gap: 4 }}>
@@ -6711,11 +6799,19 @@ export default function DuoPar() {
 
   const topBarUsername = profile?.username || (session?.user?.email ? session.user.email.split("@")[0] : "Ученик");
   const topBarLangLevel = profile?.lang_level || null;
+  const [showStarInfo, setShowStarInfo] = useState(false);
 
   return (
     <div style={{ minHeight: "100vh", background: "#0f0d1a", display: "flex", justifyContent: "center", padding: "0 0 40px", fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Persistent top bar: username + level + star balance */}
-      <UserTopBar userId={session?.user?.id} username={topBarUsername} langLevel={topBarLangLevel} />
+      <UserTopBar
+        userId={session?.user?.id}
+        username={topBarUsername}
+        langLevel={topBarLangLevel}
+        onProfileClick={() => setScreen("profile")}
+        onStarsClick={() => setShowStarInfo(true)}
+      />
+      {showStarInfo && <StarInfoModal onClose={() => setShowStarInfo(false)} />}
 
       <div style={{ width: "100%", maxWidth: 420, padding: "50px 20px 0" }}>
 
